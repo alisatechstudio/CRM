@@ -1,0 +1,29 @@
+{
+  "name": "aura-department-store-crm",
+  "version": "1.0.0",
+  "description": "Full-Stack Enterprise Departmental Store CRM, POS Checkout, Loyalty Engine & Customer 360",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "server": "node server/server.js",
+    "client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "dev": "node server/server.js"
+  },
+  "keywords": [
+    "crm",
+    "retail",
+    "department-store",
+    "pos",
+    "loyalty",
+    "rfm-segmentation"
+  ],
+  "author": "Antigravity",
+  "license": "ISC",
+  "dependencies": {
+    "better-sqlite3": "^13.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^5.1.0"
+  }
+}

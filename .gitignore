@@ -3,6 +3,10 @@ node_modules/
 client/node_modules/
 server/node_modules/
 
+# Build artifacts
+client/dist/
+dist/
+
 # Logs & temp
 *.log
 npm-debug.log*
@@ -10,10 +14,13 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 
-# Database temporary files
+# Database temporary & binary files
+server/*.db
 server/*.db-shm
 server/*.db-wal
+*.db
 
 # OS files
 .DS_Store
 Thumbs.db
+
