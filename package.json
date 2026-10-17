@@ -12,7 +12,8 @@
     "client": "npm --prefix client run dev",
     "postinstall": "npm --prefix client install",
     "build": "npm --prefix client install && npm --prefix client run build",
-    "dev": "node server/server.js"
+    "dev": "node server/server.js",
+    "db:clean": "node server/cleanDatabase.js"
   },
   "keywords": [
     "crm",

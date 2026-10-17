@@ -70,8 +70,20 @@ async function seedMongoIfEmpty(force = false) {
     const Customer = require('./models/Customer');
     const Coupon = require('./models/Coupon');
     const Order = require('./models/Order');
+    const SystemMeta = require('./models/SystemMeta');
 
     if (!force) {
+      if (process.env.AUTO_SEED === 'false') {
+        console.log('AUTO_SEED is disabled via environment variable.');
+        return;
+      }
+
+      const cleanMeta = await SystemMeta.findOne({ key: 'is_cleaned_blank' }).lean();
+      if (cleanMeta && cleanMeta.value === true) {
+        console.log('Database was wiped blank by admin. Skipping automatic re-seeding.');
+        return;
+      }
+
       const storeCount = await Store.countDocuments();
       if (storeCount > 0) {
         console.log('MongoDB already has store data. Skipping seed.');
@@ -194,7 +206,7 @@ async function seedMongoIfEmpty(force = false) {
   }
 }
 
-async function resetMongoDatabase() {
+async function wipeAllCollections() {
   const Store = require('./models/Store');
   const Department = require('./models/Department');
   const Product = require('./models/Product');
@@ -204,8 +216,9 @@ async function resetMongoDatabase() {
   const LoyaltyTransaction = require('./models/LoyaltyTransaction');
   const Campaign = require('./models/Campaign');
   const SupportTicket = require('./models/SupportTicket');
+  const SystemMeta = require('./models/SystemMeta');
 
-  await Promise.all([
+  const [stores, departments, products, customers, coupons, orders, loyalty, campaigns, tickets] = await Promise.all([
     Store.deleteMany({}),
     Department.deleteMany({}),
     Product.deleteMany({}),
@@ -217,11 +230,40 @@ async function resetMongoDatabase() {
     SupportTicket.deleteMany({})
   ]);
 
+  // Set flag so auto-seeding will not repopulate on subsequent connections
+  await SystemMeta.findOneAndUpdate(
+    { key: 'is_cleaned_blank' },
+    { value: true, updated_at: new Date() },
+    { upsert: true, new: true }
+  );
+
+  return {
+    stores: stores.deletedCount,
+    departments: departments.deletedCount,
+    products: products.deletedCount,
+    customers: customers.deletedCount,
+    coupons: coupons.deletedCount,
+    orders: orders.deletedCount,
+    loyaltyTransactions: loyalty.deletedCount,
+    campaigns: campaigns.deletedCount,
+    supportTickets: tickets.deletedCount
+  };
+}
+
+async function resetMongoDatabase() {
+  const SystemMeta = require('./models/SystemMeta');
+  await SystemMeta.findOneAndUpdate(
+    { key: 'is_cleaned_blank' },
+    { value: false, updated_at: new Date() },
+    { upsert: true }
+  );
+  await wipeAllCollections();
   await seedMongoIfEmpty(true);
 }
 
 module.exports = {
   connectToMongo,
   seedMongoIfEmpty,
-  resetMongoDatabase
+  resetMongoDatabase,
+  wipeAllCollections
 };

@@ -1075,6 +1075,20 @@ router.get('/analytics', async (req, res) => {
   }
 });
 
+router.post('/clean-data', async (req, res) => {
+  try {
+    const { wipeAllCollections } = require('./mongoConnection');
+    const result = await wipeAllCollections();
+    res.json({
+      success: true,
+      message: 'MongoDB database has been completely cleaned. All collections are now 100% blank (0 records).',
+      deletedCounts: result
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.post('/reset-data', async (req, res) => {
   try {
     const { resetMongoDatabase } = require('./mongoConnection');

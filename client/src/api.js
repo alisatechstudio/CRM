@@ -77,5 +77,6 @@ export const api = {
   updateTicket: (id, data) => request(`/tickets/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
   // Maintenance
-  resetData: () => request('/reset-data', { method: 'POST' })
+  resetData: () => request('/reset-data', { method: 'POST' }),
+  cleanData: () => request('/clean-data', { method: 'POST' })
 };
