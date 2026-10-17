@@ -10,7 +10,6 @@ import {
   Store, 
   Sun, 
   Moon, 
-  RotateCcw,
   Sparkles
 } from 'lucide-react';
 
@@ -21,8 +20,7 @@ export default function Sidebar({
   setTheme, 
   stores = [], 
   activeStore, 
-  setActiveStore,
-  onResetData
+  setActiveStore
 }) {
   const navItems = [
     { id: 'dashboard', label: 'এক্সিকিউটিভ ড্যাশবোর্ড', icon: LayoutDashboard },
@@ -103,24 +101,15 @@ export default function Sidebar({
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
+        <div style={{ marginTop: '0.25rem' }}>
           <button 
             className="btn btn-secondary btn-sm" 
-            style={{ flex: 1 }}
+            style={{ width: '100%', justifyContent: 'center' }}
             title="থিম পরিবর্তন করুন"
             onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
           >
             {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
             <span>{theme === 'dark' ? 'লাইট মোড' : 'ডার্ক মোড'}</span>
-          </button>
-
-          <button 
-            className="btn btn-secondary btn-sm" 
-            title="ডেমো ডেটা পুনরায় সেট করুন"
-            onClick={onResetData}
-          >
-            <RotateCcw size={15} />
-            <span>রিসেট</span>
           </button>
         </div>
       </div>

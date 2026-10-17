@@ -60,18 +60,6 @@ export default function App() {
     }
   };
 
-  const handleResetData = async () => {
-    if (window.confirm('আপনি কি ডাটাবেজ রিসেট করে সম্পূর্ণ বাংলা ডেমো ডেটা পুনরায় লোড করতে চান?')) {
-      try {
-        await api.resetData();
-        await loadInitialData();
-        alert('ডাটাবেজ সফলভাবে বাংলা ডেমো ডেটায় পুনঃস্থাপিত হয়েছে!');
-      } catch (err) {
-        alert(err.message);
-      }
-    }
-  };
-
   return (
     <div className="app-container">
       {/* Navigation Sidebar */}
@@ -83,7 +71,6 @@ export default function App() {
         stores={stores}
         activeStore={activeStore}
         setActiveStore={setActiveStore}
-        onResetData={handleResetData}
       />
 
       {/* Main App Canvas */}
