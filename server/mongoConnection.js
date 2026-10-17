@@ -38,7 +38,7 @@ async function connectToMongo() {
   return cached.conn;
 }
 
-async function seedMongoIfEmpty() {
+async function seedMongoIfEmpty(force = false) {
   try {
     const Store = require('./models/Store');
     const Department = require('./models/Department');
@@ -47,10 +47,12 @@ async function seedMongoIfEmpty() {
     const Coupon = require('./models/Coupon');
     const Order = require('./models/Order');
 
-    const storeCount = await Store.countDocuments();
-    if (storeCount > 0) {
-      console.log('MongoDB already has store data. Skipping seed.');
-      return;
+    if (!force) {
+      const storeCount = await Store.countDocuments();
+      if (storeCount > 0) {
+        console.log('MongoDB already has store data. Skipping seed.');
+        return;
+      }
     }
 
     console.log('Seeding initial Mijan Stationary data into MongoDB...');
@@ -168,7 +170,34 @@ async function seedMongoIfEmpty() {
   }
 }
 
+async function resetMongoDatabase() {
+  const Store = require('./models/Store');
+  const Department = require('./models/Department');
+  const Product = require('./models/Product');
+  const Customer = require('./models/Customer');
+  const Coupon = require('./models/Coupon');
+  const Order = require('./models/Order');
+  const LoyaltyTransaction = require('./models/LoyaltyTransaction');
+  const Campaign = require('./models/Campaign');
+  const SupportTicket = require('./models/SupportTicket');
+
+  await Promise.all([
+    Store.deleteMany({}),
+    Department.deleteMany({}),
+    Product.deleteMany({}),
+    Customer.deleteMany({}),
+    Coupon.deleteMany({}),
+    Order.deleteMany({}),
+    LoyaltyTransaction.deleteMany({}),
+    Campaign.deleteMany({}),
+    SupportTicket.deleteMany({})
+  ]);
+
+  await seedMongoIfEmpty(true);
+}
+
 module.exports = {
   connectToMongo,
-  seedMongoIfEmpty
+  seedMongoIfEmpty,
+  resetMongoDatabase
 };

@@ -1,127 +1,88 @@
 const express = require('express');
 const router = express.Router();
-const db = require('./database');
-const { seedDatabase } = require('./seedData');
+
+const Store = require('./models/Store');
+const Department = require('./models/Department');
+const Customer = require('./models/Customer');
+const Product = require('./models/Product');
+const Order = require('./models/Order');
+const LoyaltyTransaction = require('./models/LoyaltyTransaction');
+const Coupon = require('./models/Coupon');
+const Campaign = require('./models/Campaign');
+const SupportTicket = require('./models/SupportTicket');
 
 // =================== STORES & DEPARTMENTS ===================
-router.get('/stores', (req, res) => {
+router.get('/stores', async (req, res) => {
   try {
-    const stores = db.prepare('SELECT * FROM stores ORDER BY name ASC').all();
+    const stores = await Store.find().sort({ id: 1 }).lean();
     res.json(stores);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/departments', (req, res) => {
+router.get('/departments', async (req, res) => {
   try {
-    const departments = db.prepare(`
-      SELECT d.*, COUNT(p.id) as product_count 
-      FROM departments d
-      LEFT JOIN products p ON p.department_id = d.id
-      GROUP BY d.id
-      ORDER BY d.name ASC
-    `).all();
-    res.json(departments);
+    const depts = await Department.find().sort({ name: 1 }).lean();
+    res.json(depts);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// =================== CUSTOMERS (360° CRM) ===================
-router.get('/customers', (req, res) => {
+// =================== CUSTOMERS ===================
+router.get('/customers', async (req, res) => {
   try {
-    const { search, tier, churn_risk, sort_by = 'total_spent', order = 'DESC' } = req.query;
-    let query = 'SELECT * FROM customers WHERE 1=1';
-    const params = [];
+    const { search, tier, churn_risk, preferred_department, sort = 'last_visit' } = req.query;
+    const filter = {};
+
+    if (tier && tier !== 'All') filter.tier = tier;
+    if (churn_risk && churn_risk !== 'All') filter.churn_risk = churn_risk;
+    if (preferred_department && preferred_department !== 'All') filter.preferred_department = preferred_department;
 
     if (search) {
-      query += ` AND (first_name LIKE ? OR last_name LIKE ? OR email LIKE ? OR phone LIKE ? OR card_number LIKE ?)`;
-      const s = `%${search}%`;
-      params.push(s, s, s, s, s);
+      const reg = new RegExp(search, 'i');
+      filter.$or = [
+        { first_name: reg },
+        { last_name: reg },
+        { card_number: reg },
+        { email: reg },
+        { phone: reg }
+      ];
     }
 
-    if (tier && tier !== 'All') {
-      query += ` AND tier = ?`;
-      params.push(tier);
-    }
+    const sortMap = {
+      'total_spent': { total_spent: -1 },
+      'points_balance': { points_balance: -1 },
+      'visit_count': { visit_count: -1 },
+      'name': { first_name: 1 },
+      'last_visit': { last_visit: -1 }
+    };
 
-    if (churn_risk && churn_risk !== 'All') {
-      query += ` AND churn_risk = ?`;
-      params.push(churn_risk);
-    }
-
-    const allowedSort = ['total_spent', 'points_balance', 'visit_count', 'last_visit', 'first_name', 'join_date'];
-    const sortCol = allowedSort.includes(sort_by) ? sort_by : 'total_spent';
-    const sortOrder = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
-
-    query += ` ORDER BY ${sortCol} ${sortOrder}`;
-
-    const customers = db.prepare(query).all(...params);
-    const parsed = customers.map(c => ({
-      ...c,
-      tags: JSON.parse(c.tags || '[]')
-    }));
-    res.json(parsed);
+    const customers = await Customer.find(filter).sort(sortMap[sort] || { last_visit: -1 }).lean();
+    res.json(customers);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/customers/:id', (req, res) => {
+router.get('/customers/:id', async (req, res) => {
   try {
-    const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
-    if (!customer) {
-      return res.status(404).json({ error: 'Customer not found' });
-    }
+    const customer = await Customer.findOne({ id: req.params.id }).lean();
+    if (!customer) return res.status(404).json({ error: 'গ্রাহক খুঁজে পাওয়া যায়নি' });
 
-    // Purchase history
-    const orders = db.prepare(`
-      SELECT o.*, s.name as store_name
-      FROM orders o
-      JOIN stores s ON s.id = o.store_id
-      WHERE o.customer_id = ?
-      ORDER BY o.created_at DESC
-      LIMIT 10
-    `).all(customer.id);
+    const [orders, loyalty, tickets] = await Promise.all([
+      Order.find({ customer_id: customer.id }).sort({ created_at: -1 }).limit(20).lean(),
+      LoyaltyTransaction.find({ customer_id: customer.id }).sort({ created_at: -1 }).limit(30).lean(),
+      SupportTicket.find({ customer_id: customer.id }).sort({ created_at: -1 }).lean()
+    ]);
 
-    // Items for each order
-    const orderItemsStmt = db.prepare('SELECT * FROM order_items WHERE order_id = ?');
-    const enrichedOrders = orders.map(ord => ({
-      ...ord,
-      items: orderItemsStmt.all(ord.id)
-    }));
-
-    // Loyalty ledger
-    const loyalty = db.prepare(`
-      SELECT * FROM loyalty_transactions
-      WHERE customer_id = ?
-      ORDER BY created_at DESC
-      LIMIT 15
-    `).all(customer.id);
-
-    // Support tickets
-    const tickets = db.prepare(`
-      SELECT * FROM support_tickets
-      WHERE customer_id = ?
-      ORDER BY created_at DESC
-    `).all(customer.id);
-
-    // RFM calculation
-    // Recency: days since last visit
-    const lastVisitDate = customer.last_visit ? new Date(customer.last_visit) : null;
-    const now = new Date('2026-10-17'); // contextual reference time
-    const daysSinceLastVisit = lastVisitDate ? Math.max(0, Math.round((now - lastVisitDate) / (1000 * 60 * 60 * 24))) : 999;
-    
-    // Average order value
     const aov = customer.visit_count > 0 ? (customer.total_spent / customer.visit_count).toFixed(2) : '0.00';
 
     res.json({
       ...customer,
-      tags: JSON.parse(customer.tags || '[]'),
-      daysSinceLastVisit,
       aov: Number(aov),
-      orders: enrichedOrders,
+      orders,
       loyalty,
       tickets
     });
@@ -130,7 +91,7 @@ router.get('/customers/:id', (req, res) => {
   }
 });
 
-router.post('/customers', (req, res) => {
+router.post('/customers', async (req, res) => {
   try {
     const { first_name, last_name, email, phone, birthday, preferred_department, notes, tags } = req.body;
     if (!first_name || !last_name || !email || !phone) {
@@ -141,63 +102,71 @@ router.post('/customers', (req, res) => {
     const randNum = Math.floor(10000 + Math.random() * 90000);
     const card_number = `BRZ-${randNum}`;
     const join_date = new Date().toISOString().split('T')[0];
-    const tagsJson = JSON.stringify(tags || ['New Member']);
 
-    db.prepare(`
-      INSERT INTO customers (
-        id, card_number, first_name, last_name, email, phone,
-        tier, points_balance, lifetime_points, total_spent, visit_count,
-        join_date, birthday, churn_risk, tags, notes, preferred_department
-      ) VALUES (?, ?, ?, ?, ?, ?, 'Bronze', 50, 50, 0, 0, ?, ?, 'Low', ?, ?, ?)
-    `).run(
-      id, card_number, first_name, last_name, email, phone,
-      join_date, birthday || null, tagsJson, notes || '', preferred_department || 'Grocery & Gourmet Fresh'
-    );
+    const customer = await Customer.create({
+      id,
+      card_number,
+      first_name: first_name.trim(),
+      last_name: last_name.trim(),
+      email: email.trim(),
+      phone: phone.trim(),
+      tier: 'Bronze',
+      points_balance: 50,
+      lifetime_points: 50,
+      total_spent: 0,
+      visit_count: 0,
+      join_date,
+      birthday: birthday || null,
+      churn_risk: 'Low',
+      tags: tags || ['নতুন মেম্বার'],
+      notes: notes || '',
+      preferred_department: preferred_department || 'খাতা, ডায়েরি ও কাগজ সামগ্রী'
+    });
 
-    // Give welcome bonus 50 points
-    db.prepare(`
-      INSERT INTO loyalty_transactions (id, customer_id, type, points, balance_after, description, created_at)
-      VALUES (?, ?, 'Bonus', 50, 50, 'Welcome Member Bonus Points', datetime('now'))
-    `).run('lt_' + Date.now(), id);
+    await LoyaltyTransaction.create({
+      id: 'lt_' + Date.now(),
+      customer_id: id,
+      type: 'Bonus',
+      points: 50,
+      balance_after: 50,
+      description: 'স্বাগতম মেম্বার বোনাস পয়েন্ট',
+      created_at: new Date().toISOString()
+    });
 
-    const created = db.prepare('SELECT * FROM customers WHERE id = ?').get(id);
-    res.status(201).json({ ...created, tags: JSON.parse(created.tags || '[]') });
+    res.status(201).json(customer);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.put('/customers/:id', (req, res) => {
+router.put('/customers/:id', async (req, res) => {
   try {
-    const { first_name, last_name, phone, tier, churn_risk, preferred_department, notes, tags } = req.body;
-    const existing = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
-    if (!existing) return res.status(404).json({ error: 'Customer not found' });
+    const { first_name, last_name, email, phone, birthday, preferred_department, notes, tags } = req.body;
+    const updated = await Customer.findOneAndUpdate(
+      { id: req.params.id },
+      {
+        $set: {
+          first_name,
+          last_name,
+          email,
+          phone,
+          birthday,
+          preferred_department,
+          notes,
+          tags
+        }
+      },
+      { new: true }
+    ).lean();
 
-    db.prepare(`
-      UPDATE customers SET
-        first_name = COALESCE(?, first_name),
-        last_name = COALESCE(?, last_name),
-        phone = COALESCE(?, phone),
-        tier = COALESCE(?, tier),
-        churn_risk = COALESCE(?, churn_risk),
-        preferred_department = COALESCE(?, preferred_department),
-        notes = COALESCE(?, notes),
-        tags = COALESCE(?, tags)
-      WHERE id = ?
-    `).run(
-      first_name, last_name, phone, tier, churn_risk,
-      preferred_department, notes, tags ? JSON.stringify(tags) : null,
-      req.params.id
-    );
-
-    const updated = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
-    res.json({ ...updated, tags: JSON.parse(updated.tags || '[]') });
+    if (!updated) return res.status(404).json({ error: 'Customer not found' });
+    res.json(updated);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/customers/:id/points', (req, res) => {
+router.post('/customers/:id/points', async (req, res) => {
   try {
     const { points, reason, type = 'Adjusted' } = req.body;
     const delta = parseInt(points, 10);
@@ -205,13 +174,12 @@ router.post('/customers/:id/points', (req, res) => {
       return res.status(400).json({ error: 'Valid points integer is required' });
     }
 
-    const customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(req.params.id);
+    const customer = await Customer.findOne({ id: req.params.id });
     if (!customer) return res.status(404).json({ error: 'Customer not found' });
 
     const newBalance = Math.max(0, customer.points_balance + delta);
     const newLifetime = delta > 0 ? customer.lifetime_points + delta : customer.lifetime_points;
 
-    // Auto tier calculation based on lifetime points
     let newTier = customer.tier;
     if (newLifetime >= 12000) newTier = 'VIP';
     else if (newLifetime >= 7000) newTier = 'Platinum';
@@ -219,18 +187,20 @@ router.post('/customers/:id/points', (req, res) => {
     else if (newLifetime >= 1500) newTier = 'Silver';
     else newTier = 'Bronze';
 
-    const tx = db.transaction(() => {
-      db.prepare(`
-        UPDATE customers SET points_balance = ?, lifetime_points = ?, tier = ? WHERE id = ?
-      `).run(newBalance, newLifetime, newTier, customer.id);
+    customer.points_balance = newBalance;
+    customer.lifetime_points = newLifetime;
+    customer.tier = newTier;
+    await customer.save();
 
-      db.prepare(`
-        INSERT INTO loyalty_transactions (id, customer_id, type, points, balance_after, description, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, datetime('now'))
-      `).run('lt_' + Date.now(), customer.id, type, delta, newBalance, reason || 'Manual points adjustment');
+    await LoyaltyTransaction.create({
+      id: 'lt_' + Date.now(),
+      customer_id: customer.id,
+      type,
+      points: delta,
+      balance_after: newBalance,
+      description: reason || 'ম্যানুয়াল পয়েন্ট সমন্বয়',
+      created_at: new Date().toISOString()
     });
-
-    tx();
 
     res.json({
       success: true,
@@ -244,93 +214,108 @@ router.post('/customers/:id/points', (req, res) => {
 });
 
 // =================== PRODUCTS & INVENTORY ===================
-router.get('/products', (req, res) => {
+router.get('/products', async (req, res) => {
   try {
     const { department_id, search, low_stock, expiry_filter, expiry_from, expiry_to } = req.query;
-    let query = `
-      SELECT p.*, d.name as department_name, d.code as department_code
-      FROM products p
-      JOIN departments d ON d.id = p.department_id
-      WHERE 1=1
-    `;
-    const params = [];
+    const filter = {};
 
     if (department_id && department_id !== 'all') {
-      query += ` AND p.department_id = ?`;
-      params.push(department_id);
+      filter.department_id = department_id;
     }
 
     if (search) {
-      query += ` AND (p.name LIKE ? OR p.barcode LIKE ? OR p.category LIKE ?)`;
-      const s = `%${search}%`;
-      params.push(s, s, s);
+      const reg = new RegExp(search, 'i');
+      filter.$or = [
+        { name: reg },
+        { barcode: reg },
+        { category: reg }
+      ];
     }
 
     if (low_stock === 'true') {
-      query += ` AND p.stock_qty <= p.min_threshold`;
+      filter.$expr = { $lte: ['$stock_qty', '$min_threshold'] };
     }
 
-    // Expiry Date Filtering
     const today = new Date().toISOString().split('T')[0];
+    const addDays = (d, days) => {
+      const date = new Date(d);
+      date.setDate(date.getDate() + days);
+      return date.toISOString().split('T')[0];
+    };
+
     if (expiry_filter === 'has_expiry') {
-      query += ` AND p.has_expiry = 1 AND p.expiry_date IS NOT NULL`;
+      filter.has_expiry = 1;
+      filter.expiry_date = { $ne: null };
     } else if (expiry_filter === 'no_expiry') {
-      query += ` AND (p.has_expiry = 0 OR p.has_expiry IS NULL)`;
+      filter.$or = [{ has_expiry: 0 }, { has_expiry: null }, { expiry_date: null }];
     } else if (expiry_filter === 'expired') {
-      query += ` AND p.has_expiry = 1 AND p.expiry_date IS NOT NULL AND p.expiry_date < ?`;
-      params.push(today);
+      filter.has_expiry = 1;
+      filter.expiry_date = { $lt: today, $ne: null };
     } else if (expiry_filter === 'expiring_30') {
-      query += ` AND p.has_expiry = 1 AND p.expiry_date IS NOT NULL AND p.expiry_date >= ? AND p.expiry_date <= date(?, '+30 days')`;
-      params.push(today, today);
+      filter.has_expiry = 1;
+      filter.expiry_date = { $gte: today, $lte: addDays(today, 30) };
     } else if (expiry_filter === 'expiring_60') {
-      query += ` AND p.has_expiry = 1 AND p.expiry_date IS NOT NULL AND p.expiry_date >= ? AND p.expiry_date <= date(?, '+60 days')`;
-      params.push(today, today);
+      filter.has_expiry = 1;
+      filter.expiry_date = { $gte: today, $lte: addDays(today, 60) };
     } else if (expiry_filter === 'expiring_90') {
-      query += ` AND p.has_expiry = 1 AND p.expiry_date IS NOT NULL AND p.expiry_date >= ? AND p.expiry_date <= date(?, '+90 days')`;
-      params.push(today, today);
+      filter.has_expiry = 1;
+      filter.expiry_date = { $gte: today, $lte: addDays(today, 90) };
     }
 
-    if (expiry_from) {
-      query += ` AND p.has_expiry = 1 AND p.expiry_date >= ?`;
-      params.push(expiry_from);
-    }
-    if (expiry_to) {
-      query += ` AND p.has_expiry = 1 AND p.expiry_date <= ?`;
-      params.push(expiry_to);
+    if (expiry_from || expiry_to) {
+      filter.has_expiry = 1;
+      filter.expiry_date = filter.expiry_date || {};
+      if (expiry_from) filter.expiry_date.$gte = expiry_from;
+      if (expiry_to) filter.expiry_date.$lte = expiry_to;
     }
 
-    query += ` ORDER BY p.name ASC`;
-    const products = db.prepare(query).all(...params);
-    res.json(products);
+    const [products, depts] = await Promise.all([
+      Product.find(filter).sort({ name: 1 }).lean(),
+      Department.find().lean()
+    ]);
+
+    const deptMap = {};
+    for (const d of depts) {
+      deptMap[d.id] = { name: d.name, code: d.code };
+    }
+
+    const enriched = products.map(p => ({
+      ...p,
+      department_name: deptMap[p.department_id]?.name || 'সাধারণ স্টেশনারি',
+      department_code: deptMap[p.department_id]?.code || 'GEN'
+    }));
+
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/products/:id', (req, res) => {
+router.get('/products/:id', async (req, res) => {
   try {
-    const product = db.prepare(`
-      SELECT p.*, d.name as department_name, d.code as department_code
-      FROM products p
-      JOIN departments d ON d.id = p.department_id
-      WHERE p.id = ?
-    `).get(req.params.id);
+    const product = await Product.findOne({ id: req.params.id }).lean();
     if (!product) return res.status(404).json({ error: 'পণ্যটি খুঁজে পাওয়া যায়নি' });
-    res.json(product);
+
+    const dept = await Department.findOne({ id: product.department_id }).lean();
+    res.json({
+      ...product,
+      department_name: dept?.name || '',
+      department_code: dept?.code || ''
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/products', (req, res) => {
+router.post('/products', async (req, res) => {
   try {
     const { name, barcode, department_id, category, price, cost, stock_qty, min_threshold, unit, expiry_date, has_expiry } = req.body;
     if (!name || !barcode || !department_id || price === undefined) {
       return res.status(400).json({ error: 'পণ্যের নাম, বারকোড, বিভাগ এবং বিক্রয়মূল্য প্রদান করা আবশ্যক' });
     }
 
-    const existingBarcode = db.prepare('SELECT id FROM products WHERE barcode = ?').get(barcode.trim());
-    if (existingBarcode) {
+    const existing = await Product.findOne({ barcode: barcode.trim() });
+    if (existing) {
       return res.status(400).json({ error: 'এই বারকোডটি ইতিমধ্যে ক্যাটালগে রয়েছে' });
     }
 
@@ -338,494 +323,444 @@ router.post('/products', (req, res) => {
     const finalExpiry = isExpApplicable ? expiry_date.trim() : null;
 
     const id = 'prod_' + Date.now();
-    db.prepare(`
-      INSERT INTO products (id, barcode, name, department_id, category, price, cost, stock_qty, min_threshold, unit, expiry_date, has_expiry)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      id, barcode.trim(), name.trim(), department_id, category || 'সাধারণ স্টেশনারি',
-      parseFloat(price), parseFloat(cost || 0), parseInt(stock_qty || 0, 10),
-      parseInt(min_threshold || 10, 10), unit || 'পিস',
-      finalExpiry, isExpApplicable
-    );
+    const created = await Product.create({
+      id,
+      barcode: barcode.trim(),
+      name: name.trim(),
+      department_id,
+      category: category || 'সাধারণ স্টেশনারি',
+      price: parseFloat(price),
+      cost: parseFloat(cost || 0),
+      stock_qty: parseInt(stock_qty || 0, 10),
+      min_threshold: parseInt(min_threshold || 10, 10),
+      unit: unit || 'পিস',
+      expiry_date: finalExpiry,
+      has_expiry: isExpApplicable
+    });
 
-    const created = db.prepare(`
-      SELECT p.*, d.name as department_name, d.code as department_code
-      FROM products p
-      JOIN departments d ON d.id = p.department_id WHERE p.id = ?
-    `).get(id);
-
-    res.status(201).json(created);
+    const dept = await Department.findOne({ id: department_id }).lean();
+    res.status(201).json({
+      ...created.toObject(),
+      department_name: dept?.name || '',
+      department_code: dept?.code || ''
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.put('/products/:id', (req, res) => {
+router.put('/products/:id', async (req, res) => {
   try {
     const { name, barcode, department_id, category, price, cost, stock_qty, min_threshold, unit, expiry_date, has_expiry } = req.body;
-    const existing = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+    const existing = await Product.findOne({ id: req.params.id });
     if (!existing) return res.status(404).json({ error: 'পণ্যটি খুঁজে পাওয়া যায়নি' });
 
     if (barcode && barcode.trim() !== existing.barcode) {
-      const duplicate = db.prepare('SELECT id FROM products WHERE barcode = ? AND id != ?').get(barcode.trim(), req.params.id);
+      const duplicate = await Product.findOne({ barcode: barcode.trim(), id: { $ne: req.params.id } });
       if (duplicate) {
         return res.status(400).json({ error: 'এই বারকোডটি অন্য একটি পণ্যে ইতিমধ্যে ব্যবহৃত হচ্ছে' });
       }
+      existing.barcode = barcode.trim();
     }
 
-    let isExpApplicable = existing.has_expiry;
-    let finalExpiry = existing.expiry_date;
+    if (name) existing.name = name.trim();
+    if (department_id) existing.department_id = department_id;
+    if (category) existing.category = category;
+    if (price !== undefined) existing.price = parseFloat(price);
+    if (cost !== undefined) existing.cost = parseFloat(cost);
+    if (stock_qty !== undefined) existing.stock_qty = parseInt(stock_qty, 10);
+    if (min_threshold !== undefined) existing.min_threshold = parseInt(min_threshold, 10);
+    if (unit) existing.unit = unit;
+
     if (has_expiry !== undefined) {
-      isExpApplicable = (has_expiry === true || has_expiry === 1 || has_expiry === '1' || has_expiry === 'true') ? 1 : 0;
-      finalExpiry = isExpApplicable ? (expiry_date ? expiry_date.trim() : existing.expiry_date) : null;
+      const isExp = (has_expiry === true || has_expiry === 1 || has_expiry === '1' || has_expiry === 'true') ? 1 : 0;
+      existing.has_expiry = isExp;
+      existing.expiry_date = isExp ? (expiry_date ? expiry_date.trim() : existing.expiry_date) : null;
     } else if (expiry_date !== undefined) {
-      finalExpiry = expiry_date ? expiry_date.trim() : null;
-      isExpApplicable = finalExpiry ? 1 : 0;
+      existing.expiry_date = expiry_date ? expiry_date.trim() : null;
+      existing.has_expiry = existing.expiry_date ? 1 : 0;
     }
 
-    db.prepare(`
-      UPDATE products SET
-        name = COALESCE(?, name),
-        barcode = COALESCE(?, barcode),
-        department_id = COALESCE(?, department_id),
-        category = COALESCE(?, category),
-        price = CASE WHEN ? IS NOT NULL THEN ? ELSE price END,
-        cost = CASE WHEN ? IS NOT NULL THEN ? ELSE cost END,
-        stock_qty = CASE WHEN ? IS NOT NULL THEN ? ELSE stock_qty END,
-        min_threshold = CASE WHEN ? IS NOT NULL THEN ? ELSE min_threshold END,
-        unit = COALESCE(?, unit),
-        expiry_date = ?,
-        has_expiry = ?
-      WHERE id = ?
-    `).run(
-      name ? name.trim() : null,
-      barcode ? barcode.trim() : null,
-      department_id || null,
-      category || null,
-      price !== undefined ? parseFloat(price) : null,
-      price !== undefined ? parseFloat(price) : null,
-      cost !== undefined ? parseFloat(cost) : null,
-      cost !== undefined ? parseFloat(cost) : null,
-      stock_qty !== undefined ? parseInt(stock_qty, 10) : null,
-      stock_qty !== undefined ? parseInt(stock_qty, 10) : null,
-      min_threshold !== undefined ? parseInt(min_threshold, 10) : null,
-      min_threshold !== undefined ? parseInt(min_threshold, 10) : null,
-      unit || null,
-      finalExpiry,
-      isExpApplicable,
-      req.params.id
-    );
+    await existing.save();
 
-    const updated = db.prepare(`
-      SELECT p.*, d.name as department_name, d.code as department_code
-      FROM products p
-      JOIN departments d ON d.id = p.department_id
-      WHERE p.id = ?
-    `).get(req.params.id);
-
-    res.json(updated);
+    const dept = await Department.findOne({ id: existing.department_id }).lean();
+    res.json({
+      ...existing.toObject(),
+      department_name: dept?.name || '',
+      department_code: dept?.code || ''
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.delete('/products/:id', (req, res) => {
+router.patch('/products/:id/stock', async (req, res) => {
   try {
-    const existing = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
-    if (!existing) return res.status(404).json({ error: 'পণ্যটি খুঁজে পাওয়া যায়নি' });
-
-    // Check if product is referenced in order_items
-    const orderItemCount = db.prepare('SELECT COUNT(*) as count FROM order_items WHERE product_id = ?').get(req.params.id);
-    if (orderItemCount && orderItemCount.count > 0) {
-      return res.status(400).json({
-        error: `এই পণ্যের ${orderItemCount.count} টি পূর্ববর্তী বিক্রয় রেকর্ড রয়েছে। হিসাবের ভারসাম্য রক্ষার্থে এটি সরাসরি মোছা সম্ভব নয়। অনুগ্রহ করে স্টক সংখ্যা ০ করে রাখুন।`
-      });
-    }
-
-    db.prepare('DELETE FROM products WHERE id = ?').run(req.params.id);
-    res.json({ success: true, message: 'পণ্যটি ক্যাটালগ থেকে সফলভাবে মুছে ফেলা হয়েছে', id: req.params.id });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.patch('/products/:id/stock', (req, res) => {
-  try {
-    const { change, new_qty, reason } = req.body;
-    const product = db.prepare('SELECT * FROM products WHERE id = ?').get(req.params.id);
+    const { change, set_to } = req.body;
+    const product = await Product.findOne({ id: req.params.id });
     if (!product) return res.status(404).json({ error: 'পণ্যটি খুঁজে পাওয়া যায়নি' });
 
-    let updatedStock = product.stock_qty;
-    if (new_qty !== undefined) {
-      updatedStock = Math.max(0, parseInt(new_qty, 10));
+    let newStock = product.stock_qty;
+    if (set_to !== undefined) {
+      newStock = Math.max(0, parseInt(set_to, 10));
     } else if (change !== undefined) {
-      updatedStock = Math.max(0, product.stock_qty + parseInt(change, 10));
+      newStock = Math.max(0, product.stock_qty + parseInt(change, 10));
     }
 
-    db.prepare('UPDATE products SET stock_qty = ? WHERE id = ?').run(updatedStock, req.params.id);
-    
-    const updated = db.prepare(`
-      SELECT p.*, d.name as department_name, d.code as department_code
-      FROM products p
-      JOIN departments d ON d.id = p.department_id
-      WHERE p.id = ?
-    `).get(req.params.id);
+    product.stock_qty = newStock;
+    await product.save();
 
-    res.json({ ...updated, adjustReason: reason || 'স্টক আপডেট' });
+    res.json({ success: true, product_id: product.id, new_stock: newStock });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/products/:id', async (req, res) => {
+  try {
+    const result = await Product.deleteOne({ id: req.params.id });
+    if (result.deletedCount === 0) return res.status(404).json({ error: 'পণ্যটি খুঁজে পাওয়া যায়নি' });
+    res.json({ success: true, message: 'পণ্যটি সফলভাবে মুছে ফেলা হয়েছে' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // =================== POS & CHECKOUT ===================
-router.post('/pos/checkout', (req, res) => {
+router.post('/pos/checkout', async (req, res) => {
   try {
     const {
       customer_id,
-      store_id = 'store_1',
-      cashier_name = 'মিজানুর রহমান',
-      items = [],
+      store_id,
+      cashier_name,
+      items,
       coupon_code,
-      manual_discount_type = 'fixed',
-      manual_discount_value = 0,
-      manual_discount_amount = 0,
+      manual_discount_type,
+      manual_discount_value,
+      manual_discount_amount,
       manual_discount_reason = '',
       points_to_redeem = 0,
-      payment_method = 'কার্ড (Card)'
+      payment_method = 'নগদ (Cash)'
     } = req.body;
 
-    if (!items || items.length === 0) {
-      return res.status(400).json({ error: 'কার্টে কমপক্ষে একটি পণ্য থাকতে হবে' });
+    if (!items || !items.length) {
+      return res.status(400).json({ error: 'কার্টে অন্তত একটি পণ্য থাকা আবশ্যক' });
     }
 
-    // Begin atomic checkout transaction
-    const checkoutTx = db.transaction(() => {
-      let subtotal = 0;
-      const verifiedItems = [];
+    let subtotal = 0;
+    const verifiedItems = [];
 
-      // Validate products and check stock
-      for (const item of items) {
-        const prod = db.prepare('SELECT * FROM products WHERE id = ?').get(item.id);
-        if (!prod) throw new Error(`পণ্যটি পাওয়া যায়নি: ${item.id}`);
-        const qty = parseInt(item.quantity, 10) || 1;
-        const lineTotal = prod.price * qty;
-        subtotal += lineTotal;
-
-        const dept = db.prepare('SELECT name FROM departments WHERE id = ?').get(prod.department_id);
-
-        verifiedItems.push({
-          productId: prod.id,
-          name: prod.name,
-          deptName: dept ? dept.name : 'সাধারণ',
-          unitPrice: prod.price,
-          qty,
-          lineTotal
-        });
-
-        // Decrement stock
-        db.prepare('UPDATE products SET stock_qty = MAX(0, stock_qty - ?) WHERE id = ?').run(qty, prod.id);
+    for (const item of items) {
+      const prod = await Product.findOne({ id: item.productId });
+      if (!prod) {
+        return res.status(400).json({ error: `পণ্য ID ${item.productId} খুঁজে পাওয়া যায়নি` });
+      }
+      if (prod.stock_qty < item.qty) {
+        return res.status(400).json({ error: `পর্যাপ্ত স্টক নেই: ${prod.name} (মজুদ: ${prod.stock_qty})` });
       }
 
-      // Check coupon
-      let discountAmount = 0;
-      if (coupon_code) {
-        const coupon = db.prepare('SELECT * FROM coupons WHERE code = ? AND is_active = 1').get(coupon_code.toUpperCase().trim());
-        if (coupon) {
-          if (subtotal >= coupon.min_spend) {
-            if (coupon.discount_type === 'percentage') {
-              discountAmount = (subtotal * coupon.discount_value) / 100;
-              if (coupon.max_discount > 0 && discountAmount > coupon.max_discount) {
-                discountAmount = coupon.max_discount;
-              }
-            } else {
-              discountAmount = Math.min(coupon.discount_value, subtotal);
-            }
+      const lineTotal = Number((prod.price * item.qty).toFixed(2));
+      subtotal += lineTotal;
 
-            // Increment coupon usage
-            db.prepare('UPDATE coupons SET used_count = used_count + 1 WHERE id = ?').run(coupon.id);
+      const dept = await Department.findOne({ id: prod.department_id }).lean();
+      verifiedItems.push({
+        productId: prod.id,
+        name: prod.name,
+        deptName: dept?.name || 'স্টেশনারি',
+        unitPrice: prod.price,
+        qty: item.qty,
+        lineTotal
+      });
+
+      // Deduct stock
+      prod.stock_qty = Math.max(0, prod.stock_qty - item.qty);
+      await prod.save();
+    }
+
+    subtotal = Number(subtotal.toFixed(2));
+
+    // Coupon discount
+    let discountAmount = 0;
+    if (coupon_code) {
+      const coupon = await Coupon.findOne({ code: coupon_code.toUpperCase(), is_active: 1 });
+      if (coupon && subtotal >= coupon.min_spend) {
+        if (coupon.discount_type === 'percentage') {
+          discountAmount = (subtotal * coupon.discount_value) / 100;
+          if (coupon.max_discount > 0 && discountAmount > coupon.max_discount) {
+            discountAmount = coupon.max_discount;
           }
-        }
-      }
-
-      // Calculate manual cashier discount
-      let calculatedManualDiscount = 0;
-      const parsedManualVal = parseFloat(manual_discount_value || manual_discount_amount || 0);
-      if (parsedManualVal > 0) {
-        if (manual_discount_type === 'percentage') {
-          calculatedManualDiscount = (subtotal * parsedManualVal) / 100;
         } else {
-          calculatedManualDiscount = parsedManualVal;
+          discountAmount = Math.min(coupon.discount_value, subtotal);
         }
-        // Cap manual discount so that subtotal - couponDiscount - manualDiscount >= 0
-        const maxPossibleManual = Math.max(0, subtotal - discountAmount);
-        if (calculatedManualDiscount > maxPossibleManual) {
-          calculatedManualDiscount = maxPossibleManual;
+        discountAmount = Number(discountAmount.toFixed(2));
+        coupon.used_count += 1;
+        await coupon.save();
+      }
+    }
+
+    // Manual discount
+    let calculatedManualDiscount = 0;
+    const parsedManualVal = parseFloat(manual_discount_value || manual_discount_amount || 0);
+    if (parsedManualVal > 0) {
+      if (manual_discount_type === 'percentage') {
+        calculatedManualDiscount = (subtotal * parsedManualVal) / 100;
+      } else {
+        calculatedManualDiscount = parsedManualVal;
+      }
+      const maxPossibleManual = Math.max(0, subtotal - discountAmount);
+      if (calculatedManualDiscount > maxPossibleManual) {
+        calculatedManualDiscount = maxPossibleManual;
+      }
+      calculatedManualDiscount = Number(calculatedManualDiscount.toFixed(2));
+    }
+
+    // Points discount
+    let pointsRedeemed = 0;
+    let pointsDiscount = 0;
+    let customer = null;
+    if (customer_id) {
+      customer = await Customer.findOne({ id: customer_id });
+      if (customer && points_to_redeem > 0) {
+        pointsRedeemed = Math.min(customer.points_balance, parseInt(points_to_redeem, 10));
+        pointsDiscount = Number((pointsRedeemed * 1.0).toFixed(2));
+        const rem = Math.max(0, subtotal - discountAmount - calculatedManualDiscount);
+        if (pointsDiscount > rem) {
+          pointsDiscount = rem;
+          pointsRedeemed = Math.round(pointsDiscount);
         }
-        calculatedManualDiscount = Number(calculatedManualDiscount.toFixed(2));
       }
+    }
 
-      // Customer loyalty points validation
-      let pointsRedeemed = 0;
-      let pointsDiscount = 0;
-      let customer = null;
+    const netTaxable = Math.max(0, subtotal - discountAmount - calculatedManualDiscount - pointsDiscount);
+    const tax = 0; // Stationery zero VAT in BD
+    const total = Number(netTaxable.toFixed(2));
 
-      if (customer_id) {
-        customer = db.prepare('SELECT * FROM customers WHERE id = ?').get(customer_id);
-        if (customer && points_to_redeem > 0) {
-          pointsRedeemed = Math.min(customer.points_balance, parseInt(points_to_redeem, 10));
-          // Rule: 1 point = ৳1.00 discount
-          pointsDiscount = Number((pointsRedeemed * 1.0).toFixed(2));
-          // Cannot discount more than remaining total
-          const remainingBeforePoints = Math.max(0, subtotal - discountAmount - calculatedManualDiscount);
-          if (pointsDiscount > remainingBeforePoints) {
-            pointsDiscount = remainingBeforePoints;
-            pointsRedeemed = Math.round(pointsDiscount);
-          }
-        }
-      }
+    const orderId = 'ord_' + Date.now();
+    const orderNumber = `ORD-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+    const createdAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-      const taxableAmount = Math.max(0, subtotal - discountAmount - calculatedManualDiscount - pointsDiscount);
-      const taxRate = 0.08; // 8% sales tax
-      const tax = Number((taxableAmount * taxRate).toFixed(2));
-      const total = Number((taxableAmount + tax).toFixed(2));
+    const orderItemsForSave = verifiedItems.map((it, idx) => ({
+      id: `item_${orderId}_${idx + 1}`,
+      product_id: it.productId,
+      product_name: it.name,
+      department_name: it.deptName,
+      unit_price: it.unitPrice,
+      quantity: it.qty,
+      total_price: it.lineTotal
+    }));
 
-      const orderId = 'ord_' + Date.now();
-      const orderNumber = 'ORD-' + Math.floor(100000 + Math.random() * 900000);
-      const createdAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
-
-      // Insert Order with manual_discount & manual_discount_reason
-      db.prepare(`
-        INSERT INTO orders (
-          id, order_number, customer_id, store_id, cashier_name,
-          subtotal, discount_amount, manual_discount, manual_discount_reason,
-          points_redeemed, points_discount,
-          tax, total, payment_method, status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'Completed', ?)
-      `).run(
-        orderId, orderNumber, customer ? customer.id : null, store_id, cashier_name,
-        subtotal, discountAmount, calculatedManualDiscount, manual_discount_reason.trim(),
-        pointsRedeemed, pointsDiscount,
-        tax, total, payment_method, createdAt
-      );
-
-      // Insert Order Items
-      let itemIndex = 1;
-      const insertItemStmt = db.prepare(`
-        INSERT INTO order_items (id, order_id, product_id, product_name, department_name, unit_price, quantity, total_price)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-      `);
-
-      for (const it of verifiedItems) {
-        insertItemStmt.run(
-          `item_${orderId}_${itemIndex++}`,
-          orderId,
-          it.productId,
-          it.name,
-          it.deptName,
-          it.unitPrice,
-          it.qty,
-          it.lineTotal
-        );
-      }
-
-      // Handle customer points accrual and stats
-      let earnedPoints = 0;
-      if (customer) {
-        let multiplier = 1.0;
-        if (customer.tier === 'Silver') multiplier = 1.25;
-        else if (customer.tier === 'Gold') multiplier = 1.5;
-        else if (customer.tier === 'Platinum') multiplier = 1.75;
-        else if (customer.tier === 'VIP') multiplier = 2.0;
-
-        earnedPoints = Math.round(total * multiplier);
-
-        const newBalance = customer.points_balance - pointsRedeemed + earnedPoints;
-        const newLifetime = customer.lifetime_points + earnedPoints;
-        const newTotalSpent = Number((customer.total_spent + total).toFixed(2));
-        const newVisitCount = customer.visit_count + 1;
-
-        // Auto tier progression
-        let newTier = customer.tier;
-        if (newLifetime >= 12000) newTier = 'VIP';
-        else if (newLifetime >= 7000) newTier = 'Platinum';
-        else if (newLifetime >= 3500) newTier = 'Gold';
-        else if (newLifetime >= 1500) newTier = 'Silver';
-
-        db.prepare(`
-          UPDATE customers SET
-            points_balance = ?,
-            lifetime_points = ?,
-            total_spent = ?,
-            visit_count = ?,
-            last_visit = ?,
-            tier = ?,
-            churn_risk = 'Low'
-          WHERE id = ?
-        `).run(newBalance, newLifetime, newTotalSpent, newVisitCount, createdAt.split(' ')[0], newTier, customer.id);
-
-        if (pointsRedeemed > 0) {
-          db.prepare(`
-            INSERT INTO loyalty_transactions (id, customer_id, order_id, type, points, balance_after, description, created_at)
-            VALUES (?, ?, ?, 'Redeemed', ?, ?, ?, ?)
-          `).run(
-            'lt_' + Date.now() + '_red',
-            customer.id,
-            orderId,
-            -pointsRedeemed,
-            customer.points_balance - pointsRedeemed,
-            `Redeemed ${pointsRedeemed} pts (৳${pointsDiscount.toFixed(2)}) on #${orderNumber}`,
-            createdAt
-          );
-        }
-
-        db.prepare(`
-          INSERT INTO loyalty_transactions (id, customer_id, order_id, type, points, balance_after, description, created_at)
-          VALUES (?, ?, ?, 'Earned', ?, ?, ?, ?)
-        `).run(
-          'lt_' + Date.now() + '_earn',
-          customer.id,
-          orderId,
-          earnedPoints,
-          newBalance,
-          `Earned ${earnedPoints} pts (${multiplier}x tier rate) on #${orderNumber}`,
-          createdAt
-        );
-      }
-
-      return {
-        orderId,
-        orderNumber,
-        subtotal,
-        discountAmount,
-        manualDiscount: calculatedManualDiscount,
-        manualDiscountReason: manual_discount_reason.trim(),
-        pointsRedeemed,
-        pointsDiscount,
-        tax,
-        total,
-        payment_method,
-        createdAt,
-        earnedPoints,
-        items: verifiedItems,
-        customerName: customer ? `${customer.first_name} ${customer.last_name}` : 'সাধারণ খুচরা ক্রেতা',
-        customerCard: customer ? customer.card_number : null
-      };
+    await Order.create({
+      id: orderId,
+      order_number: orderNumber,
+      customer_id: customer ? customer.id : null,
+      store_id: store_id || 'store_1',
+      cashier_name: cashier_name || 'মিজানুর রহমান',
+      subtotal,
+      discount_amount: discountAmount,
+      manual_discount: calculatedManualDiscount,
+      manual_discount_reason: manual_discount_reason.trim(),
+      points_redeemed: pointsRedeemed,
+      points_discount: pointsDiscount,
+      tax,
+      total,
+      payment_method,
+      status: 'Completed',
+      created_at: createdAt,
+      items: orderItemsForSave
     });
 
-    const result = checkoutTx();
-    res.status(201).json(result);
+    let earnedPoints = 0;
+    if (customer) {
+      let multiplier = 1.0;
+      if (customer.tier === 'Silver') multiplier = 1.25;
+      else if (customer.tier === 'Gold') multiplier = 1.5;
+      else if (customer.tier === 'Platinum') multiplier = 1.75;
+      else if (customer.tier === 'VIP') multiplier = 2.0;
+
+      earnedPoints = Math.round(total * multiplier);
+      const newBalance = customer.points_balance - pointsRedeemed + earnedPoints;
+      const newLifetime = customer.lifetime_points + earnedPoints;
+      const newTotalSpent = Number((customer.total_spent + total).toFixed(2));
+      const newVisitCount = customer.visit_count + 1;
+
+      let newTier = customer.tier;
+      if (newLifetime >= 12000) newTier = 'VIP';
+      else if (newLifetime >= 7000) newTier = 'Platinum';
+      else if (newLifetime >= 3500) newTier = 'Gold';
+      else if (newLifetime >= 1500) newTier = 'Silver';
+
+      customer.points_balance = newBalance;
+      customer.lifetime_points = newLifetime;
+      customer.total_spent = newTotalSpent;
+      customer.visit_count = newVisitCount;
+      customer.last_visit = createdAt.split(' ')[0];
+      customer.tier = newTier;
+      customer.churn_risk = 'Low';
+      await customer.save();
+
+      if (pointsRedeemed > 0) {
+        await LoyaltyTransaction.create({
+          id: 'lt_' + Date.now() + '_red',
+          customer_id: customer.id,
+          order_id: orderId,
+          type: 'Redeemed',
+          points: -pointsRedeemed,
+          balance_after: customer.points_balance - earnedPoints,
+          description: `অর্ডার #${orderNumber}-এ রিডিম পয়েন্ট`,
+          created_at: createdAt
+        });
+      }
+
+      await LoyaltyTransaction.create({
+        id: 'lt_' + Date.now() + '_earn',
+        customer_id: customer.id,
+        order_id: orderId,
+        type: 'Earned',
+        points: earnedPoints,
+        balance_after: customer.points_balance,
+        description: `অর্ডার #${orderNumber}-এ অর্জিত ${earnedPoints} পয়েন্ট (${multiplier}x রেট)`,
+        created_at: createdAt
+      });
+    }
+
+    res.status(201).json({
+      orderId,
+      orderNumber,
+      subtotal,
+      discountAmount,
+      manualDiscount: calculatedManualDiscount,
+      manualDiscountReason: manual_discount_reason.trim(),
+      pointsRedeemed,
+      pointsDiscount,
+      tax,
+      total,
+      payment_method,
+      createdAt,
+      earnedPoints,
+      items: verifiedItems,
+      customerName: customer ? `${customer.first_name} ${customer.last_name}` : 'সাধারণ খুচরা ক্রেতা',
+      customerCard: customer ? customer.card_number : null
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
 // =================== ORDERS & RECEIPTS ===================
-router.get('/orders', (req, res) => {
+router.get('/orders', async (req, res) => {
   try {
     const { customer_id, limit = 50, start_date, end_date } = req.query;
-    let query = `
-      SELECT o.*, 
-        c.first_name as customer_first_name, 
-        c.last_name as customer_last_name, 
-        c.card_number as customer_card,
-        s.name as store_name
-      FROM orders o
-      LEFT JOIN customers c ON c.id = o.customer_id
-      LEFT JOIN stores s ON s.id = o.store_id
-      WHERE 1=1
-    `;
-    const params = [];
+    const filter = {};
 
-    if (customer_id) {
-      query += ` AND o.customer_id = ?`;
-      params.push(customer_id);
+    if (customer_id) filter.customer_id = customer_id;
+    if (start_date || end_date) {
+      filter.created_at = {};
+      if (start_date) filter.created_at.$gte = start_date;
+      if (end_date) filter.created_at.$lte = end_date + ' 23:59:59';
     }
 
-    if (start_date) {
-      query += ` AND date(o.created_at) >= ?`;
-      params.push(start_date);
-    }
+    const orders = await Order.find(filter)
+      .sort({ created_at: -1 })
+      .limit(parseInt(limit, 10))
+      .lean();
 
-    if (end_date) {
-      query += ` AND date(o.created_at) <= ?`;
-      params.push(end_date);
-    }
+    const customerIds = orders.map(o => o.customer_id).filter(Boolean);
+    const customers = await Customer.find({ id: { $in: customerIds } }).lean();
+    const custMap = {};
+    for (const c of customers) custMap[c.id] = c;
 
-    query += ` ORDER BY o.created_at DESC LIMIT ?`;
-    params.push(parseInt(limit, 10));
+    const enriched = orders.map(o => ({
+      ...o,
+      customer_first_name: custMap[o.customer_id]?.first_name || '',
+      customer_last_name: custMap[o.customer_id]?.last_name || '',
+      customer_card: custMap[o.customer_id]?.card_number || null,
+      store_name: 'মিজান স্টেশনারি'
+    }));
 
-    const orders = db.prepare(query).all(...params);
-    res.json(orders);
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.get('/orders/:id', (req, res) => {
+router.get('/orders/:id', async (req, res) => {
   try {
-    const order = db.prepare(`
-      SELECT o.*, 
-        c.first_name, c.last_name, c.email, c.phone, c.card_number, c.tier,
-        s.name as store_name, s.location as store_location, s.phone as store_phone
-      FROM orders o
-      LEFT JOIN customers c ON c.id = o.customer_id
-      LEFT JOIN stores s ON s.id = o.store_id
-      WHERE o.id = ?
-    `).get(req.params.id);
-
+    const order = await Order.findOne({ id: req.params.id }).lean();
     if (!order) return res.status(404).json({ error: 'Order not found' });
 
-    const items = db.prepare('SELECT * FROM order_items WHERE order_id = ?').all(order.id);
-    res.json({ ...order, items });
+    let customer = null;
+    if (order.customer_id) {
+      customer = await Customer.findOne({ id: order.customer_id }).lean();
+    }
+
+    const store = await Store.findOne({ id: order.store_id || 'store_1' }).lean();
+
+    res.json({
+      ...order,
+      first_name: customer?.first_name || '',
+      last_name: customer?.last_name || '',
+      email: customer?.email || '',
+      phone: customer?.phone || '',
+      card_number: customer?.card_number || null,
+      tier: customer?.tier || 'Bronze',
+      store_name: store?.name || 'মিজান স্টেশনারি',
+      store_location: store?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর',
+      store_phone: store?.phone || '+৮৮০ ১৭৯৮-১২৩৪৫৬'
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// =================== COUPONS ===================
-router.get('/coupons', (req, res) => {
+// =================== COUPONS & OFFERS ===================
+router.get('/coupons', async (req, res) => {
   try {
-    const coupons = db.prepare('SELECT * FROM coupons ORDER BY is_active DESC, expiry_date ASC').all();
+    const coupons = await Coupon.find().sort({ expiry_date: 1 }).lean();
     res.json(coupons);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/coupons', (req, res) => {
+router.post('/coupons', async (req, res) => {
   try {
     const { code, title, discount_type, discount_value, min_spend, max_discount, target_tier, expiry_date, usage_limit } = req.body;
     if (!code || !title || !discount_type || discount_value === undefined || !expiry_date) {
       return res.status(400).json({ error: 'Code, title, discount type, value, and expiry date are required' });
     }
 
-    const id = 'cp_' + Date.now();
-    db.prepare(`
-      INSERT INTO coupons (id, code, title, discount_type, discount_value, min_spend, max_discount, target_tier, expiry_date, usage_limit, used_count, is_active)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1)
-    `).run(
-      id, code.toUpperCase().trim(), title, discount_type,
-      parseFloat(discount_value), parseFloat(min_spend || 0),
-      parseFloat(max_discount || 0), target_tier || 'All',
-      expiry_date, parseInt(usage_limit || 100, 10)
-    );
+    const existing = await Coupon.findOne({ code: code.toUpperCase() });
+    if (existing) return res.status(400).json({ error: 'Coupon code already exists' });
 
-    const created = db.prepare('SELECT * FROM coupons WHERE id = ?').get(id);
+    const id = 'cp_' + Date.now();
+    const created = await Coupon.create({
+      id,
+      code: code.toUpperCase(),
+      title,
+      discount_type,
+      discount_value: parseFloat(discount_value),
+      min_spend: parseFloat(min_spend || 0),
+      max_discount: parseFloat(max_discount || 0),
+      target_tier: target_tier || 'All',
+      expiry_date,
+      usage_limit: parseInt(usage_limit || 100, 10),
+      used_count: 0,
+      is_active: 1
+    });
+
     res.status(201).json(created);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/coupons/validate', (req, res) => {
+router.post('/coupons/validate', async (req, res) => {
   try {
-    const { code, cart_subtotal = 0, customer_tier = 'Bronze' } = req.body;
+    const { code, cart_subtotal, customer_tier = 'Bronze' } = req.body;
     if (!code) return res.status(400).json({ valid: false, message: 'Coupon code is required' });
 
-    const coupon = db.prepare('SELECT * FROM coupons WHERE code = ? AND is_active = 1').get(code.toUpperCase().trim());
-    if (!coupon) {
-      return res.status(404).json({ valid: false, message: 'Invalid or expired coupon code' });
-    }
+    const coupon = await Coupon.findOne({ code: code.toUpperCase(), is_active: 1 }).lean();
+    if (!coupon) return res.status(404).json({ valid: false, message: 'Invalid or expired coupon code' });
 
     if (coupon.used_count >= coupon.usage_limit) {
       return res.status(400).json({ valid: false, message: 'Coupon usage limit has been reached' });
@@ -839,26 +774,8 @@ router.post('/coupons/validate', (req, res) => {
     if (cart_subtotal < coupon.min_spend) {
       return res.status(400).json({
         valid: false,
-        message: `Minimum spend of $${coupon.min_spend.toFixed(2)} required for this coupon`
+        message: `ন্যূনতম ৳${coupon.min_spend.toFixed(2)} ক্রয়ে এই কুপন প্রযোজ্য`
       });
-    }
-
-    // Check tier eligibility
-    if (coupon.target_tier !== 'All') {
-      const tierRank = { 'Bronze': 1, 'Silver': 2, 'Gold': 3, 'Platinum': 4, 'VIP': 5 };
-      const customerRank = tierRank[customer_tier] || 1;
-      let minRequiredRank = 1;
-      if (coupon.target_tier === 'Silver+') minRequiredRank = 2;
-      else if (coupon.target_tier === 'Gold+') minRequiredRank = 3;
-      else if (coupon.target_tier === 'Platinum+') minRequiredRank = 4;
-      else if (coupon.target_tier === 'VIP') minRequiredRank = 5;
-
-      if (customerRank < minRequiredRank) {
-        return res.status(400).json({
-          valid: false,
-          message: `This promo requires ${coupon.target_tier} membership`
-        });
-      }
     }
 
     let estimatedDiscount = 0;
@@ -881,17 +798,17 @@ router.post('/coupons/validate', (req, res) => {
   }
 });
 
-// =================== MARKETING CAMPAIGNS & RFM ===================
-router.get('/campaigns', (req, res) => {
+// =================== CAMPAIGNS ===================
+router.get('/campaigns', async (req, res) => {
   try {
-    const campaigns = db.prepare('SELECT * FROM campaigns ORDER BY sent_at DESC, id DESC').all();
+    const campaigns = await Campaign.find().sort({ sent_at: -1, id: -1 }).lean();
     res.json(campaigns);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/campaigns', (req, res) => {
+router.post('/campaigns', async (req, res) => {
   try {
     const { name, channel, target_segment, subject, content, coupon_code } = req.body;
     if (!name || !channel || !target_segment || !subject || !content) {
@@ -899,94 +816,91 @@ router.post('/campaigns', (req, res) => {
     }
 
     const id = 'cmp_' + Date.now();
-    db.prepare(`
-      INSERT INTO campaigns (id, name, channel, target_segment, subject, content, coupon_code, status, audience_count)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'Draft', 0)
-    `).run(id, name, channel, target_segment, subject, content, coupon_code || null);
+    const created = await Campaign.create({
+      id,
+      name,
+      channel,
+      target_segment,
+      subject,
+      content,
+      coupon_code: coupon_code ? coupon_code.toUpperCase() : null,
+      status: 'Draft',
+      audience_count: 0
+    });
 
-    const created = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(id);
     res.status(201).json(created);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/campaigns/:id/send', (req, res) => {
+router.post('/campaigns/:id/send', async (req, res) => {
   try {
-    const campaign = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(req.params.id);
+    const campaign = await Campaign.findOne({ id: req.params.id });
     if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
 
-    // Calculate realistic audience count based on segment
-    let countQuery = 'SELECT COUNT(*) as count FROM customers WHERE 1=1';
-    if (campaign.target_segment === 'VIP Shoppers') countQuery += " AND tier = 'VIP'";
-    else if (campaign.target_segment === 'Churn Risk') countQuery += " AND churn_risk = 'High'";
-    else if (campaign.target_segment === 'High LTV') countQuery += " AND total_spent >= 3000";
-    else if (campaign.target_segment === 'Fresh Food Lovers') countQuery += " AND preferred_department LIKE '%Grocery%'";
+    let filter = {};
+    if (campaign.target_segment === 'VIP Only') filter = { tier: 'VIP' };
+    else if (campaign.target_segment === 'Gold+') filter = { tier: { $in: ['Gold', 'Platinum', 'VIP'] } };
+    else if (campaign.target_segment === 'Churn Risk') filter = { churn_risk: 'High' };
 
-    const segResult = db.prepare(countQuery).get();
-    const audienceCount = Math.max(12, segResult.count * 15); // scaled for realism
-
-    // Realistic marketing response rates
+    const count = await Customer.countDocuments(filter);
+    const audienceCount = Math.max(count, 12);
     const openRate = Number((55 + Math.random() * 30).toFixed(1));
-    const clickRate = Number((20 + Math.random() * 20).toFixed(1));
-    const conversionRate = Number((10 + Math.random() * 15).toFixed(1));
-    const revenue = Number((audienceCount * (conversionRate / 100) * 85).toFixed(2));
+    const clickRate = Number((20 + Math.random() * 25).toFixed(1));
+    const conversionRate = Number((8 + Math.random() * 14).toFixed(1));
+    const revenue = Number((audienceCount * (conversionRate / 100) * 1250).toFixed(2));
     const sentAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-    db.prepare(`
-      UPDATE campaigns SET
-        status = 'Sent',
-        audience_count = ?,
-        open_rate = ?,
-        click_rate = ?,
-        conversion_rate = ?,
-        revenue_generated = ?,
-        sent_at = ?
-      WHERE id = ?
-    `).run(audienceCount, openRate, clickRate, conversionRate, revenue, sentAt, campaign.id);
+    campaign.status = 'Sent';
+    campaign.audience_count = audienceCount;
+    campaign.open_rate = openRate;
+    campaign.click_rate = clickRate;
+    campaign.conversion_rate = conversionRate;
+    campaign.revenue_generated = revenue;
+    campaign.sent_at = sentAt;
+    await campaign.save();
 
-    const updated = db.prepare('SELECT * FROM campaigns WHERE id = ?').get(campaign.id);
-    res.json(updated);
+    res.json(campaign);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// =================== SUPPORT & SERVICE TICKETS ===================
-router.get('/tickets', (req, res) => {
+// =================== SUPPORT TICKETS ===================
+router.get('/tickets', async (req, res) => {
   try {
     const { status, priority, department } = req.query;
-    let query = `
-      SELECT t.*, 
-        c.first_name, c.last_name, c.email, c.phone, c.tier as customer_tier, c.card_number
-      FROM support_tickets t
-      JOIN customers c ON c.id = t.customer_id
-      WHERE 1=1
-    `;
-    const params = [];
+    const filter = {};
 
-    if (status && status !== 'All') {
-      query += ` AND t.status = ?`;
-      params.push(status);
-    }
-    if (priority && priority !== 'All') {
-      query += ` AND t.priority = ?`;
-      params.push(priority);
-    }
-    if (department && department !== 'All') {
-      query += ` AND t.department = ?`;
-      params.push(department);
-    }
+    if (status && status !== 'All') filter.status = status;
+    if (priority && priority !== 'All') filter.priority = priority;
+    if (department && department !== 'All') filter.department = department;
 
-    query += ` ORDER BY CASE t.priority WHEN 'Urgent' THEN 1 WHEN 'High' THEN 2 WHEN 'Medium' THEN 3 ELSE 4 END, t.created_at DESC`;
-    const tickets = db.prepare(query).all(...params);
-    res.json(tickets);
+    const tickets = await SupportTicket.find(filter).sort({ created_at: -1 }).lean();
+
+    const customerIds = tickets.map(t => t.customer_id).filter(Boolean);
+    const customers = await Customer.find({ id: { $in: customerIds } }).lean();
+    const custMap = {};
+    for (const c of customers) custMap[c.id] = c;
+
+    const enriched = tickets.map(t => ({
+      ...t,
+      first_name: custMap[t.customer_id]?.first_name || '',
+      last_name: custMap[t.customer_id]?.last_name || '',
+      email: custMap[t.customer_id]?.email || '',
+      phone: custMap[t.customer_id]?.phone || '',
+      card_number: custMap[t.customer_id]?.card_number || '',
+      customer_tier: custMap[t.customer_id]?.tier || 'Bronze'
+    }));
+
+    res.json(enriched);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.post('/tickets', (req, res) => {
+router.post('/tickets', async (req, res) => {
   try {
     const { customer_id, subject, department, type, priority, details, assigned_to } = req.body;
     if (!customer_id || !subject || !department || !type || !details) {
@@ -997,226 +911,175 @@ router.post('/tickets', (req, res) => {
     const ticket_number = 'TCK-' + Math.floor(1000 + Math.random() * 9000);
     const created_at = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
-    db.prepare(`
-      INSERT INTO support_tickets (id, ticket_number, customer_id, subject, department, type, priority, status, assigned_to, details, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'Open', ?, ?, ?)
-    `).run(
-      id, ticket_number, customer_id, subject, department, type,
-      priority || 'Medium', assigned_to || 'Store Support Desk', details, created_at
-    );
+    const created = await SupportTicket.create({
+      id,
+      ticket_number,
+      customer_id,
+      subject,
+      department,
+      type,
+      priority: priority || 'Medium',
+      status: 'Open',
+      assigned_to: assigned_to || 'স্টোর সাপোর্ট ডেস্ক',
+      details,
+      created_at
+    });
 
-    const created = db.prepare(`
-      SELECT t.*, c.first_name, c.last_name, c.email, c.phone, c.card_number
-      FROM support_tickets t
-      JOIN customers c ON c.id = t.customer_id
-      WHERE t.id = ?
-    `).get(id);
-
-    res.status(201).json(created);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-router.patch('/tickets/:id', (req, res) => {
-  try {
-    const { status, resolution_notes, csat_score, assigned_to } = req.body;
-    const ticket = db.prepare('SELECT * FROM support_tickets WHERE id = ?').get(req.params.id);
-    if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
-
-    let resolved_at = ticket.resolved_at;
-    if (status === 'Resolved' && !ticket.resolved_at) {
-      resolved_at = new Date().toISOString().replace('T', ' ').substring(0, 19);
-    }
-
-    db.prepare(`
-      UPDATE support_tickets SET
-        status = COALESCE(?, status),
-        resolution_notes = COALESCE(?, resolution_notes),
-        csat_score = COALESCE(?, csat_score),
-        assigned_to = COALESCE(?, assigned_to),
-        resolved_at = ?
-      WHERE id = ?
-    `).run(status, resolution_notes, csat_score, assigned_to, resolved_at, req.params.id);
-
-    const updated = db.prepare(`
-      SELECT t.*, c.first_name, c.last_name, c.email, c.phone, c.card_number
-      FROM support_tickets t
-      JOIN customers c ON c.id = t.customer_id
-      WHERE t.id = ?
-    `).get(req.params.id);
-
-    res.json(updated);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// =================== EXECUTIVE BI ANALYTICS ===================
-router.get('/analytics', (req, res) => {
-  try {
-    const { period, from_date, to_date } = req.query;
-    let orderDateClause = '1=1';
-    const orderParams = [];
-
-    const today = new Date().toISOString().split('T')[0];
-    if (period === 'today') {
-      orderDateClause = "date(created_at) = ?";
-      orderParams.push(today);
-    } else if (period === 'yesterday') {
-      orderDateClause = "date(created_at) = date(?, '-1 day')";
-      orderParams.push(today);
-    } else if (period === 'last_7_days') {
-      orderDateClause = "date(created_at) >= date(?, '-7 days') AND date(created_at) <= ?";
-      orderParams.push(today, today);
-    } else if (period === 'last_30_days') {
-      orderDateClause = "date(created_at) >= date(?, '-30 days') AND date(created_at) <= ?";
-      orderParams.push(today, today);
-    } else if (period === 'this_month') {
-      orderDateClause = "strftime('%Y-%m', created_at) = strftime('%Y-%m', ?)";
-      orderParams.push(today);
-    } else if (from_date && to_date) {
-      orderDateClause = "date(created_at) >= ? AND date(created_at) <= ?";
-      orderParams.push(from_date, to_date);
-    } else if (from_date) {
-      orderDateClause = "date(created_at) >= ?";
-      orderParams.push(from_date);
-    } else if (to_date) {
-      orderDateClause = "date(created_at) <= ?";
-      orderParams.push(to_date);
-    }
-
-    // 1. High level KPIs
-    const customerStats = db.prepare(`
-      SELECT 
-        COUNT(*) as total_customers,
-        SUM(CASE WHEN tier = 'VIP' THEN 1 ELSE 0 END) as vip_count,
-        SUM(CASE WHEN tier = 'Platinum' THEN 1 ELSE 0 END) as platinum_count,
-        SUM(CASE WHEN tier = 'Gold' THEN 1 ELSE 0 END) as gold_count,
-        SUM(CASE WHEN tier = 'Silver' THEN 1 ELSE 0 END) as silver_count,
-        SUM(CASE WHEN tier = 'Bronze' THEN 1 ELSE 0 END) as bronze_count,
-        SUM(CASE WHEN churn_risk = 'High' THEN 1 ELSE 0 END) as churn_high_count,
-        SUM(points_balance) as total_liability_points,
-        SUM(total_spent) as total_customer_spent
-      FROM customers
-    `).get();
-
-    const orderStats = db.prepare(`
-      SELECT 
-        COUNT(*) as total_orders,
-        COALESCE(SUM(total), 0) as total_revenue,
-        COALESCE(AVG(total), 0) as avg_basket_size,
-        COALESCE(SUM(discount_amount + points_discount), 0) as total_discounts_given
-      FROM orders
-      WHERE ${orderDateClause}
-    `).get(...orderParams);
-
-    // 2. Department-wise Revenue Breakdown
-    const deptSales = db.prepare(`
-      SELECT 
-        oi.department_name,
-        COUNT(DISTINCT oi.order_id) as orders_count,
-        SUM(oi.quantity) as units_sold,
-        ROUND(SUM(oi.total_price), 2) as revenue
-      FROM order_items oi
-      JOIN orders o ON o.id = oi.order_id
-      WHERE ${orderDateClause.replace(/created_at/g, 'o.created_at')}
-      GROUP BY oi.department_name
-      ORDER BY revenue DESC
-    `).all(...orderParams);
-
-    // 3. Customer Tier Distribution
-    const tierDistribution = [
-      { tier: 'VIP', count: customerStats.vip_count, color: '#ec4899' },
-      { tier: 'Platinum', count: customerStats.platinum_count, color: '#8b5cf6' },
-      { tier: 'Gold', count: customerStats.gold_count, color: '#f59e0b' },
-      { tier: 'Silver', count: customerStats.silver_count, color: '#94a3b8' },
-      { tier: 'Bronze', count: customerStats.bronze_count, color: '#d97706' }
-    ];
-
-    // 4. Churn Risk Distribution
-    const churnDistribution = db.prepare(`
-      SELECT churn_risk, COUNT(*) as count 
-      FROM customers 
-      GROUP BY churn_risk
-    `).all();
-
-    // 5. Top 5 VIP Spenders
-    const topSpenders = db.prepare(`
-      SELECT id, first_name, last_name, card_number, tier, total_spent, points_balance, visit_count, last_visit
-      FROM customers
-      ORDER BY total_spent DESC
-      LIMIT 5
-    `).all();
-
-    // 6. Recent Orders in selected period
-    const recentOrders = db.prepare(`
-      SELECT o.*, c.first_name, c.last_name, c.card_number, s.name as store_name
-      FROM orders o
-      LEFT JOIN customers c ON c.id = o.customer_id
-      LEFT JOIN stores s ON s.id = o.store_id
-      WHERE ${orderDateClause.replace(/created_at/g, 'o.created_at')}
-      ORDER BY o.created_at DESC
-      LIMIT 8
-    `).all(...orderParams);
-
-    // 7. Support Ticket summary
-    const ticketSummary = db.prepare(`
-      SELECT 
-        COUNT(*) as total_tickets,
-        SUM(CASE WHEN status = 'Open' THEN 1 ELSE 0 END) as open_tickets,
-        SUM(CASE WHEN status = 'In Progress' THEN 1 ELSE 0 END) as in_progress_tickets,
-        SUM(CASE WHEN status = 'Resolved' THEN 1 ELSE 0 END) as resolved_tickets,
-        AVG(CASE WHEN csat_score IS NOT NULL THEN csat_score ELSE NULL END) as avg_csat
-      FROM support_tickets
-    `).get();
-
-    res.json({
-      kpis: {
-        totalRevenue: Number(orderStats.total_revenue.toFixed(2)),
-        totalOrders: orderStats.total_orders,
-        avgBasketSize: Number(orderStats.avg_basket_size.toFixed(2)),
-        totalCustomers: customerStats.total_customers,
-        totalPointsLiability: customerStats.total_liability_points || 0,
-        churnAtRiskCount: customerStats.churn_high_count || 0,
-        totalDiscountsGiven: Number(orderStats.total_discounts_given.toFixed(2))
-      },
-      deptSales,
-      tierDistribution,
-      churnDistribution,
-      topSpenders,
-      recentOrders,
-      ticketSummary: {
-        total: ticketSummary.total_tickets,
-        open: ticketSummary.open_tickets,
-        inProgress: ticketSummary.in_progress_tickets,
-        resolved: ticketSummary.resolved_tickets,
-        avgCsat: ticketSummary.avg_csat ? Number(ticketSummary.avg_csat.toFixed(1)) : 4.8
-      }
+    const customer = await Customer.findOne({ id: customer_id }).lean();
+    res.status(201).json({
+      ...created.toObject(),
+      first_name: customer?.first_name || '',
+      last_name: customer?.last_name || '',
+      email: customer?.email || '',
+      phone: customer?.phone || '',
+      card_number: customer?.card_number || ''
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-// =================== DATA RESET FOR DEMO ===================
-router.post('/reset-data', (req, res) => {
+router.patch('/tickets/:id', async (req, res) => {
   try {
-    db.exec(`
-      DELETE FROM order_items;
-      DELETE FROM orders;
-      DELETE FROM loyalty_transactions;
-      DELETE FROM support_tickets;
-      DELETE FROM campaigns;
-      DELETE FROM coupons;
-      DELETE FROM products;
-      DELETE FROM customers;
-      DELETE FROM departments;
-      DELETE FROM stores;
-    `);
+    const { status, resolution_notes, csat_score, assigned_to } = req.body;
+    const ticket = await SupportTicket.findOne({ id: req.params.id });
+    if (!ticket) return res.status(404).json({ error: 'Ticket not found' });
 
-    seedDatabase();
-    res.json({ success: true, message: 'Database reset to default seed data successfully' });
+    if (status) ticket.status = status;
+    if (resolution_notes) ticket.resolution_notes = resolution_notes;
+    if (csat_score !== undefined) ticket.csat_score = csat_score;
+    if (assigned_to) ticket.assigned_to = assigned_to;
+    if (status === 'Resolved' && !ticket.resolved_at) {
+      ticket.resolved_at = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    }
+
+    await ticket.save();
+    res.json(ticket);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// =================== EXECUTIVE BI ANALYTICS ===================
+router.get('/analytics', async (req, res) => {
+  try {
+    const { period, from_date, to_date } = req.query;
+    const today = new Date().toISOString().split('T')[0];
+
+    const orderFilter = {};
+    if (period === 'today') {
+      orderFilter.created_at = new RegExp('^' + today);
+    } else if (period === 'last_7_days') {
+      const d7 = new Date();
+      d7.setDate(d7.getDate() - 7);
+      orderFilter.created_at = { $gte: d7.toISOString().split('T')[0] };
+    } else if (period === 'last_30_days') {
+      const d30 = new Date();
+      d30.setDate(d30.getDate() - 30);
+      orderFilter.created_at = { $gte: d30.toISOString().split('T')[0] };
+    } else if (period === 'this_month') {
+      orderFilter.created_at = new RegExp('^' + today.substring(0, 7));
+    } else if (from_date || to_date) {
+      orderFilter.created_at = {};
+      if (from_date) orderFilter.created_at.$gte = from_date;
+      if (to_date) orderFilter.created_at.$lte = to_date + ' 23:59:59';
+    }
+
+    const [customers, orders, topSpenders, tickets] = await Promise.all([
+      Customer.find().lean(),
+      Order.find(orderFilter).sort({ created_at: -1 }).lean(),
+      Customer.find().sort({ total_spent: -1 }).limit(5).lean(),
+      SupportTicket.find().lean()
+    ]);
+
+    let totalRevenue = 0;
+    let totalDiscountsGiven = 0;
+    const deptSalesMap = {};
+
+    for (const o of orders) {
+      totalRevenue += (o.total || 0);
+      totalDiscountsGiven += ((o.discount_amount || 0) + (o.points_discount || 0) + (o.manual_discount || 0));
+
+      if (o.items && Array.isArray(o.items)) {
+        for (const it of o.items) {
+          const dept = it.department_name || 'সাধারণ স্টেশনারি';
+          if (!deptSalesMap[dept]) {
+            deptSalesMap[dept] = { department_name: dept, orders_count: 0, units_sold: 0, revenue: 0 };
+          }
+          deptSalesMap[dept].orders_count += 1;
+          deptSalesMap[dept].units_sold += (it.quantity || 1);
+          deptSalesMap[dept].revenue += (it.total_price || 0);
+        }
+      }
+    }
+
+    const deptSales = Object.values(deptSalesMap).sort((a, b) => b.revenue - a.revenue);
+
+    let vip_count = 0, platinum_count = 0, gold_count = 0, silver_count = 0, bronze_count = 0;
+    let churn_high_count = 0, total_liability_points = 0;
+
+    for (const c of customers) {
+      if (c.tier === 'VIP') vip_count++;
+      else if (c.tier === 'Platinum') platinum_count++;
+      else if (c.tier === 'Gold') gold_count++;
+      else if (c.tier === 'Silver') silver_count++;
+      else bronze_count++;
+
+      if (c.churn_risk === 'High') churn_high_count++;
+      total_liability_points += (c.points_balance || 0);
+    }
+
+    const tierDistribution = [
+      { tier: 'VIP', count: vip_count, color: '#ec4899' },
+      { tier: 'Platinum', count: platinum_count, color: '#8b5cf6' },
+      { tier: 'Gold', count: gold_count, color: '#f59e0b' },
+      { tier: 'Silver', count: silver_count, color: '#94a3b8' },
+      { tier: 'Bronze', count: bronze_count, color: '#d97706' }
+    ];
+
+    const churnCounts = { Low: 0, Medium: 0, High: 0 };
+    for (const c of customers) {
+      churnCounts[c.churn_risk || 'Low'] = (churnCounts[c.churn_risk || 'Low'] || 0) + 1;
+    }
+    const churnDistribution = Object.keys(churnCounts).map(k => ({ churn_risk: k, count: churnCounts[k] }));
+
+    const recentOrders = orders.slice(0, 8);
+
+    const ticketSummary = {
+      total: tickets.length,
+      open: tickets.filter(t => t.status === 'Open').length,
+      inProgress: tickets.filter(t => t.status === 'In Progress').length,
+      resolved: tickets.filter(t => t.status === 'Resolved').length,
+      avgCsat: 4.8
+    };
+
+    res.json({
+      kpis: {
+        totalRevenue: Number(totalRevenue.toFixed(2)),
+        totalOrders: orders.length,
+        avgBasketSize: orders.length > 0 ? Number((totalRevenue / orders.length).toFixed(2)) : 0,
+        totalCustomers: customers.length,
+        totalPointsLiability: total_liability_points,
+        churnAtRiskCount: churn_high_count,
+        totalDiscountsGiven: Number(totalDiscountsGiven.toFixed(2))
+      },
+      deptSales,
+      tierDistribution,
+      churnDistribution,
+      topSpenders,
+      recentOrders,
+      ticketSummary
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/reset-data', async (req, res) => {
+  try {
+    const { resetMongoDatabase } = require('./mongoConnection');
+    await resetMongoDatabase();
+    res.json({ success: true, message: 'মিজান স্টেশনারি ডাটাবেজ সফলভাবে রিসেট ও সিড করা হয়েছে।' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
