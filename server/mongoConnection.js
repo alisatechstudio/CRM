@@ -5,9 +5,33 @@ if (!cached) {
   cached = global.mongoose = { conn: null, promise: null };
 }
 
+function getMongoUri() {
+  if (process.env.MONGODB_URI) return process.env.MONGODB_URI;
+  if (process.env.MONGO_URI) return process.env.MONGO_URI;
+  if (process.env.DATABASE_URL && process.env.DATABASE_URL.startsWith('mongodb')) return process.env.DATABASE_URL;
+
+  // Check for any Vercel integration injected environment variable matching mongodb protocol
+  for (const [key, value] of Object.entries(process.env)) {
+    if (typeof value === 'string' && (value.startsWith('mongodb+srv://') || value.startsWith('mongodb://'))) {
+      console.log(`Auto-detected MongoDB URI from env variable: ${key}`);
+      return value;
+    }
+  }
+
+  // Fallback search for any env key containing 'MONGO'
+  for (const [key, value] of Object.entries(process.env)) {
+    if (/mongo/i.test(key) && typeof value === 'string' && value.includes('mongodb')) {
+      return value;
+    }
+  }
+
+  return null;
+}
+
 async function connectToMongo() {
-  const uri = process.env.MONGODB_URI || process.env.MONGO_URI || process.env.DATABASE_URL;
+  const uri = getMongoUri();
   if (!uri) {
+    console.error('No MongoDB URI found in environment variables. Available keys:', Object.keys(process.env));
     return null;
   }
 

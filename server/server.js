@@ -14,12 +14,17 @@ app.use(express.json());
 // Ensure MongoDB is connected before handling API requests
 app.use('/api', async (req, res, next) => {
   try {
-    await connectToMongo();
+    const conn = await connectToMongo();
+    if (!conn) {
+      return res.status(500).json({ 
+        error: 'MongoDB connection string not found. Please verify that MONGODB_URI is available in Vercel environment variables.'
+      });
+    }
     next();
   } catch (err) {
     console.error('MongoDB connection error:', err);
     res.status(500).json({ 
-      error: 'MongoDB connection failed. Please verify MONGODB_URI in your environment variables.', 
+      error: 'MongoDB connection failed. Please verify your MongoDB credentials and network access.', 
       details: err.message 
     });
   }
