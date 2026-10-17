@@ -10,6 +10,68 @@ const LoyaltyTransaction = require('./models/LoyaltyTransaction');
 const Coupon = require('./models/Coupon');
 const Campaign = require('./models/Campaign');
 const SupportTicket = require('./models/SupportTicket');
+const SystemMeta = require('./models/SystemMeta');
+
+// Helper to retrieve active PIN
+async function getEffectivePin() {
+  try {
+    const meta = await SystemMeta.findOne({ key: 'app_pin' }).lean();
+    if (meta && meta.value) return String(meta.value);
+  } catch (e) {
+    // ignore
+  }
+  return process.env.APP_PIN || '0000';
+}
+
+// =================== PIN SECURITY & AUTH ===================
+router.post('/auth/verify-pin', async (req, res) => {
+  try {
+    const { pin } = req.body;
+    if (!pin && pin !== 0) {
+      return res.status(400).json({ success: false, error: 'পিন কোড প্রদান করুন' });
+    }
+    const currentPin = await getEffectivePin();
+    if (String(pin).trim() === currentPin) {
+      return res.json({ 
+        success: true, 
+        message: 'পিন যাচাই সফল হয়েছে',
+        storeName: 'মিজান স্টেশনারি',
+        authenticatedAt: new Date().toISOString()
+      });
+    } else {
+      return res.status(401).json({ 
+        success: false, 
+        error: 'ভুল পিন কোড! অনুগ্রহ করে সঠিক পিন দিন।' 
+      });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/auth/change-pin', async (req, res) => {
+  try {
+    const { oldPin, newPin } = req.body;
+    if (!oldPin || !newPin) {
+      return res.status(400).json({ error: 'পুরাতন ও নতুন পিন কোড প্রদান করুন' });
+    }
+    if (String(newPin).trim().length < 4) {
+      return res.status(400).json({ error: 'নতুন পিন কোড কমপক্ষে ৪ ডিজিটের হতে হবে' });
+    }
+    const currentPin = await getEffectivePin();
+    if (String(oldPin).trim() !== currentPin) {
+      return res.status(401).json({ error: 'বর্তমান পিন কোড সঠিক নয়' });
+    }
+    await SystemMeta.findOneAndUpdate(
+      { key: 'app_pin' },
+      { value: String(newPin).trim(), updated_at: new Date() },
+      { upsert: true }
+    );
+    res.json({ success: true, message: 'পিন কোড সফলভাবে পরিবর্তন করা হয়েছে।' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 
 // =================== STORES & DEPARTMENTS ===================
 router.get('/stores', async (req, res) => {

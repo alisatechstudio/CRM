@@ -12,8 +12,13 @@ import LoyaltyView from './components/LoyaltyView';
 import CampaignsView from './components/CampaignsView';
 import TicketsView from './components/TicketsView';
 import NewCustomerModal from './components/NewCustomerModal';
+import PinLockScreen from './components/PinLockScreen';
 
 export default function App() {
+  const [isLocked, setIsLocked] = useState(() => {
+    return !sessionStorage.getItem('crm_unlocked');
+  });
+
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [theme, setTheme] = useState('dark');
   const [stores, setStores] = useState([]);
@@ -48,8 +53,20 @@ export default function App() {
   };
 
   useEffect(() => {
-    loadInitialData();
-  }, []);
+    if (!isLocked) {
+      loadInitialData();
+    }
+  }, [isLocked]);
+
+  const handleUnlock = () => {
+    sessionStorage.setItem('crm_unlocked', 'true');
+    setIsLocked(false);
+  };
+
+  const handleLock = () => {
+    sessionStorage.removeItem('crm_unlocked');
+    setIsLocked(true);
+  };
 
   const refreshAnalytics = async (params = {}) => {
     try {
@@ -62,6 +79,10 @@ export default function App() {
 
   return (
     <div className="app-container">
+      {isLocked && (
+        <PinLockScreen onUnlock={handleUnlock} />
+      )}
+
       {/* Navigation Sidebar */}
       <Sidebar
         currentTab={currentTab}
@@ -80,6 +101,7 @@ export default function App() {
           activeStore={activeStore}
           onOpenNewCustomer={() => setShowNewCustomerModal(true)}
           onQuickPOS={() => setCurrentTab('pos')}
+          onLockApp={handleLock}
         />
 
         <main className="content-body">

@@ -1,11 +1,12 @@
 import React from 'react';
-import { UserPlus, ShoppingBag, ShieldCheck, MapPin } from 'lucide-react';
+import { UserPlus, ShoppingBag, ShieldCheck, MapPin, Lock } from 'lucide-react';
 
 export default function TopNav({ 
   currentTab, 
   activeStore, 
   onOpenNewCustomer, 
-  onQuickPOS 
+  onQuickPOS,
+  onLockApp
 }) {
   const titles = {
     dashboard: 'এক্সিকিউটিভ বিআই ড্যাশবোর্ড ও রিটেইল অ্যানালিটিক্স',
@@ -40,6 +41,20 @@ export default function TopNav({
         <button className="btn btn-primary btn-sm" onClick={onOpenNewCustomer}>
           <UserPlus size={15} />
           <span>নতুন মেম্বার যুক্ত করুন</span>
+        </button>
+
+        <button 
+          className="btn btn-secondary btn-sm" 
+          onClick={onLockApp} 
+          title="অ্যাপ্লিকেশন লক করুন"
+          style={{ 
+            color: '#f87171', 
+            borderColor: 'rgba(239, 68, 68, 0.3)',
+            background: 'rgba(239, 68, 68, 0.08)' 
+          }}
+        >
+          <Lock size={14} />
+          <span>লক করুন</span>
         </button>
 
         {/* Staff / Manager Tag */}

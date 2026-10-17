@@ -78,5 +78,9 @@ export const api = {
 
   // Maintenance
   resetData: () => request('/reset-data', { method: 'POST' }),
-  cleanData: () => request('/clean-data', { method: 'POST' })
+  cleanData: () => request('/clean-data', { method: 'POST' }),
+
+  // Auth / PIN
+  verifyPin: (pin) => request('/auth/verify-pin', { method: 'POST', body: JSON.stringify({ pin }) }),
+  changePin: (oldPin, newPin) => request('/auth/change-pin', { method: 'POST', body: JSON.stringify({ oldPin, newPin }) })
 };
