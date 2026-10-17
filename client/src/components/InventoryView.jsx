@@ -14,7 +14,8 @@ import {
   X,
   ArrowUpRight,
   ArrowDownRight,
-  ShieldAlert
+  ShieldAlert,
+  Calendar
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -25,6 +26,9 @@ export default function InventoryView() {
   const [selectedDept, setSelectedDept] = useState('all');
   const [search, setSearch] = useState('');
   const [lowStockOnly, setLowStockOnly] = useState(false);
+  const [expiryFilter, setExpiryFilter] = useState('all');
+  const [expiryFrom, setExpiryFrom] = useState('');
+  const [expiryTo, setExpiryTo] = useState('');
 
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
@@ -78,7 +82,14 @@ export default function InventoryView() {
       setLoading(true);
       setErrorMsg('');
       const [prods, depts] = await Promise.all([
-        api.getProducts({ department_id: selectedDept, search, low_stock: lowStockOnly }),
+        api.getProducts({ 
+          department_id: selectedDept, 
+          search, 
+          low_stock: lowStockOnly,
+          expiry_filter: expiryFilter,
+          expiry_from: expiryFilter === 'custom' ? expiryFrom : undefined,
+          expiry_to: expiryFilter === 'custom' ? expiryTo : undefined
+        }),
         api.getDepartments()
       ]);
       setProducts(prods);
@@ -96,7 +107,7 @@ export default function InventoryView() {
 
   useEffect(() => {
     loadData();
-  }, [selectedDept, search, lowStockOnly]);
+  }, [selectedDept, search, lowStockOnly, expiryFilter, expiryFrom, expiryTo]);
 
   // Quick inline stock increment
   const handleQuickStockAdjust = async (id, change) => {
@@ -262,7 +273,7 @@ export default function InventoryView() {
         </div>
 
         {/* Filter controls */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '1rem', marginTop: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1.2fr 1fr', gap: '1rem', marginTop: '1.25rem' }}>
           <div className="input-group">
             <label className="input-label">এসকেইউ বা বারকোড খুঁজুন</label>
             <div style={{ position: 'relative' }}>
@@ -270,7 +281,7 @@ export default function InventoryView() {
                 type="text"
                 className="form-control"
                 style={{ width: '100%', paddingLeft: '2.4rem' }}
-                placeholder="যেমন: বসুন্ধরা A4, ম্যাটাডোর, ক্যালকুলেটর বা বারকোড..."
+                placeholder="যেমন: বসুন্ধরা A4, ম্যাটাডোর, ক্যালকুলেটর..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -285,10 +296,28 @@ export default function InventoryView() {
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
             >
-              <option value="all">সকল বিভাগ ({products.length} টি পণ্য)</option>
+              <option value="all">সকল বিভাগ</option>
               {departments.map(d => (
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
+            </select>
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">মেয়াদ ফিল্টার (Date Filter)</label>
+            <select 
+              className="form-control"
+              value={expiryFilter}
+              onChange={(e) => setExpiryFilter(e.target.value)}
+            >
+              <option value="all">সকল মেয়াদ স্থিতি</option>
+              <option value="expiring_30">⏳ দ্রুত মেয়াদ শেষ (৩০ দিন)</option>
+              <option value="expiring_60">⏳ ৬০ দিনের মধ্যে শেষ</option>
+              <option value="expiring_90">⏳ ৯০ দিনের মধ্যে শেষ</option>
+              <option value="expired">⚠ ইতিমধ্যে মেয়াদোত্তীর্ণ</option>
+              <option value="has_expiry">✓ মেয়াদ প্রযোজ্য পণ্যসমূহ</option>
+              <option value="no_expiry">🔒 প্রযোজ্য নয় (N/A)</option>
+              <option value="custom">📅 কাস্টম তারিখ রেঞ্জ (Custom)...</option>
             </select>
           </div>
 
@@ -301,10 +330,62 @@ export default function InventoryView() {
               onClick={() => setLowStockOnly(!lowStockOnly)}
             >
               <AlertTriangle size={15} />
-              <span>{lowStockOnly ? 'শুধুমাত্র কম স্টক সতর্কতা' : 'সকল স্টক প্রদর্শিত'}</span>
+              <span>{lowStockOnly ? 'শুধুমাত্র কম স্টক' : 'সকল স্টক প্রদর্শিত'}</span>
             </button>
           </div>
         </div>
+
+        {/* Custom Expiry Date Range Inputs */}
+        {expiryFilter === 'custom' && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.75rem',
+            marginTop: '0.85rem',
+            padding: '0.65rem 1rem',
+            background: 'var(--bg-app)',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-subtle)',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontWeight: 700, fontSize: '0.82rem' }}>
+              <Calendar size={15} /> কাস্টম মেয়াদ ফিল্টার:
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>শুরু:</label>
+              <input 
+                type="date" 
+                className="form-control" 
+                style={{ padding: '0.35rem 0.6rem', fontSize: '0.82rem' }}
+                value={expiryFrom}
+                onChange={(e) => setExpiryFrom(e.target.value)}
+              />
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+              <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>শেষ:</label>
+              <input 
+                type="date" 
+                className="form-control" 
+                style={{ padding: '0.35rem 0.6rem', fontSize: '0.82rem' }}
+                value={expiryTo}
+                onChange={(e) => setExpiryTo(e.target.value)}
+              />
+            </div>
+            {(expiryFrom || expiryTo) && (
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                style={{ padding: '0.3rem 0.65rem', fontSize: '0.75rem' }}
+                onClick={() => { setExpiryFrom(''); setExpiryTo(''); }}
+              >
+                <X size={12} /> ক্লিয়ার
+              </button>
+            )}
+            <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginLeft: 'auto' }}>
+              মোট ফিল্টার্ড পণ্য: {products.length} টি
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Products Table */}

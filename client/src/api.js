@@ -20,7 +20,10 @@ export async function request(endpoint, options = {}) {
 
 export const api = {
   // Analytics
-  getAnalytics: () => request('/analytics'),
+  getAnalytics: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return request(`/analytics${qs ? `?${qs}` : ''}`);
+  },
 
   // Stores & Departments
   getStores: () => request('/stores'),

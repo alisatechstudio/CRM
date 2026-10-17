@@ -51,9 +51,9 @@ export default function App() {
     loadInitialData();
   }, []);
 
-  const refreshAnalytics = async () => {
+  const refreshAnalytics = async (params = {}) => {
     try {
-      const an = await api.getAnalytics();
+      const an = await api.getAnalytics(params);
       setAnalytics(an);
     } catch (err) {
       console.error(err);
@@ -101,6 +101,7 @@ export default function App() {
               analytics={analytics}
               onSelectCustomer={(id) => setSelectedCustomerId(id)}
               onOpenReceipt={(orderId) => setSelectedReceiptId(orderId)}
+              onRefreshAnalytics={refreshAnalytics}
             />
           )}
 

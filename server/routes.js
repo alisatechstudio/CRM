@@ -246,7 +246,7 @@ router.post('/customers/:id/points', (req, res) => {
 // =================== PRODUCTS & INVENTORY ===================
 router.get('/products', (req, res) => {
   try {
-    const { department_id, search, low_stock } = req.query;
+    const { department_id, search, low_stock, expiry_filter, expiry_from, expiry_to } = req.query;
     let query = `
       SELECT p.*, d.name as department_name, d.code as department_code
       FROM products p
@@ -268,6 +268,35 @@ router.get('/products', (req, res) => {
 
     if (low_stock === 'true') {
       query += ` AND p.stock_qty <= p.min_threshold`;
+    }
+
+    // Expiry Date Filtering
+    const today = new Date().toISOString().split('T')[0];
+    if (expiry_filter === 'has_expiry') {
+      query += ` AND p.has_expiry = 1 AND p.expiry_date IS NOT NULL`;
+    } else if (expiry_filter === 'no_expiry') {
+      query += ` AND (p.has_expiry = 0 OR p.has_expiry IS NULL)`;
+    } else if (expiry_filter === 'expired') {
+      query += ` AND p.has_expiry = 1 AND p.expiry_date IS NOT NULL AND p.expiry_date < ?`;
+      params.push(today);
+    } else if (expiry_filter === 'expiring_30') {
+      query += ` AND p.has_expiry = 1 AND p.expiry_date IS NOT NULL AND p.expiry_date >= ? AND p.expiry_date <= date(?, '+30 days')`;
+      params.push(today, today);
+    } else if (expiry_filter === 'expiring_60') {
+      query += ` AND p.has_expiry = 1 AND p.expiry_date IS NOT NULL AND p.expiry_date >= ? AND p.expiry_date <= date(?, '+60 days')`;
+      params.push(today, today);
+    } else if (expiry_filter === 'expiring_90') {
+      query += ` AND p.has_expiry = 1 AND p.expiry_date IS NOT NULL AND p.expiry_date >= ? AND p.expiry_date <= date(?, '+90 days')`;
+      params.push(today, today);
+    }
+
+    if (expiry_from) {
+      query += ` AND p.has_expiry = 1 AND p.expiry_date >= ?`;
+      params.push(expiry_from);
+    }
+    if (expiry_to) {
+      query += ` AND p.has_expiry = 1 AND p.expiry_date <= ?`;
+      params.push(expiry_to);
     }
 
     query += ` ORDER BY p.name ASC`;
@@ -693,7 +722,7 @@ router.post('/pos/checkout', (req, res) => {
 // =================== ORDERS & RECEIPTS ===================
 router.get('/orders', (req, res) => {
   try {
-    const { customer_id, limit = 50 } = req.query;
+    const { customer_id, limit = 50, start_date, end_date } = req.query;
     let query = `
       SELECT o.*, 
         c.first_name as customer_first_name, 
@@ -703,12 +732,23 @@ router.get('/orders', (req, res) => {
       FROM orders o
       LEFT JOIN customers c ON c.id = o.customer_id
       LEFT JOIN stores s ON s.id = o.store_id
+      WHERE 1=1
     `;
     const params = [];
 
     if (customer_id) {
-      query += ` WHERE o.customer_id = ?`;
+      query += ` AND o.customer_id = ?`;
       params.push(customer_id);
+    }
+
+    if (start_date) {
+      query += ` AND date(o.created_at) >= ?`;
+      params.push(start_date);
+    }
+
+    if (end_date) {
+      query += ` AND date(o.created_at) <= ?`;
+      params.push(end_date);
     }
 
     query += ` ORDER BY o.created_at DESC LIMIT ?`;
@@ -1015,6 +1055,37 @@ router.patch('/tickets/:id', (req, res) => {
 // =================== EXECUTIVE BI ANALYTICS ===================
 router.get('/analytics', (req, res) => {
   try {
+    const { period, from_date, to_date } = req.query;
+    let orderDateClause = '1=1';
+    const orderParams = [];
+
+    const today = new Date().toISOString().split('T')[0];
+    if (period === 'today') {
+      orderDateClause = "date(created_at) = ?";
+      orderParams.push(today);
+    } else if (period === 'yesterday') {
+      orderDateClause = "date(created_at) = date(?, '-1 day')";
+      orderParams.push(today);
+    } else if (period === 'last_7_days') {
+      orderDateClause = "date(created_at) >= date(?, '-7 days') AND date(created_at) <= ?";
+      orderParams.push(today, today);
+    } else if (period === 'last_30_days') {
+      orderDateClause = "date(created_at) >= date(?, '-30 days') AND date(created_at) <= ?";
+      orderParams.push(today, today);
+    } else if (period === 'this_month') {
+      orderDateClause = "strftime('%Y-%m', created_at) = strftime('%Y-%m', ?)";
+      orderParams.push(today);
+    } else if (from_date && to_date) {
+      orderDateClause = "date(created_at) >= ? AND date(created_at) <= ?";
+      orderParams.push(from_date, to_date);
+    } else if (from_date) {
+      orderDateClause = "date(created_at) >= ?";
+      orderParams.push(from_date);
+    } else if (to_date) {
+      orderDateClause = "date(created_at) <= ?";
+      orderParams.push(to_date);
+    }
+
     // 1. High level KPIs
     const customerStats = db.prepare(`
       SELECT 
@@ -1037,7 +1108,8 @@ router.get('/analytics', (req, res) => {
         COALESCE(AVG(total), 0) as avg_basket_size,
         COALESCE(SUM(discount_amount + points_discount), 0) as total_discounts_given
       FROM orders
-    `).get();
+      WHERE ${orderDateClause}
+    `).get(...orderParams);
 
     // 2. Department-wise Revenue Breakdown
     const deptSales = db.prepare(`
@@ -1047,9 +1119,11 @@ router.get('/analytics', (req, res) => {
         SUM(oi.quantity) as units_sold,
         ROUND(SUM(oi.total_price), 2) as revenue
       FROM order_items oi
+      JOIN orders o ON o.id = oi.order_id
+      WHERE ${orderDateClause.replace(/created_at/g, 'o.created_at')}
       GROUP BY oi.department_name
       ORDER BY revenue DESC
-    `).all();
+    `).all(...orderParams);
 
     // 3. Customer Tier Distribution
     const tierDistribution = [
@@ -1075,15 +1149,16 @@ router.get('/analytics', (req, res) => {
       LIMIT 5
     `).all();
 
-    // 6. Recent Orders
+    // 6. Recent Orders in selected period
     const recentOrders = db.prepare(`
       SELECT o.*, c.first_name, c.last_name, c.card_number, s.name as store_name
       FROM orders o
       LEFT JOIN customers c ON c.id = o.customer_id
       LEFT JOIN stores s ON s.id = o.store_id
+      WHERE ${orderDateClause.replace(/created_at/g, 'o.created_at')}
       ORDER BY o.created_at DESC
-      LIMIT 6
-    `).all();
+      LIMIT 8
+    `).all(...orderParams);
 
     // 7. Support Ticket summary
     const ticketSummary = db.prepare(`

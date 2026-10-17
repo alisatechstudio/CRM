@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { 
   DollarSign, 
   ShoppingBag, 
@@ -8,10 +8,16 @@ import {
   AlertTriangle, 
   ArrowUpRight, 
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  Calendar,
+  Filter
 } from 'lucide-react';
 
-export default function DashboardView({ analytics, onSelectCustomer, onOpenReceipt }) {
+export default function DashboardView({ analytics, onSelectCustomer, onOpenReceipt, onRefreshAnalytics }) {
+  const [period, setPeriod] = useState('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
+
   if (!analytics) {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
@@ -24,6 +30,28 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
   }
 
   const { kpis, deptSales = [], tierDistribution = [], topSpenders = [], recentOrders = [], ticketSummary = {} } = analytics;
+
+  const handlePeriodChange = (newPeriod) => {
+    setPeriod(newPeriod);
+    if (newPeriod !== 'custom' && onRefreshAnalytics) {
+      onRefreshAnalytics({ period: newPeriod });
+    }
+  };
+
+  const handleCustomDateApply = () => {
+    if ((fromDate || toDate) && onRefreshAnalytics) {
+      onRefreshAnalytics({ from_date: fromDate, to_date: toDate });
+    }
+  };
+
+  const handleCustomDateClear = () => {
+    setFromDate('');
+    setToDate('');
+    setPeriod('all');
+    if (onRefreshAnalytics) {
+      onRefreshAnalytics({ period: 'all' });
+    }
+  };
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
@@ -60,6 +88,92 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Date Filter Bar */}
+      <div className="glass-panel" style={{ 
+        padding: '0.85rem 1.25rem', 
+        display: 'flex', 
+        alignItems: 'center', 
+        justifyContent: 'space-between', 
+        flexWrap: 'wrap', 
+        gap: '0.75rem',
+        border: '1px solid var(--border-subtle)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Calendar size={18} style={{ color: 'var(--primary)' }} />
+          <span style={{ fontWeight: 700, fontSize: '0.88rem' }}>বিক্রয় ও রিপোর্ট সময়কাল ফিল্টার:</span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+          {[
+            { id: 'all', label: 'সব সময় (All)' },
+            { id: 'today', label: 'আজ (Today)' },
+            { id: 'yesterday', label: 'গতকাল' },
+            { id: 'last_7_days', label: 'বিগত ৭ দিন' },
+            { id: 'last_30_days', label: 'বিগত ৩০ দিন' },
+            { id: 'this_month', label: 'চলতি মাস' },
+            { id: 'custom', label: 'কাস্টম তারিখ...' }
+          ].map(item => (
+            <button
+              key={item.id}
+              type="button"
+              className={`btn ${period === item.id ? 'btn-primary' : 'btn-secondary'}`}
+              style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', height: '34px' }}
+              onClick={() => handlePeriodChange(item.id)}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
+
+        {period === 'custom' && (
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '0.6rem', 
+            width: '100%', 
+            marginTop: '0.5rem', 
+            paddingTop: '0.65rem', 
+            borderTop: '1px solid var(--border-subtle)', 
+            flexWrap: 'wrap' 
+          }}>
+            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>তারিখ থেকে:</label>
+            <input 
+              type="date" 
+              className="form-control" 
+              style={{ padding: '0.35rem 0.6rem', fontSize: '0.82rem', width: 'auto' }} 
+              value={fromDate} 
+              onChange={e => setFromDate(e.target.value)} 
+            />
+            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>তারিখ পর্যন্ত:</label>
+            <input 
+              type="date" 
+              className="form-control" 
+              style={{ padding: '0.35rem 0.6rem', fontSize: '0.82rem', width: 'auto' }} 
+              value={toDate} 
+              onChange={e => setToDate(e.target.value)} 
+            />
+            <button 
+              type="button" 
+              className="btn btn-primary" 
+              style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }} 
+              onClick={handleCustomDateApply}
+            >
+              প্রয়োগ করুন
+            </button>
+            {(fromDate || toDate) && (
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                style={{ padding: '0.35rem 0.65rem', fontSize: '0.8rem' }} 
+                onClick={handleCustomDateClear}
+              >
+                রিসেট
+              </button>
+            )}
+          </div>
+        )}
       </div>
 
       {/* KPI Cards Grid */}
