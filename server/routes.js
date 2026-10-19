@@ -88,6 +88,9 @@ router.get('/stores', async (req, res) => {
 });
 
 const DEFAULT_DEPARTMENTS = [
+  { id: 'dept_cosmetics', name: 'কসমেটিকস ও রূপচর্চা', code: 'COSM', icon: 'Sparkles', description: 'ফেসওয়াশ, লোশন, ক্রিম, শ্যাম্পু, পারফিউম, লিপস্টিক ও স্কিন কেয়ার' },
+  { id: 'dept_gifts', name: 'গিফট আইটেম ও খেলনা', code: 'GIFT', icon: 'Gift', description: 'ফটোফ্রেম, শোপিস, কাস্টমাইজড মগ, হাতঘড়ি, খেলনা ও গিফট বক্স' },
+  { id: 'dept_computer', name: 'কম্পিউটার ও ডিজিটাল সামগ্রী', code: 'COMP', icon: 'Monitor', description: 'মাউস, কিবোর্ড, পেনড্রাইভ, হেডফোন, ইউএসবি ক্যাবল ও চার্জার' },
   { id: 'dept_paper', name: 'খাতা, ডায়েরি ও কাগজ সামগ্রী', code: 'PAPR', icon: 'BookOpen', description: 'লেকচার খাতা, স্পাইরাল নোটবুক, এ৪ রিম পেপার ও এক্সিকিউটিভ ডায়েরি' },
   { id: 'dept_pens', name: 'কলম, পেন্সিল ও মার্কার', code: 'PENS', icon: 'Edit3', description: 'বলপেন, জেল পেন, রোলিং বল, ড্রয়িং পেন্সিল ও হাইলাইটার' },
   { id: 'dept_art', name: 'আর্ট, ক্রাফট ও ড্রয়িং', code: 'ARTS', icon: 'Palette', description: 'জলরং, এক্রিলিক, ক্যানভাস, তুলি, গ্লু গান ও পোস্টার পেপার' },
@@ -97,15 +100,14 @@ const DEFAULT_DEPARTMENTS = [
 
 router.get('/departments', async (req, res) => {
   try {
-    let depts = await Department.find().sort({ name: 1 }).lean();
-    if (!depts || depts.length === 0) {
-      try {
-        await Department.insertMany(DEFAULT_DEPARTMENTS);
-        depts = await Department.find().sort({ name: 1 }).lean();
-      } catch (insertErr) {
-        depts = DEFAULT_DEPARTMENTS;
-      }
+    for (const d of DEFAULT_DEPARTMENTS) {
+      await Department.updateOne(
+        { id: d.id },
+        { $setOnInsert: d },
+        { upsert: true }
+      );
     }
+    let depts = await Department.find().sort({ id: 1 }).lean();
     res.json(depts && depts.length > 0 ? depts : DEFAULT_DEPARTMENTS);
   } catch (err) {
     res.json(DEFAULT_DEPARTMENTS);

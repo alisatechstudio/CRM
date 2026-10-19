@@ -86,18 +86,41 @@ async function seedMongoIfEmpty(force = false) {
 
       const storeCount = await Store.countDocuments();
       if (storeCount > 0) {
-        const deptCount = await Department.countDocuments();
-        if (deptCount === 0) {
-          console.log('Departments collection is empty. Seeding stationery departments...');
-          await Department.insertMany([
-            { id: 'dept_paper', name: 'খাতা, ডায়েরি ও কাগজ সামগ্রী', code: 'PAPR', icon: 'BookOpen', description: 'লেকচার খাতা, স্পাইরাল নোটবুক, এ৪ রিম পেপার ও এক্সিকিউটিভ ডায়েরি' },
-            { id: 'dept_pens', name: 'কলম, পেন্সিল ও মার্কার', code: 'PENS', icon: 'Edit3', description: 'বলপেন, জেল পেন, রোলিং বল, ড্রয়িং পেন্সিল ও হাইলাইটার' },
-            { id: 'dept_art', name: 'আর্ট, ক্রাফট ও ড্রয়িং', code: 'ARTS', icon: 'Palette', description: 'জলরং, এক্রিলিক, ক্যানভাস, তুলি, গ্লু গান ও পোস্টার পেপার' },
-            { id: 'dept_office', name: 'অফিস সাপ্লাই ও ফাইল ফোল্ডার', code: 'OFFC', icon: 'Folder', description: 'বক্স ফাইল, পাঞ্চিং মেশিন, স্ট্যাপলার, ক্লিপবোর্ড ও ডেস্ক অর্গানাইজার' },
-            { id: 'dept_tools', name: 'ক্যালকুলেটর, জ্যামিতি ও ব্যাগ', code: 'TOOL', icon: 'Briefcase', description: 'সায়েন্টিফিক ক্যালকুলেটর, জ্যামিতি বক্স, মেটাল স্কেল ও স্কুল ব্যাকপ্যাক' }
+        // Ensure all default departments exist
+        const defaultDepts = [
+          { id: 'dept_cosmetics', name: 'কসমেটিকস ও রূপচর্চা', code: 'COSM', icon: 'Sparkles', description: 'ফেসওয়াশ, লোশন, ক্রিম, শ্যাম্পু, পারফিউম, লিপস্টিক ও স্কিন কেয়ার' },
+          { id: 'dept_gifts', name: 'গিফট আইটেম ও খেলনা', code: 'GIFT', icon: 'Gift', description: 'ফটোফ্রেম, শোপিস, কাস্টমাইজড মগ, হাতঘড়ি, খেলনা ও গিফট বক্স' },
+          { id: 'dept_computer', name: 'কম্পিউটার ও ডিজিটাল সামগ্রী', code: 'COMP', icon: 'Monitor', description: 'মাউস, কিবোর্ড, পেনড্রাইভ, হেডফোন, ইউএসবি ক্যাবল ও চার্জার' },
+          { id: 'dept_paper', name: 'খাতা, ডায়েরি ও কাগজ সামগ্রী', code: 'PAPR', icon: 'BookOpen', description: 'লেকচার খাতা, স্পাইরাল নোটবুক, এ৪ রিম পেপার ও এক্সিকিউটিভ ডায়েরি' },
+          { id: 'dept_pens', name: 'কলম, পেন্সিল ও মার্কার', code: 'PENS', icon: 'Edit3', description: 'বলপেন, জেল পেন, রোলিং বল, ড্রয়িং পেন্সিল ও হাইলাইটার' },
+          { id: 'dept_art', name: 'আর্ট, ক্রাফট ও ড্রয়িং', code: 'ARTS', icon: 'Palette', description: 'জলরং, এক্রিলিক, ক্যানভাস, তুলি, গ্লু গান ও পোস্টার পেপার' },
+          { id: 'dept_office', name: 'অফিস সাপ্লাই ও ফাইল ফোল্ডার', code: 'OFFC', icon: 'Folder', description: 'বক্স ফাইল, পাঞ্চিং মেশিন, স্ট্যাপলার, ক্লিপবোর্ড ও ডেস্ক অর্গানাইজার' },
+          { id: 'dept_tools', name: 'ক্যালকুলেটর, জ্যামিতি ও ব্যাগ', code: 'TOOL', icon: 'Briefcase', description: 'সায়েন্টিফিক ক্যালকুলেটর, জ্যামিতি বক্স, মেটাল স্কেল ও স্কুল ব্যাকপ্যাক' }
+        ];
+        for (const d of defaultDepts) {
+          await Department.updateOne({ id: d.id }, { $setOnInsert: d }, { upsert: true });
+        }
+
+        // Check if cosmetics & gifts sample products are present, if not add a few
+        const cosCount = await Product.countDocuments({ department_id: 'dept_cosmetics' });
+        if (cosCount === 0) {
+          await Product.insertMany([
+            { id: 'prod_cos01', barcode: '890600101', name: 'পন্ডস হোয়াইট বিউটি ফেসওয়াশ (১০০ গ্রাম)', department_id: 'dept_cosmetics', category: 'ফেসওয়াশ ও ক্লিনজার', price: 230.00, cost: 175.00, stock_qty: 45, min_threshold: 10, unit: 'টিউব', expiry_date: '2027-12-31', has_expiry: 1 },
+            { id: 'prod_cos02', barcode: '890600102', name: 'নিভিয়া নারিশিং বডি মিল্ক লোশন (২০০ মিলি)', department_id: 'dept_cosmetics', category: 'ক্রিম, লোশন ও ময়েশ্চারাইজার', price: 380.00, cost: 290.00, stock_qty: 35, min_threshold: 8, unit: 'বোতল', expiry_date: '2028-06-30', has_expiry: 1 },
+            { id: 'prod_cos03', barcode: '890600103', name: 'ফগ রয়েল লং লাস্টিং বডি স্প্রে (১২০ মিলি)', department_id: 'dept_cosmetics', category: 'পারফিউম, বডি স্প্রে ও আতর', price: 320.00, cost: 240.00, stock_qty: 40, min_threshold: 10, unit: 'ক্যান', expiry_date: '2028-12-31', has_expiry: 1 }
           ]);
         }
-        console.log('MongoDB already has store data. Skipping seed.');
+
+        const gftCount = await Product.countDocuments({ department_id: 'dept_gifts' });
+        if (gftCount === 0) {
+          await Product.insertMany([
+            { id: 'prod_gft01', barcode: '890700101', name: 'রোমান্টিক মার্বেল ডিজাইন কাপল ফটোফ্রেম (৮x১০ ইঞ্চি)', department_id: 'dept_gifts', category: 'ফটোফ্রেম ও ওয়ালমেট', price: 450.00, cost: 280.00, stock_qty: 25, min_threshold: 5, unit: 'পিস', expiry_date: null, has_expiry: 0 },
+            { id: 'prod_gft02', barcode: '890700102', name: 'ম্যাজিক কালার চেঞ্জিং প্রিন্টেড সিরামিক মগ', department_id: 'dept_gifts', category: 'কাস্টমাইজড মগ ও কাপ', price: 280.00, cost: 160.00, stock_qty: 35, min_threshold: 8, unit: 'পিস', expiry_date: null, has_expiry: 0 },
+            { id: 'prod_gft03', barcode: '890700103', name: 'কিউট পোলার টেডি বিয়ার সফট টয় (১২ ইঞ্চি)', department_id: 'dept_gifts', category: 'খেলনা ও টেডি বিয়ার', price: 550.00, cost: 340.00, stock_qty: 20, min_threshold: 5, unit: 'পিস', expiry_date: null, has_expiry: 0 }
+          ]);
+        }
+
+        console.log('MongoDB store data and departments verified.');
         return;
       }
     }
@@ -117,6 +140,9 @@ async function seedMongoIfEmpty(force = false) {
 
     // Departments
     await Department.insertMany([
+      { id: 'dept_cosmetics', name: 'কসমেটিকস ও রূপচর্চা', code: 'COSM', icon: 'Sparkles', description: 'ফেসওয়াশ, লোশন, ক্রিম, শ্যাম্পু, পারফিউম, লিপস্টিক ও স্কিন কেয়ার' },
+      { id: 'dept_gifts', name: 'গিফট আইটেম ও খেলনা', code: 'GIFT', icon: 'Gift', description: 'ফটোফ্রেম, শোপিস, কাস্টমাইজড মগ, হাতঘড়ি, খেলনা ও গিফট বক্স' },
+      { id: 'dept_computer', name: 'কম্পিউটার ও ডিজিটাল সামগ্রী', code: 'COMP', icon: 'Monitor', description: 'মাউস, কিবোর্ড, পেনড্রাইভ, হেডফোন, ইউএসবি ক্যাবল ও চার্জার' },
       { id: 'dept_paper', name: 'খাতা, ডায়েরি ও কাগজ সামগ্রী', code: 'PAPR', icon: 'BookOpen', description: 'লেকচার খাতা, স্পাইরাল নোটবুক, এ৪ রিম পেপার ও এক্সিকিউটিভ ডায়েরি' },
       { id: 'dept_pens', name: 'কলম, পেন্সিল ও মার্কার', code: 'PENS', icon: 'Edit3', description: 'বলপেন, জেল পেন, রোলিং বল, ড্রয়িং পেন্সিল ও হাইলাইটার' },
       { id: 'dept_art', name: 'আর্ট, ক্রাফট ও ড্রয়িং', code: 'ARTS', icon: 'Palette', description: 'জলরং, এক্রিলিক, ক্যানভাস, তুলি, গ্লু গান ও পোস্টার পেপার' },

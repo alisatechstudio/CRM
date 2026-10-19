@@ -77,7 +77,7 @@ export default function InventoryView() {
     ];
 
     const unique = Array.from(new Set(all.filter(Boolean)));
-    return unique.length > 0 ? unique : ['সাধারণ স্টেশনারি', 'অন্যান্য'];
+    return unique.length > 0 ? unique : ['সাধারণ ক্যাটাগরি', 'অন্যান্য'];
   };
 
   // Modal states
@@ -188,7 +188,7 @@ export default function InventoryView() {
       ? selectedDept 
       : (activeDepartments[0]?.id || 'dept_paper');
     const deptCats = getCategoriesForDept(defaultDept);
-    const initialCategory = deptCats[0] || 'সাধারণ স্টেশনারি';
+    const initialCategory = deptCats[0] || 'সাধারণ ক্যাটাগরি';
 
     setNewProd({
       name: '',
@@ -211,7 +211,7 @@ export default function InventoryView() {
   // When Department changes in Add Modal
   const handleNewProdDeptChange = (deptId) => {
     const deptCats = getCategoriesForDept(deptId);
-    const firstCat = deptCats[0] || 'সাধারণ স্টেশনারি';
+    const firstCat = deptCats[0] || 'সাধারণ ক্যাটাগরি';
     setNewProd(prev => ({
       ...prev,
       department_id: deptId,
@@ -933,7 +933,7 @@ export default function InventoryView() {
                     <select 
                       className="form-control"
                       required
-                      value={newProd.department_id || activeDepartments[0]?.id || 'dept_paper'}
+                      value={newProd.department_id || activeDepartments[0]?.id || 'dept_cosmetics'}
                       onChange={(e) => handleNewProdDeptChange(e.target.value)}
                     >
                       {activeDepartments.map(d => (
@@ -1238,7 +1238,7 @@ export default function InventoryView() {
                           onClick={() => {
                             setIsCustomEditCategory(false);
                             const cats = getCategoriesForDept(editForm.department_id, editingProduct?.category);
-                            setEditForm(prev => ({ ...prev, category: cats[0] || 'সাধারণ স্টেশনারি' }));
+                            setEditForm(prev => ({ ...prev, category: cats[0] || 'সাধারণ ক্যাটাগরি' }));
                           }}
                           style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
                         >
