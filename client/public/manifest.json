@@ -1,0 +1,83 @@
+{
+  "id": "/?source=pwa",
+  "name": "মিজান কম্পিউটার অ্যান্ড কসমেটিকস — CRM & POS",
+  "short_name": "Mijan CRM",
+  "description": "মিজান কম্পিউটার অ্যান্ড কসমেটিকস এর রিটেইল সিআরএম, বিলিং, স্টক ইনভেন্টরি ও পিওএস সফটওয়্যার",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b0f19",
+  "theme_color": "#0b0f19",
+  "lang": "bn",
+  "dir": "ltr",
+  "categories": [
+    "business",
+    "finance",
+    "productivity",
+    "shopping"
+  ],
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "পিওএস ক্যাশ কাউন্টার (POS)",
+      "short_name": "POS",
+      "description": "দ্রুত বিক্রয় বিলিং ও বারকোড স্ক্যান",
+      "url": "/?tab=pos",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "ইনভেন্টরি স্টক (Inventory)",
+      "short_name": "ইনভেন্টরি",
+      "description": "পণ্য স্টক ও মূল্য তালিকা",
+      "url": "/?tab=inventory",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "ড্যাশবোর্ড (Dashboard)",
+      "short_name": "ড্যাশবোর্ড",
+      "description": "দৈনিক বিক্রয় ও আয়-ব্যয় রিপোর্ট",
+      "url": "/?tab=dashboard",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "কাস্টমার ম্যানেজমেন্ট (Customers)",
+      "short_name": "কাস্টমার",
+      "description": "গ্রাহক প্রোফাইল ও লয়াল্টি পয়েন্ট",
+      "url": "/?tab=customers",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    }
+  ],
+  "prefer_related_applications": false
+}

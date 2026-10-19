@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserPlus, ShoppingBag, ShieldCheck, MapPin, Lock, Menu, Sparkles } from 'lucide-react';
+import { UserPlus, ShoppingBag, ShieldCheck, MapPin, Lock, Menu, Sparkles, Download } from 'lucide-react';
 
 export default function TopNav({ 
   currentTab, 
@@ -7,7 +7,8 @@ export default function TopNav({
   onOpenNewCustomer, 
   onQuickPOS,
   onLockApp,
-  onOpenMobileMenu
+  onOpenMobileMenu,
+  onOpenInstallModal
 }) {
   const titles = {
     dashboard: 'এক্সিকিউটিভ বিআই ড্যাশবোর্ড',
@@ -55,6 +56,16 @@ export default function TopNav({
             <span>পিওএস</span>
           </button>
         )}
+
+        {/* Install PWA Button (Mobile & Desktop) */}
+        <button 
+          className="btn btn-sm top-nav-action-btn install-pwa-btn" 
+          onClick={onOpenInstallModal}
+          title="মোবাইল বা কম্পিউটারে অ্যাপ হিসেবে ইনস্টল করুন"
+        >
+          <Download size={14} />
+          <span className="desktop-btn-text">অ্যাপ ইনস্টল</span>
+        </button>
 
         {/* New Member Button (Icon on mobile, text on desktop) */}
         <button 

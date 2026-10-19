@@ -14,6 +14,7 @@ import TicketsView from './components/TicketsView';
 import NewCustomerModal from './components/NewCustomerModal';
 import PinLockScreen from './components/PinLockScreen';
 import MobileBottomNav from './components/MobileBottomNav';
+import InstallPwaModal from './components/InstallPwaModal';
 
 export default function App() {
   const [isLocked, setIsLocked] = useState(() => {
@@ -26,6 +27,7 @@ export default function App() {
   const [stores, setStores] = useState([]);
   const [activeStore, setActiveStore] = useState(null);
   const [analytics, setAnalytics] = useState(null);
+  const [showInstallModal, setShowInstallModal] = useState(false);
 
   // Modals state
   const [selectedCustomerId, setSelectedCustomerId] = useState(null);
@@ -99,6 +101,7 @@ export default function App() {
         setActiveStore={setActiveStore}
         isOpen={mobileSidebarOpen}
         onClose={() => setMobileSidebarOpen(false)}
+        onOpenInstallModal={() => setShowInstallModal(true)}
       />
 
       {/* Main App Canvas */}
@@ -113,6 +116,7 @@ export default function App() {
           }}
           onLockApp={handleLock}
           onOpenMobileMenu={() => setMobileSidebarOpen(true)}
+          onOpenInstallModal={() => setShowInstallModal(true)}
         />
 
         <main className="content-body">
@@ -189,6 +193,13 @@ export default function App() {
             refreshAnalytics();
             setSelectedCustomerId(newCust.id);
           }}
+        />
+      )}
+
+      {/* PWA App Install Modal */}
+      {showInstallModal && (
+        <InstallPwaModal 
+          onClose={() => setShowInstallModal(false)} 
         />
       )}
 

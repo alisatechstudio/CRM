@@ -11,7 +11,8 @@ import {
   Sun, 
   Moon, 
   Sparkles,
-  X
+  X,
+  Download
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -23,7 +24,8 @@ export default function Sidebar({
   activeStore, 
   setActiveStore,
   isOpen = false,
-  onClose
+  onClose,
+  onOpenInstallModal
 }) {
   const navItems = [
     { id: 'dashboard', label: 'এক্সিকিউটিভ ড্যাশবোর্ড', icon: LayoutDashboard },
@@ -135,7 +137,28 @@ export default function Sidebar({
             </div>
           </div>
 
-          <div style={{ marginTop: '0.25rem' }}>
+          <div style={{ marginTop: '0.35rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <button 
+              type="button"
+              className="btn btn-secondary btn-sm" 
+              style={{ 
+                width: '100%', 
+                justifyContent: 'center',
+                background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.15) 0%, rgba(139, 92, 246, 0.12) 100%)',
+                borderColor: 'rgba(99, 102, 241, 0.35)',
+                color: '#a5b4fc',
+                fontWeight: 600
+              }}
+              title="মোবাইল বা কম্পিউটারে অ্যাপ হিসেবে ইনস্টল করুন"
+              onClick={() => {
+                if (onClose) onClose();
+                if (onOpenInstallModal) onOpenInstallModal();
+              }}
+            >
+              <Download size={15} />
+              <span>অ্যাপ ইনস্টল করুন</span>
+            </button>
+
             <button 
               type="button"
               className="btn btn-secondary btn-sm" 
