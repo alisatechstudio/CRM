@@ -23,7 +23,9 @@ export default function App() {
 
   const [currentTab, setCurrentTab] = useState('dashboard');
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('crm_theme') || 'light';
+  });
   const [stores, setStores] = useState([]);
   const [activeStore, setActiveStore] = useState(null);
   const [analytics, setAnalytics] = useState(null);
@@ -34,9 +36,10 @@ export default function App() {
   const [selectedReceiptId, setSelectedReceiptId] = useState(null);
   const [showNewCustomerModal, setShowNewCustomerModal] = useState(false);
 
-  // Set theme on root
+  // Set theme on root and persist preference
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('crm_theme', theme);
   }, [theme]);
 
   // Initial load
