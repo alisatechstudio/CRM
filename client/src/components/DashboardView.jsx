@@ -54,7 +54,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.75rem' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Top Welcome Banner */}
       <div className="glass-panel" style={{ 
         background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(236, 72, 153, 0.08) 100%)',
@@ -62,28 +62,29 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '1.25rem 1.75rem'
+        padding: '1.35rem 1.75rem',
+        borderRadius: 'var(--radius-lg)'
       }}>
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             <Sparkles size={14} /> মিজান কম্পিউটার অ্যান্ড কসমেটিকস • সেলস ও সিআরএম ইন্টেলিজেন্স
           </div>
-          <h1 style={{ fontSize: '1.6rem', margin: '0.25rem 0' }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস (Mijan Computer & Cosmetics) সামগ্রিক পারফরম্যান্স</h1>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
+          <h1 style={{ fontSize: '1.55rem', margin: '0.35rem 0 0.25rem', fontWeight: 800 }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস (Mijan Computer & Cosmetics) সামগ্রিক পারফরম্যান্স</h1>
+          <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
             কম্পিউটার এক্সেসরিজ, কসমেটিকস, স্টেশনারি ও প্রসাধনী সামগ্রীর লাইভ সেলস ও কাস্টমার ট্র্যাকিং।
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem' }}>
+        <div style={{ display: 'flex', gap: '1rem', flexShrink: 0 }}>
           <div style={{ 
             textAlign: 'right', 
-            padding: '0.5rem 1rem', 
+            padding: '0.65rem 1.15rem', 
             background: 'var(--bg-surface)', 
             borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border-subtle)'
           }}>
-            <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)', fontWeight: 600 }}>সিএসএটি সন্তুষ্টি</div>
-            <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--success)' }}>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>সিএসএটি সন্তুষ্টি</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--success)', marginTop: '0.15rem' }}>
               ★ {ticketSummary.avgCsat || '4.8'} / ৫.০
             </div>
           </div>
@@ -92,20 +93,29 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
 
       {/* Date Filter Bar */}
       <div className="glass-panel" style={{ 
-        padding: '0.85rem 1.25rem', 
+        padding: '0.9rem 1.5rem', 
         display: 'flex', 
         alignItems: 'center', 
         justifyContent: 'space-between', 
         flexWrap: 'wrap', 
-        gap: '0.75rem',
+        gap: '0.85rem',
         border: '1px solid var(--border-subtle)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
           <Calendar size={18} style={{ color: 'var(--primary)' }} />
-          <span style={{ fontWeight: 700, fontSize: '0.88rem' }}>বিক্রয় ও রিপোর্ট সময়কাল ফিল্টার:</span>
+          <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>বিক্রয় ও রিপোর্ট সময়কাল ফিল্টার:</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+        <div style={{ 
+          display: 'flex', 
+          alignItems: 'center', 
+          gap: '0.35rem', 
+          flexWrap: 'wrap',
+          background: 'var(--bg-surface)',
+          padding: '0.3rem',
+          borderRadius: 'var(--radius-md)',
+          border: '1px solid var(--border-subtle)'
+        }}>
           {[
             { id: 'all', label: 'সব সময় (All)' },
             { id: 'today', label: 'আজ (Today)' },
@@ -119,7 +129,13 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
               key={item.id}
               type="button"
               className={`btn ${period === item.id ? 'btn-primary' : 'btn-secondary'}`}
-              style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem', height: '34px' }}
+              style={{ 
+                padding: '0.35rem 0.8rem', 
+                fontSize: '0.8rem', 
+                height: '32px',
+                border: period === item.id ? 'none' : '1px solid transparent',
+                borderRadius: 'var(--radius-sm)'
+              }}
               onClick={() => handlePeriodChange(item.id)}
             >
               {item.label}
@@ -238,66 +254,112 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       </div>
 
       {/* 2-Column: Department Sales & Loyalty Tiers */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1.35fr 1fr', gap: '1.5rem', alignItems: 'stretch' }}>
         {/* Department Revenue Breakdown */}
-        <div className="glass-panel">
+        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
             <div>
-              <h3 style={{ margin: 0 }}>বিভাগ ভিত্তিক বিক্রয় বিশ্লেষণ</h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>ডিপার্টমেন্ট অনুযায়ী বিক্রয় ও রাজস্ব অংশীদারিত্ব</p>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>বিভাগ ভিত্তিক বিক্রয় বিশ্লেষণ</h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>ডিপার্টমেন্ট অনুযায়ী বিক্রয় ও রাজস্ব অংশীদারিত্ব</p>
             </div>
-            <span className="btn btn-secondary btn-sm" style={{ pointerEvents: 'none' }}>
+            <span className="btn btn-secondary btn-sm" style={{ pointerEvents: 'none', fontSize: '0.75rem', padding: '0.3rem 0.65rem' }}>
               সকল বিভাগ
             </span>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-            {deptSales.map((dept, idx) => {
-              const maxRev = deptSales.length > 0 ? deptSales[0].revenue || 1 : 1;
-              const pct = Math.min(100, Math.round((dept.revenue / maxRev) * 100));
-              
-              const colors = ['#6366f1', '#ec4899', '#06b6d4', '#f59e0b', '#10b981'];
-              const color = colors[idx % colors.length];
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem', flex: 1, justifyContent: 'center' }}>
+            {(deptSales && deptSales.length > 0) ? (
+              deptSales.map((dept, idx) => {
+                const maxRev = deptSales[0].revenue || 1;
+                const pct = Math.min(100, Math.round((dept.revenue / maxRev) * 100));
+                const colors = ['#6366f1', '#ec4899', '#06b6d4', '#f59e0b', '#10b981'];
+                const color = colors[idx % colors.length];
 
-              return (
-                <div key={dept.department_name} style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem' }}>
-                    <span style={{ fontWeight: 600 }}>{dept.department_name}</span>
-                    <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-                      ৳{dept.revenue?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      <span style={{ color: 'var(--text-dim)', fontWeight: 400, marginLeft: '0.5rem', fontSize: '0.75rem' }}>
-                        ({dept.units_sold} ইউনিট)
+                return (
+                  <div key={dept.department_name} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.86rem' }}>
+                      <span style={{ fontWeight: 600 }}>{dept.department_name}</span>
+                      <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                        ৳{dept.revenue?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        <span style={{ color: 'var(--text-dim)', fontWeight: 400, marginLeft: '0.5rem', fontSize: '0.75rem' }}>
+                          ({dept.units_sold} ইউনিট)
+                        </span>
                       </span>
-                    </span>
-                  </div>
-                  <div style={{ 
-                    height: '8px', 
-                    background: 'var(--bg-surface-elevated)', 
-                    borderRadius: 'var(--radius-full)', 
-                    overflow: 'hidden' 
-                  }}>
+                    </div>
                     <div style={{ 
-                      width: `${pct}%`, 
-                      height: '100%', 
-                      background: color, 
-                      borderRadius: 'var(--radius-full)',
-                      transition: 'width 0.5s ease'
-                    }} />
+                      height: '8px', 
+                      background: 'var(--bg-surface-elevated)', 
+                      borderRadius: 'var(--radius-full)', 
+                      overflow: 'hidden' 
+                    }}>
+                      <div style={{ 
+                        width: `${pct}%`, 
+                        height: '100%', 
+                        background: color, 
+                        borderRadius: 'var(--radius-full)',
+                        transition: 'width 0.5s ease'
+                      }} />
+                    </div>
                   </div>
+                );
+              })
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                {[
+                  { name: 'কম্পিউটার ও ডিজিটাল সামগ্রী', revenue: 0, units: 0, color: '#6366f1' },
+                  { name: 'কসমেটিকস ও রূপচর্চা', revenue: 0, units: 0, color: '#ec4899' },
+                  { name: 'গিফট আইটেম ও খেলনা', revenue: 0, units: 0, color: '#06b6d4' }
+                ].map((dept) => (
+                  <div key={dept.name} style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.86rem' }}>
+                      <span style={{ fontWeight: 600 }}>{dept.name}</span>
+                      <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                        ৳০.০০
+                        <span style={{ color: 'var(--text-dim)', fontWeight: 400, marginLeft: '0.5rem', fontSize: '0.75rem' }}>
+                          (০ ইউনিট)
+                        </span>
+                      </span>
+                    </div>
+                    <div style={{ 
+                      height: '8px', 
+                      background: 'var(--bg-surface-elevated)', 
+                      borderRadius: 'var(--radius-full)', 
+                      overflow: 'hidden' 
+                    }}>
+                      <div style={{ 
+                        width: '0%', 
+                        height: '100%', 
+                        background: dept.color, 
+                        borderRadius: 'var(--radius-full)' 
+                      }} />
+                    </div>
+                  </div>
+                ))}
+                <div style={{ 
+                  textAlign: 'center', 
+                  fontSize: '0.76rem', 
+                  color: 'var(--text-dim)', 
+                  marginTop: '0.35rem',
+                  padding: '0.45rem',
+                  background: 'var(--bg-surface)',
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px dashed var(--border-subtle)'
+                }}>
+                  💡 পিওএস থেকে চেকআউট সম্পন্ন হলে বিভাগভিত্তিক বিক্রয় স্বয়ংক্রিয়ভাবে লাইভ হবে
                 </div>
-              );
-            })}
+              </div>
+            )}
           </div>
         </div>
 
         {/* Loyalty Tier Distribution */}
-        <div className="glass-panel">
+        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ marginBottom: '1.25rem' }}>
-            <h3 style={{ margin: 0 }}>গ্রাহক টিয়ার বণ্টন অনুপাত</h3>
-            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>লয়্যালটি মেম্বারশিপের স্তর বিন্যাস</p>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>গ্রাহক টিয়ার বণ্টন অনুপাত</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>লয়্যালটি মেম্বারশিপের স্তর বিন্যাস</p>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, justifyContent: 'center' }}>
             {tierDistribution.map((t) => {
               const totalCust = kpis.totalCustomers || 1;
               const pct = Math.round((t.count / totalCust) * 100);
@@ -315,16 +377,16 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                   display: 'flex', 
                   alignItems: 'center', 
                   justifyContent: 'space-between',
-                  padding: '0.65rem 0.85rem',
+                  padding: '0.75rem 1rem',
                   background: 'var(--bg-surface)',
                   borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-subtle)'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                     <span className={`tier-badge tier-${t.tier}`}>{t.tier}</span>
-                    <span style={{ fontSize: '0.85rem', fontWeight: 600 }}>{tierLabels[t.tier] || t.tier}</span>
+                    <span style={{ fontSize: '0.86rem', fontWeight: 600 }}>{tierLabels[t.tier] || t.tier}</span>
                   </div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontFamily: 'var(--font-mono)' }}>
                     {t.count} জন ({pct}%)
                   </div>
                 </div>
@@ -335,17 +397,17 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       </div>
 
       {/* 2-Column: Top VIP Spenders & Recent Orders */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', alignItems: 'stretch' }}>
         {/* Top VIP Spenders */}
-        <div className="glass-panel">
+        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <div>
-              <h3 style={{ margin: 0 }}>শীর্ষ ভিআইপি ক্রেতাবৃন্দ</h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>সর্বোচ্চ লাইফটাইম ভ্যালু (এলটিভি) গ্রাহক</p>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>শীর্ষ ভিআইপি ক্রেতাবৃন্দ</h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>সর্বোচ্চ লাইফটাইম ভ্যালু (এলটিভি) গ্রাহক</p>
             </div>
           </div>
 
-          <div className="data-table-container">
+          <div className="data-table-container" style={{ flex: 1 }}>
             <table className="data-table">
               <thead>
                 <tr>
@@ -357,87 +419,110 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                 </tr>
               </thead>
               <tbody>
-                {topSpenders.map((cust) => (
-                  <tr key={cust.id}>
-                    <td>
-                      <div style={{ fontWeight: 600 }}>{cust.first_name} {cust.last_name}</div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
-                        {cust.card_number}
-                      </div>
-                    </td>
-                    <td>
-                      <span className={`tier-badge tier-${cust.tier}`}>{cust.tier}</span>
-                    </td>
-                    <td style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-                      ৳{cust.total_spent?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                    </td>
-                    <td style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                      {cust.points_balance?.toLocaleString()}
-                    </td>
-                    <td>
-                      <button 
-                        className="btn btn-secondary btn-sm"
-                        onClick={() => onSelectCustomer(cust.id)}
-                      >
-                        প্রোফাইল <ArrowUpRight size={13} />
-                      </button>
+                {topSpenders.length === 0 ? (
+                  <tr>
+                    <td colSpan="5" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                      এখনো কোনো কেনাকাটার তথ্য পাওয়া যায়নি
                     </td>
                   </tr>
-                ))}
+                ) : (
+                  topSpenders.map((cust) => (
+                    <tr key={cust.id}>
+                      <td>
+                        <div style={{ fontWeight: 600 }}>{cust.first_name} {cust.last_name}</div>
+                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
+                          {cust.card_number}
+                        </div>
+                      </td>
+                      <td>
+                        <span className={`tier-badge tier-${cust.tier}`}>{cust.tier}</span>
+                      </td>
+                      <td style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                        ৳{cust.total_spent?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                      </td>
+                      <td style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                        {cust.points_balance?.toLocaleString()}
+                      </td>
+                      <td>
+                        <button 
+                          className="btn btn-secondary btn-sm"
+                          onClick={() => onSelectCustomer(cust.id)}
+                        >
+                          প্রোফাইল <ArrowUpRight size={13} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
         </div>
 
         {/* Recent Transactions Feed */}
-        <div className="glass-panel">
+        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <div>
-              <h3 style={{ margin: 0 }}>সাম্প্রতিক পিওএস ক্যাশ লেনদেন</h3>
-              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>লাইভ চেকআউট ও রসিদ প্রবাহ</p>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>সাম্প্রতিক পিওএস ক্যাশ লেনদেন</h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>লাইভ চেকআউট ও রসিদ প্রবাহ</p>
             </div>
           </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-            {recentOrders.map((ord) => (
-              <div 
-                key={ord.id}
-                style={{ 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'space-between',
-                  padding: '0.75rem 1rem',
-                  background: 'var(--bg-surface)',
-                  borderRadius: 'var(--radius-md)',
-                  border: '1px solid var(--border-subtle)',
-                  cursor: 'pointer',
-                  transition: 'border-color var(--transition-fast)'
-                }}
-                onClick={() => onOpenReceipt(ord.id)}
-              >
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <span style={{ fontWeight: 700, fontSize: '0.875rem' }}>{ord.order_number}</span>
-                    <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>• {ord.store_name}</span>
-                  </div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
-                    {ord.first_name ? `${ord.first_name} ${ord.last_name}` : 'সাধারণ অতিথি'} • {ord.payment_method}
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: 800, fontFamily: 'var(--font-mono)', fontSize: '0.95rem' }}>
-                      ৳{ord.total?.toFixed(2)}
-                    </div>
-                    <div style={{ fontSize: '0.7rem', color: 'var(--success)' }}>
-                      সম্পন্ন
-                    </div>
-                  </div>
-                  <ChevronRight size={16} style={{ color: 'var(--text-dim)' }} />
-                </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
+            {recentOrders.length === 0 ? (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '2.5rem', 
+                color: 'var(--text-muted)', 
+                fontSize: '0.85rem',
+                background: 'var(--bg-surface)',
+                borderRadius: 'var(--radius-md)',
+                border: '1px dashed var(--border-subtle)',
+                margin: 'auto 0'
+              }}>
+                এখনো কোনো বিক্রয় রসিদ তৈরি হয়নি
               </div>
-            ))}
+            ) : (
+              recentOrders.map((ord) => (
+                <div 
+                  key={ord.id}
+                  style={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    justifyContent: 'space-between',
+                    padding: '0.75rem 1rem',
+                    background: 'var(--bg-surface)',
+                    borderRadius: 'var(--radius-md)',
+                    border: '1px solid var(--border-subtle)',
+                    cursor: 'pointer',
+                    transition: 'border-color var(--transition-fast)'
+                  }}
+                  onClick={() => onOpenReceipt(ord.id)}
+                >
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span style={{ fontWeight: 700, fontSize: '0.875rem' }}>{ord.order_number}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>• {ord.store_name}</span>
+                    </div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
+                      {ord.first_name ? `${ord.first_name} ${ord.last_name}` : 'সাধারণ অতিথি'} • {ord.payment_method}
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ textAlign: 'right' }}>
+                      <div style={{ fontWeight: 800, fontFamily: 'var(--font-mono)', fontSize: '0.95rem' }}>
+                        ৳{ord.total?.toFixed(2)}
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--success)' }}>
+                        সম্পন্ন
+                      </div>
+                    </div>
+                    <ChevronRight size={16} style={{ color: 'var(--text-dim)' }} />
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
