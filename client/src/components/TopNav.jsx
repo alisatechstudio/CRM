@@ -11,13 +11,13 @@ export default function TopNav({
   onOpenInstallModal
 }) {
   const titles = {
-    dashboard: 'এক্সিকিউটিভ বিআই ড্যাশবোর্ড',
-    pos: 'পয়েন্ট অব সেল (পিওএস)',
-    customers: 'কাস্টমার ৩৬০° সিআরএম',
-    inventory: 'ডিপার্টমেন্টাল ইনভেন্টরি',
-    loyalty: 'লয়্যালটি ও রিওয়ার্ডস',
+    dashboard: 'ড্যাশবোর্ড',
+    pos: 'পিওএস কাউন্টার',
+    customers: 'কাস্টমার তালিকা',
+    inventory: 'ইনভেন্টরি স্টক',
+    loyalty: 'লয়্যালটি ও পয়েন্ট',
     campaigns: 'মার্কেটিং ক্যাম্পেইন',
-    tickets: 'কাস্টমার সার্ভিস ও রিটার্ন'
+    tickets: 'সাপোর্ট ও রিটার্ন'
   };
 
   return (
@@ -64,7 +64,7 @@ export default function TopNav({
           title="মোবাইল বা কম্পিউটারে অ্যাপ হিসেবে ইনস্টল করুন"
         >
           <Download size={14} />
-          <span className="desktop-btn-text">অ্যাপ ইনস্টল</span>
+          <span className="desktop-btn-text">ইনস্টল</span>
         </button>
 
         {/* New Member Button (Icon on mobile, text on desktop) */}
@@ -74,7 +74,7 @@ export default function TopNav({
           title="নতুন কাস্টমার নিবন্ধন"
         >
           <UserPlus size={15} />
-          <span className="desktop-btn-text">নতুন মেম্বার</span>
+          <span className="desktop-btn-text">+ গ্রাহক</span>
         </button>
 
         {/* Lock App Button */}

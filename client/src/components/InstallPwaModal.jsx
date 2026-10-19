@@ -99,14 +99,14 @@ export default function InstallPwaModal({ onClose }) {
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-primary)' }}>
-                  মিজান CRM অ্যাপ ইনস্টল
+                  অ্যাপ ইনস্টল
                 </h3>
                 <span className="badge badge-indigo" style={{ fontSize: '0.72rem', padding: '3px 8px' }}>
                   PWA App
                 </span>
               </div>
               <p style={{ margin: '2px 0 0 0', fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                মোবাইল বা কম্পিউটারে নেটিভ অ্যাপের মতো ব্যবহার করুন
+                ডিভাইসে সরাসরি ইনস্টল করে ব্যবহার করুন।
               </p>
             </div>
           </div>
@@ -114,7 +114,7 @@ export default function InstallPwaModal({ onClose }) {
             className="icon-btn-ghost" 
             onClick={onClose}
             style={{ borderRadius: '50%', padding: '8px' }}
-            title="বন্ধ করুন"
+            title="বন্ধ"
           >
             <X size={20} />
           </button>
@@ -140,10 +140,10 @@ export default function InstallPwaModal({ onClose }) {
               <CheckCircle2 size={28} color="#10b981" style={{ flexShrink: 0 }} />
               <div>
                 <div style={{ fontWeight: 700, color: '#10b981', fontSize: '0.96rem' }}>
-                  অ্যাপটি আপনার ডিভাইসে সফলভাবে ইনস্টল করা আছে!
+                  অ্যাপটি সফলভাবে ইনস্টল করা আছে!
                 </div>
                 <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                  আপনি এটি সরাসরি হোম স্ক্রিন বা অ্যাপ্লিকেশন তালিকা থেকে ফুল-স্ক্রিন মোডে চালাতে পারবেন।
+                  হোম স্ক্রিন থেকে সরাসরি ব্যবহার করতে পারবেন।
                 </div>
               </div>
             </div>
@@ -165,11 +165,11 @@ export default function InstallPwaModal({ onClose }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <Sparkles size={20} color="#818cf8" />
                   <div style={{ fontWeight: 700, fontSize: '0.98rem', color: '#c7d2fe' }}>
-                    ১-ক্লিকে ইনস্টল উপলব্ধ!
+                    ইনস্টল উপলব্ধ
                   </div>
                 </div>
                 <p style={{ margin: 0, fontSize: '0.84rem', color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                  নিচের বাটনে ক্লিক করুন। আপনার ব্রাউজার সরাসরি ডিভাইসের নিজস্ব ইনস্টলেশন ডায়লগ দেখাবে।
+                  নিচের বাটনে ক্লিক করে ইনস্টল করুন।
                 </p>
                 <button
                   className="btn btn-primary"
@@ -189,7 +189,7 @@ export default function InstallPwaModal({ onClose }) {
                   }}
                 >
                   <Download size={18} />
-                  {installing ? 'ইনস্টল হচ্ছে...' : '📥 সরাসরি ইনস্টল করুন (Install Now)'}
+                  {installing ? 'ইনস্টল হচ্ছে...' : '📥 ইনস্টল করুন'}
                 </button>
               </div>
             )
@@ -263,7 +263,7 @@ export default function InstallPwaModal({ onClose }) {
           {/* Platform Instructions Selector */}
           <div>
             <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-secondary)', marginBottom: '10px' }}>
-              ডিভাইস অনুযায়ী ইনস্টল করার নিয়মাবলী:
+              ইনস্টল করার নিয়ম:
             </div>
             
             <div 
@@ -450,7 +450,7 @@ export default function InstallPwaModal({ onClose }) {
             onClick={onClose}
             style={{ borderRadius: '10px', padding: '8px 16px', fontSize: '0.86rem' }}
           >
-            ঠিক আছে
+            বন্ধ
           </button>
         </div>
       </div>

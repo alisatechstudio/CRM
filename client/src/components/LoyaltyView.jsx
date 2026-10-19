@@ -123,23 +123,23 @@ export default function LoyaltyView() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--tier-vip)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>
-              <Award size={16} /> মিজান কম্পিউটার অ্যান্ড কসমেটিকস লয়্যালটি ফ্রেমওয়ার্ক
+              <Award size={16} /> লয়্যালটি পলিসি
             </div>
-            <h2 style={{ fontSize: '1.5rem', margin: '0.35rem 0' }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস লয়্যালটি রিওয়ার্ডস ও পয়েন্টস পলিসি</h2>
+            <h2 style={{ fontSize: '1.5rem', margin: '0.35rem 0' }}>লয়্যালটি ও রিওয়ার্ডস</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-              গ্রাহকের সর্বমোট কেনাকাটার ভিত্তিতে স্বয়ংক্রিয় টিয়ার অগ্রগতি, পয়েন্ট মাল্টিপ্লায়ার ও ক্যাশব্যাক রিডেম্পশন পলিসি।
+              টিয়ার সুবিধা, পয়েন্ট মাল্টিপ্লায়ার ও ভাউচার ব্যবস্থাপনা।
             </p>
           </div>
 
           <button className="btn btn-primary" onClick={() => setShowAddCoupon(true)}>
-            <Plus size={16} /> নতুন কুপন ভাউচার তৈরি করুন
+            <Plus size={16} /> + নতুন ভাউচার
           </button>
         </div>
       </div>
 
       {/* Tier Matrix Cards */}
       <div>
-        <h3 style={{ fontSize: '1.15rem', marginBottom: '0.85rem' }}>সদস্য টিয়ার সুবিধা ও মাল্টিপ্লায়ার ম্যাট্রিক্স</h3>
+        <h3 style={{ fontSize: '1.15rem', marginBottom: '0.85rem' }}>টিয়ার সুবিধা ও রেট</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem' }}>
           {tierMatrix.map((t) => (
             <div 
@@ -162,7 +162,7 @@ export default function LoyaltyView() {
                 </div>
 
                 <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginBottom: '0.85rem' }}>
-                  পয়েন্ট সীমা: {t.threshold}
+                  পয়েন্ট: {t.threshold}
                 </div>
 
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '0.45rem' }}>
@@ -183,9 +183,9 @@ export default function LoyaltyView() {
       <div className="glass-panel">
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
           <div>
-            <h3 style={{ margin: 0 }}>সক্রিয় স্টোর প্রোমোশনাল ভাউচারসমূহ</h3>
+            <h3 style={{ margin: 0 }}>প্রোমোশনাল ভাউচারসমূহ</h3>
             <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-              পিওএস ক্যাশ কাউন্টারে গ্রহণযোগ্য বৈধ কুপন ডিসকাউন্ট কোড
+              পিওএস কাউন্টারে প্রযোজ্য কুপন তালিকা
             </p>
           </div>
         </div>
@@ -194,13 +194,13 @@ export default function LoyaltyView() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>ভাউচার কোড</th>
-                <th>ক্যাম্পেইন শিরোনাম</th>
-                <th>ছাড়ের পরিমাণ</th>
-                <th>সর্বনিম্ন বিল</th>
-                <th>লক্ষ্যমাত্রা টিয়ার</th>
-                <th>ব্যবহার সংখ্যা</th>
-                <th>মেয়াদ উত্তীর্ণের তারিখ</th>
+                <th>কোড</th>
+                <th>শিরোনাম</th>
+                <th>ছাড়</th>
+                <th>ন্যূনতম বিল</th>
+                <th>টিয়ার</th>
+                <th>ব্যবহার</th>
+                <th>মেয়াদ</th>
                 <th>স্ট্যাটাস</th>
               </tr>
             </thead>
@@ -247,7 +247,7 @@ export default function LoyaltyView() {
                     </td>
 
                     <td style={{ fontSize: '0.82rem', fontFamily: 'var(--font-mono)' }}>
-                      {cp.used_count} / {cp.usage_limit} বার
+                      {cp.used_count}/{cp.usage_limit}
                     </td>
 
                     <td style={{ fontSize: '0.8rem', color: 'var(--text-dim)' }}>
@@ -272,7 +272,7 @@ export default function LoyaltyView() {
         <div className="modal-overlay" onClick={() => setShowAddCoupon(false)}>
           <div className="modal-card" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2 style={{ fontSize: '1.15rem', margin: 0, wordBreak: 'break-word', flex: 1, minWidth: 0 }}>নতুন প্রোমো ভাউচার তৈরি করুন</h2>
+              <h2 style={{ fontSize: '1.15rem', margin: 0, wordBreak: 'break-word', flex: 1, minWidth: 0 }}>নতুন ভাউচার তৈরি</h2>
               <button className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }} onClick={() => setShowAddCoupon(false)}>✕</button>
             </div>
 
@@ -280,7 +280,7 @@ export default function LoyaltyView() {
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label">ভাউচার কোড *</label>
+                    <label className="input-label">কোড *</label>
                     <input 
                       type="text" 
                       className="form-control" 
@@ -292,25 +292,25 @@ export default function LoyaltyView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">ছাড়ের ধরন *</label>
+                    <label className="input-label">ধরন *</label>
                     <select 
                       className="form-control"
                       value={newCoupon.discount_type}
                       onChange={(e) => setNewCoupon({ ...newCoupon, discount_type: e.target.value })}
                     >
-                      <option value="percentage">শতকরা হার (%)</option>
-                      <option value="fixed">নির্দিষ্ট টাকা (৳)</option>
+                      <option value="percentage">শতকরা (%)</option>
+                      <option value="fixed">টাকা (৳)</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">শিরোনাম / ক্যাম্পেইন বিবরণ *</label>
+                  <label className="input-label">শিরোনাম *</label>
                   <input 
                     type="text" 
                     className="form-control" 
                     required 
-                    placeholder="যেমন: ঈদ স্পেশাল ২০% ছাড় ভাউচার"
+                    placeholder="ভাউচারের শিরোনাম..."
                     value={newCoupon.title}
                     onChange={(e) => setNewCoupon({ ...newCoupon, title: e.target.value })}
                   />
@@ -318,7 +318,7 @@ export default function LoyaltyView() {
 
                 <div className="modal-form-grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label">মান *</label>
+                    <label className="input-label">ছাড়ের মান *</label>
                     <input 
                       type="number" 
                       step="0.01" 
@@ -331,7 +331,7 @@ export default function LoyaltyView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">সর্বনিম্ন বিল (৳)</label>
+                    <label className="input-label">ন্যূনতম বিল (৳)</label>
                     <input 
                       type="number" 
                       className="form-control" 
@@ -341,13 +341,13 @@ export default function LoyaltyView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">প্রযোজ্য টিয়ার</label>
+                    <label className="input-label">টিয়ার</label>
                     <select 
                       className="form-control"
                       value={newCoupon.target_tier}
                       onChange={(e) => setNewCoupon({ ...newCoupon, target_tier: e.target.value })}
                     >
-                      <option value="All">সকল গ্রাহক</option>
+                      <option value="All">সকল</option>
                       <option value="Silver+">সিলভার+</option>
                       <option value="Gold+">গোল্ড+</option>
                       <option value="Platinum+">প্ল্যাটিনাম+</option>
@@ -358,7 +358,7 @@ export default function LoyaltyView() {
 
                 <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label">মেয়াদ শেষ *</label>
+                    <label className="input-label">মেয়াদ *</label>
                     <input 
                       type="date" 
                       className="form-control" 
@@ -369,7 +369,7 @@ export default function LoyaltyView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">সর্বোচ্চ ব্যবহার সংখ্যা</label>
+                    <label className="input-label">সর্বোচ্চ ব্যবহার</label>
                     <input 
                       type="number" 
                       className="form-control" 
@@ -385,7 +385,7 @@ export default function LoyaltyView() {
                   বাতিল
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'তৈরি হচ্ছে...' : 'ভাউচার সক্রিয় করুন'}
+                  {saving ? 'সংরক্ষণ...' : 'সংরক্ষণ করুন'}
                 </button>
               </div>
             </form>

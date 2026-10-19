@@ -151,16 +151,16 @@ export default function CampaignsView() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--secondary)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>
-              <Target size={16} /> টার্গেটেড ওমনিচ্যানেল যোগাযোগ
+              <Target size={16} /> ওমনিচ্যানেল প্রচার
             </div>
-            <h2 style={{ fontSize: '1.5rem', margin: '0.35rem 0' }}>মার্কেটিং ক্যাম্পেইন ও আরএফএম গ্রাহক সেগমেন্টেশন</h2>
+            <h2 style={{ fontSize: '1.5rem', margin: '0.35rem 0' }}>মার্কেটিং ও ক্যাম্পেইন</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
-              ডাটাবেসের গ্রাহক প্রোফাইল, লয়্যালটি স্কোর ও কেনাকাটার হিসেব অনুযায়ী স্বয়ংক্রিয় প্রচারণা ও বিক্রয় বৃদ্ধি।
+              গ্রাহক সেগমেন্টেশন, প্রচারণা ও বিক্রয় বৃদ্ধি।
             </p>
           </div>
 
           <button className="btn btn-primary" onClick={() => handleOpenCreateModal()}>
-            <Plus size={16} /> নতুন ক্যাম্পেইন তৈরি করুন
+            <Plus size={16} /> + নতুন ক্যাম্পেইন
           </button>
         </div>
       </div>
@@ -172,9 +172,9 @@ export default function CampaignsView() {
             <Radio size={22} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>মোট ক্যাম্পেইন (DB)</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>মোট ক্যাম্পেইন</div>
             <div style={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{totalCampaigns} টি</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{sentCount} টি প্রেরিত / {totalCampaigns - sentCount} ড্রাফট</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{sentCount} প্রেরিত • {totalCampaigns - sentCount} ড্রাফট</div>
           </div>
         </div>
 
@@ -183,11 +183,11 @@ export default function CampaignsView() {
             <DollarSign size={22} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>ক্যাম্পেইন অর্জিত বিক্রয়</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>অর্জিত বিক্রয়</div>
             <div style={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: 'var(--font-mono)', color: 'var(--success)' }}>
               ৳{totalRevenueGenerated.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>গড় রূপান্তর: {avgConversionRate}%</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>রূপান্তর: {avgConversionRate}%</div>
           </div>
         </div>
 
@@ -196,9 +196,9 @@ export default function CampaignsView() {
             <Users size={22} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>মোট রিচড গ্রাহক</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>রিচড গ্রাহক</div>
             <div style={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{totalAudienceReached} জন</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>গড় ওপেন হার: {avgOpenRate}%</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>ওপেন হার: {avgOpenRate}%</div>
           </div>
         </div>
 
@@ -207,9 +207,9 @@ export default function CampaignsView() {
             <TrendingUp size={22} />
           </div>
           <div>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>সক্রিয় কুপন ভাউচার</div>
+            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>সক্রিয় কুপন</div>
             <div style={{ fontSize: '1.35rem', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>{coupons.length} টি</div>
-            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>প্রচারণায় সংযুক্তযোগ্য</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>প্রচারণায় ব্যবহারযোগ্য</div>
           </div>
         </div>
       </div>
@@ -217,8 +217,8 @@ export default function CampaignsView() {
       {/* Dynamic Database Driven RFM Cohorts */}
       <div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-          <h3 style={{ fontSize: '1.1rem', margin: 0 }}>স্বয়ংক্রিয় আরএফএম সেগমেন্ট গ্রুপসমূহ (লাইভ ডাটাবেস)</h3>
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>যেকোনো সেগমেন্টে ক্লিক করে সরাসরি ক্যাম্পেইন তৈরি করুন</span>
+          <h3 style={{ fontSize: '1.1rem', margin: 0 }}>গ্রাহক সেগমেন্টেশন</h3>
+          <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>ক্লিক করে ক্যাম্পেইন শুরু করুন</span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(215px, 1fr))', gap: '1rem' }}>
           {segments.map((seg) => (
@@ -243,7 +243,7 @@ export default function CampaignsView() {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '0.5rem', borderTop: '1px solid var(--border-subtle)' }}>
                 <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>{seg.criteria}</span>
                 <span style={{ fontSize: '0.95rem', color: 'var(--secondary)', fontWeight: 800, fontFamily: 'var(--font-mono)' }}>
-                  {seg.count} জন সদস্য
+                  {seg.count} জন
                 </span>
               </div>
             </div>
@@ -254,21 +254,21 @@ export default function CampaignsView() {
       {/* Campaigns Table */}
       <div className="glass-panel" style={{ padding: 0 }}>
         <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--border-subtle)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h3 style={{ fontSize: '1.05rem', margin: 0 }}>মার্কেটিং ক্যাম্পেইন তালিকা ({campaigns.length} টি)</h3>
-          <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>MongoDB ডাটাবেস থেকে রিয়েল-টাইম লোডকৃত</span>
+          <h3 style={{ fontSize: '1.05rem', margin: 0 }}>ক্যাম্পেইন তালিকা ({campaigns.length})</h3>
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>রিয়েল-টাইম ডাটা</span>
         </div>
         <div className="data-table-container" style={{ border: 'none' }}>
           <table className="data-table">
             <thead>
               <tr>
-                <th>ক্যাম্পেইনের নাম ও বিষয়</th>
+                <th>ক্যাম্পেইন</th>
                 <th>মাধ্যম</th>
-                <th>টার্গেট সেগমেন্ট</th>
-                <th>সংযুক্ত ভাউচার</th>
-                <th>প্রাপক সংখ্যা</th>
-                <th>ওপেন / ক্লিক হার</th>
-                <th>রূপান্তর (কনভার্সন)</th>
-                <th>অর্জিত বিক্রয়</th>
+                <th>টার্গেট</th>
+                <th>ভাউচার</th>
+                <th>প্রাপক</th>
+                <th>ওপেন/ক্লিক</th>
+                <th>রূপান্তর</th>
+                <th>বিক্রয়</th>
                 <th style={{ textAlign: 'right' }}>স্ট্যাটাস / অ্যাকশন</th>
               </tr>
             </thead>
@@ -282,7 +282,7 @@ export default function CampaignsView() {
               ) : campaigns.length === 0 ? (
                 <tr>
                   <td colSpan="9" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    এখনো কোনো ক্যাম্পেইন তৈরি করা হয়নি। নতুন ক্যাম্পেইন তৈরি করুন।
+                    কোনো ক্যাম্পেইন তৈরি করা হয়নি।
                   </td>
                 </tr>
               ) : (
@@ -291,7 +291,7 @@ export default function CampaignsView() {
                     <td>
                       <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{c.name}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginTop: '0.15rem' }}>
-                        বিষয়: {c.subject}
+                        {c.subject}
                       </div>
                     </td>
 
@@ -336,7 +336,7 @@ export default function CampaignsView() {
                     </td>
 
                     <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem' }}>
-                      {c.status === 'Sent' ? `${c.audience_count} জন প্রাপক` : 'ড্রাফট (অপ্রেরিত)'}
+                      {c.status === 'Sent' ? `${c.audience_count} জন` : 'ড্রাফট'}
                     </td>
 
                     <td>
@@ -345,7 +345,7 @@ export default function CampaignsView() {
                           <span style={{ color: 'var(--success)', fontWeight: 700 }}>{c.open_rate}%</span> / {c.click_rate}%
                         </div>
                       ) : (
-                        <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>পাঠানো হয়নি</span>
+                        <span style={{ color: 'var(--text-dim)', fontSize: '0.75rem' }}>অপ্রেরিত</span>
                       )}
                     </td>
 
@@ -373,7 +373,7 @@ export default function CampaignsView() {
                       <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'flex-end' }}>
                         {c.status === 'Sent' ? (
                           <span className="status-pill status-low">
-                            <CheckCircle size={12} /> প্রেরিত ({c.sent_at ? c.sent_at.split(' ')[0] : 'সম্পন্ন'})
+                            <CheckCircle size={12} /> প্রেরিত
                           </span>
                         ) : (
                           <button 
@@ -382,7 +382,7 @@ export default function CampaignsView() {
                             onClick={() => handleSend(c.id)}
                           >
                             <Send size={13} />
-                            {sendingId === c.id ? 'প্রেরণ চলছে...' : 'ব্লাস্ট পাঠান'}
+                            {sendingId === c.id ? 'পাঠানো হচ্ছে...' : 'পাঠান'}
                           </button>
                         )}
 
@@ -412,7 +412,7 @@ export default function CampaignsView() {
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
                 <Target size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-                <h2 style={{ fontSize: '1.15rem', margin: 0, wordBreak: 'break-word', minWidth: 0 }}>নতুন মার্কেটিং ক্যাম্পেইন তৈরি (Database Driven)</h2>
+                <h2 style={{ fontSize: '1.15rem', margin: 0, wordBreak: 'break-word', minWidth: 0 }}>নতুন ক্যাম্পেইন তৈরি</h2>
               </div>
               <button className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }} onClick={() => setShowCreate(false)}>
                 <X size={16} />
@@ -422,12 +422,12 @@ export default function CampaignsView() {
             <form onSubmit={handleCreate} className="modal-form" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 <div className="input-group">
-                  <label className="input-label">ক্যাম্পেইনের নাম *</label>
+                  <label className="input-label">নাম *</label>
                   <input 
                     type="text" 
                     className="form-control" 
                     required 
-                    placeholder="যেমন: এইচএসসি ও ভর্তি প্রস্তুতি স্পেশাল অফার"
+                    placeholder="ক্যাম্পেইনের নাম লিখুন..."
                     value={newCamp.name}
                     onChange={(e) => setNewCamp({ ...newCamp, name: e.target.value })}
                   />
@@ -435,20 +435,20 @@ export default function CampaignsView() {
 
                 <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label">প্রচারণা মাধ্যম *</label>
+                    <label className="input-label">মাধ্যম *</label>
                     <select 
                       className="form-control"
                       value={newCamp.channel}
                       onChange={(e) => setNewCamp({ ...newCamp, channel: e.target.value })}
                     >
-                      <option value="SMS">এসএমএস বার্তা (SMS)</option>
-                      <option value="Email">ইমেইল নিউজলেটার (Email)</option>
-                      <option value="Omnichannel">ওমনিচ্যানেল (ইমেইল + এসএমএস)</option>
+                      <option value="SMS">এসএমএস</option>
+                      <option value="Email">ইমেইল</option>
+                      <option value="Omnichannel">ওমনিচ্যানেল</option>
                     </select>
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">টার্গেট গ্রাহক সেগমেন্ট *</label>
+                    <label className="input-label">টার্গেট সেগমেন্ট *</label>
                     <select 
                       className="form-control"
                       value={newCamp.target_segment}
@@ -456,7 +456,7 @@ export default function CampaignsView() {
                     >
                       {segments.map(seg => (
                         <option key={seg.id} value={seg.name}>
-                          {seg.name} ({seg.count} জন প্রাপক)
+                          {seg.name} ({seg.count} জন)
                         </option>
                       ))}
                     </select>
@@ -464,19 +464,19 @@ export default function CampaignsView() {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">বার্তার বিষয় / হেডার *</label>
+                  <label className="input-label">বিষয় *</label>
                   <input 
                     type="text" 
                     className="form-control" 
                     required 
-                    placeholder="যেমন: প্রিয় {first_name}, খাতা-কলমে বিশেষ ছাড়!"
+                    placeholder="বার্তার বিষয়..."
                     value={newCamp.subject}
                     onChange={(e) => setNewCamp({ ...newCamp, subject: e.target.value })}
                   />
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">বার্তার মূল বিষয়বস্তু *</label>
+                  <label className="input-label">বার্তা *</label>
                   <textarea 
                     className="form-control" 
                     rows={4} 
@@ -485,18 +485,18 @@ export default function CampaignsView() {
                     onChange={(e) => setNewCamp({ ...newCamp, content: e.target.value })}
                   />
                   <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)', marginTop: '0.2rem' }}>
-                    গ্রাহকের নাম ডায়নামিক রাখতে <code>{'{first_name}'}</code> এবং কুপনের জন্য <code>{'{coupon_code}'}</code> ব্যবহার করুন।
+                    নামের জন্য <code>{'{first_name}'}</code> ও কুপনের জন্য <code>{'{coupon_code}'}</code> ব্যবহার করুন।
                   </span>
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">সংযুক্ত ভাউচার কোড (ডাটাবেস কুপন তালিকা)</label>
+                  <label className="input-label">ভাউচার কোড</label>
                   <select 
                     className="form-control"
                     value={newCamp.coupon_code}
                     onChange={(e) => setNewCamp({ ...newCamp, coupon_code: e.target.value })}
                   >
-                    <option value="">কোনো কুপন সংযুক্ত নয়</option>
+                    <option value="">কোনো ভাউচার নেই</option>
                     {coupons.map(cp => (
                       <option key={cp.code} value={cp.code}>
                         {cp.code} — {cp.title} ({cp.discount_type === 'percentage' ? `${cp.discount_value}% ছাড়` : `৳${cp.discount_value} ছাড়`})
@@ -511,7 +511,7 @@ export default function CampaignsView() {
                   বাতিল
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
-                  <Plus size={15} /> {saving ? 'সংরক্ষণ হচ্ছে...' : 'ড্রাফট হিসেবে সংরক্ষণ করুন'}
+                  <Plus size={15} /> {saving ? 'সংরক্ষণ...' : 'সংরক্ষণ করুন'}
                 </button>
               </div>
             </form>

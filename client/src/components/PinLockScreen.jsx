@@ -146,14 +146,14 @@ export default function PinLockScreen({ onUnlock }) {
           <p className="pin-brand-subtitle">চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর</p>
           <div className="pin-system-badge">
             <ShieldCheck size={14} />
-            <span>সুরক্ষিত সিআরএম ও পিওএস সিস্টেম</span>
+            <span>সুরক্ষিত সিআরএম ও পিওএস</span>
           </div>
         </div>
 
         {/* PIN Indicators */}
         <div className="pin-indicators-container">
           <p className="pin-prompt-text">
-            {isSuccess ? 'স্বাগতম! আনলক হচ্ছে...' : 'প্রবেশ করতে ৪-ডিজিট পিন দিন'}
+            {isSuccess ? 'আনলক হচ্ছে...' : '৪-ডিজিট পিন দিন'}
           </p>
 
           <div className="pin-dots-wrapper">
@@ -204,7 +204,7 @@ export default function PinLockScreen({ onUnlock }) {
             className="keypad-btn keypad-fn"
             onClick={handleClear}
             disabled={isVerifying || isSuccess}
-            title="সব মুছুন (Clear)"
+            title="মুছুন"
           >
             <span>C</span>
           </button>
@@ -223,7 +223,7 @@ export default function PinLockScreen({ onUnlock }) {
             className="keypad-btn keypad-fn"
             onClick={handleBackspace}
             disabled={isVerifying || isSuccess}
-            title="ব্যাকস্পেস (Backspace)"
+            title="ব্যাকস্পেস"
           >
             <Delete size={20} />
           </button>
@@ -237,7 +237,7 @@ export default function PinLockScreen({ onUnlock }) {
             onClick={() => setShowChangePin(true)}
           >
             <KeyRound size={14} />
-            <span>পিন পরিবর্তন করুন</span>
+            <span>পিন পরিবর্তন</span>
           </button>
         </div>
       </div>
@@ -249,7 +249,7 @@ export default function PinLockScreen({ onUnlock }) {
             <div className="pin-modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <KeyRound size={18} style={{ color: 'var(--primary)' }} />
-                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>সিকিউরিটি পিন পরিবর্তন</h3>
+                <h3 style={{ margin: 0, fontSize: '1.1rem' }}>পিন পরিবর্তন</h3>
               </div>
               <button 
                 className="close-modal-btn" 
@@ -268,13 +268,13 @@ export default function PinLockScreen({ onUnlock }) {
               )}
 
               <div className="form-group">
-                <label>বর্তমান পিন (Old PIN):</label>
+                <label>বর্তমান পিন:</label>
                 <input
                   type="password"
                   maxLength={6}
                   value={oldPin}
                   onChange={(e) => setOldPin(e.target.value)}
-                  placeholder="বর্তমান পিন কোড"
+                  placeholder="বর্তমান পিন"
                   required
                   className="pin-input-field"
                   autoFocus
@@ -282,26 +282,26 @@ export default function PinLockScreen({ onUnlock }) {
               </div>
 
               <div className="form-group">
-                <label>নতুন পিন (New 4-digit PIN):</label>
+                <label>নতুন পিন:</label>
                 <input
                   type="password"
                   maxLength={6}
                   value={newPin}
                   onChange={(e) => setNewPin(e.target.value)}
-                  placeholder="নতুন ৪-ডিজিট পিন দিন"
+                  placeholder="নতুন পিন"
                   required
                   className="pin-input-field"
                 />
               </div>
 
               <div className="form-group">
-                <label>নতুন পিন নিশ্চিত করুন (Confirm PIN):</label>
+                <label>পিন নিশ্চিত করুন:</label>
                 <input
                   type="password"
                   maxLength={6}
                   value={confirmPin}
                   onChange={(e) => setConfirmPin(e.target.value)}
-                  placeholder="নতুন পিন পুনরায় দিন"
+                  placeholder="পুনরায় নতুন পিন দিন"
                   required
                   className="pin-input-field"
                 />
@@ -320,7 +320,7 @@ export default function PinLockScreen({ onUnlock }) {
                   className="btn btn-primary w-full"
                   disabled={isChanging}
                 >
-                  {isChanging ? 'আপডেট হচ্ছে...' : 'পিন সংরক্ষণ করুন'}
+                  {isChanging ? 'সংরক্ষণ...' : 'সংরক্ষণ করুন'}
                 </button>
               </div>
             </form>

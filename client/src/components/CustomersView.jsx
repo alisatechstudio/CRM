@@ -51,14 +51,14 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
       <div className="glass-panel" style={{ padding: '1.25rem 1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h2 style={{ fontSize: '1.35rem', margin: 0 }}>কাস্টমার ৩৬০° মেম্বার ডিরেক্টরি</h2>
+            <h2 style={{ fontSize: '1.35rem', margin: 0 }}>কাস্টমার তালিকা</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              গ্রাহকের প্রোফাইল অনুসন্ধান, লাইফটাইম ভ্যালু (এলটিভি) ও লয়্যালটি আরএফএম বিশ্লেষণ।
+              গ্রাহক প্রোফাইল, পয়েন্ট ও কেনাকাটার হিসাব।
             </p>
           </div>
 
           <button className="btn btn-primary" onClick={onOpenNewCustomer}>
-            + নতুন মেম্বার যুক্ত করুন
+            + নতুন গ্রাহক
           </button>
         </div>
 
@@ -66,13 +66,13 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
         <div className="customer-filters-grid">
           {/* Search Box */}
           <div className="input-group">
-            <label className="input-label">গ্রাহক অনুসন্ধান</label>
+            <label className="input-label">অনুসন্ধান</label>
             <div style={{ position: 'relative' }}>
               <input
                 type="text"
                 className="form-control"
                 style={{ width: '100%', paddingLeft: '2.4rem' }}
-                placeholder="নাম, ফোন নম্বর, কার্ড # বা ইমেইল..."
+                placeholder="নাম, ফোন বা কার্ড নম্বর..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -85,48 +85,48 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
 
           {/* Tier Filter */}
           <div className="input-group">
-            <label className="input-label">লয়্যালটি টিয়ার</label>
+            <label className="input-label">টিয়ার</label>
             <select 
               className="form-control"
               value={tierFilter}
               onChange={(e) => setTierFilter(e.target.value)}
             >
-              <option value="All">সকল টিয়ার</option>
-              <option value="VIP">ভিআইপি (VIP)</option>
-              <option value="Platinum">প্ল্যাটিনাম (Platinum)</option>
-              <option value="Gold">গোল্ড (Gold)</option>
-              <option value="Silver">সিলভার (Silver)</option>
-              <option value="Bronze">ব্রোঞ্জ (Bronze)</option>
+              <option value="All">সব টিয়ার</option>
+              <option value="VIP">ভিআইপি</option>
+              <option value="Platinum">প্ল্যাটিনাম</option>
+              <option value="Gold">গোল্ড</option>
+              <option value="Silver">সিলভার</option>
+              <option value="Bronze">ব্রোঞ্জ</option>
             </select>
           </div>
 
           {/* Churn Risk Filter */}
           <div className="input-group">
-            <label className="input-label">ঝুঁকির মাত্রা (Churn)</label>
+            <label className="input-label">ঝুঁকি</label>
             <select 
               className="form-control"
               value={churnFilter}
               onChange={(e) => setChurnFilter(e.target.value)}
             >
-              <option value="All">সকল ঝুঁকির মাত্রা</option>
-              <option value="Low">কম ঝুঁকি (নিয়মিত)</option>
+              <option value="All">সব ঝুঁকি</option>
+              <option value="Low">কম ঝুঁকি</option>
               <option value="Medium">মাঝারি ঝুঁকি</option>
-              <option value="High">উচ্চ ঝুঁকি (অনুপস্থিত)</option>
+              <option value="High">উচ্চ ঝুঁকি</option>
             </select>
           </div>
 
           {/* Sort By */}
           <div className="input-group">
-            <label className="input-label">সর্ট ক্রম</label>
+            <label className="input-label">সর্ট</label>
             <select 
               className="form-control"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
             >
-              <option value="total_spent">সর্বোচ্চ কেনাকাটা (৳)</option>
-              <option value="points_balance">পয়েন্ট ব্যালেন্স</option>
-              <option value="visit_count">ভিজিট সংখ্যা</option>
-              <option value="last_visit">সর্বশেষ স্টোর ভিজিট</option>
+              <option value="total_spent">মোট ক্রয় (৳)</option>
+              <option value="points_balance">পয়েন্ট</option>
+              <option value="visit_count">ভিজিট</option>
+              <option value="last_visit">সর্বশেষ ভিজিট</option>
             </select>
           </div>
         </div>
@@ -138,13 +138,13 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
           <table className="data-table">
             <thead>
               <tr>
-                <th>গ্রাহকের নাম ও পছন্দ</th>
-                <th>কার্ড ও যোগাযোগ</th>
+                <th>গ্রাহক</th>
+                <th>যোগাযোগ</th>
                 <th>টিয়ার</th>
-                <th>পয়েন্ট ব্যালেন্স</th>
-                <th>লাইফটাইম ভ্যালু (LTV)</th>
-                <th>ভিজিট ও উপস্থিতি</th>
-                <th>ঝুঁকির মাত্রা</th>
+                <th>পয়েন্ট</th>
+                <th>মোট ক্রয়</th>
+                <th>ভিজিট</th>
+                <th>ঝুঁকি</th>
                 <th style={{ textAlign: 'right' }}>অ্যাকশন</th>
               </tr>
             </thead>
@@ -152,13 +152,13 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
               {loading ? (
                 <tr>
                   <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    গ্রাহক প্রোফাইল লোড হচ্ছে...
+                    লোড হচ্ছে...
                   </td>
                 </tr>
               ) : customers.length === 0 ? (
                 <tr>
                   <td colSpan="8" style={{ textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-                    ফিল্টার অনুযায়ী কোনো গ্রাহক পাওয়া যায়নি।
+                    কোনো গ্রাহক পাওয়া যায়নি
                   </td>
                 </tr>
               ) : (
@@ -224,7 +224,7 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
                         className="btn btn-secondary btn-sm"
                         onClick={() => onSelectCustomer(c.id)}
                       >
-                        <Eye size={14} /> ৩৬০° প্রোফাইল
+                        <Eye size={14} /> প্রোফাইল
                       </button>
                     </td>
                   </tr>
@@ -238,11 +238,11 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
         <div className="customer-mobile-card-list">
           {loading ? (
             <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
-              গ্রাহক প্রোফাইল লোড হচ্ছে...
+              লোড হচ্ছে...
             </div>
           ) : customers.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
-              ফিল্টার অনুযায়ী কোনো গ্রাহক পাওয়া যায়নি।
+              কোনো গ্রাহক পাওয়া যায়নি
             </div>
           ) : (
             customers.map((c) => (
@@ -275,15 +275,15 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
                 {/* Metrics Grid */}
                 <div className="cust-metrics-grid">
                   <div className="cust-metric-box">
-                    <div className="cust-metric-label">মোট কেনাকাটা</div>
+                    <div className="cust-metric-label">মোট ক্রয়</div>
                     <div className="cust-metric-val">৳{c.total_spent?.toLocaleString('en-US', { minimumFractionDigits: 0 })}</div>
                   </div>
                   <div className="cust-metric-box">
-                    <div className="cust-metric-label">পয়েন্ট ব্যালেন্স</div>
+                    <div className="cust-metric-label">পয়েন্ট</div>
                     <div className="cust-metric-val points">{c.points_balance?.toLocaleString()}</div>
                   </div>
                   <div className="cust-metric-box">
-                    <div className="cust-metric-label">ভিজিট সংখ্যা</div>
+                    <div className="cust-metric-label">ভিজিট</div>
                     <div className="cust-metric-val">{c.visit_count} বার</div>
                   </div>
                 </div>
@@ -295,7 +295,7 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
                   onClick={() => onSelectCustomer(c.id)}
                 >
                   <Eye size={15} />
-                  <span>৩৬০° কাস্টমার প্রোফাইল ও ইতিহাস</span>
+                  <span>বিস্তারিত প্রোফাইল</span>
                 </button>
               </div>
             ))

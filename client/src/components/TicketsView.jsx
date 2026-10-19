@@ -126,16 +126,16 @@ export default function TicketsView({ onSelectCustomer }) {
   };
 
   const statusTranslations = {
-    'Open': 'উন্মুক্ত (Open)',
-    'In Progress': 'চলমান (In Progress)',
-    'Resolved': 'মীমাংসিত (Resolved)'
+    'Open': 'উন্মুক্ত',
+    'In Progress': 'চলমান',
+    'Resolved': 'মীমাংসিত'
   };
 
   const priorityTranslations = {
-    'Urgent': 'জরুরি (Urgent)',
-    'High': 'উচ্চ (High)',
-    'Medium': 'মাঝারি (Medium)',
-    'Low': 'সাধারণ (Low)'
+    'Urgent': 'জরুরি',
+    'High': 'উচ্চ',
+    'Medium': 'মাঝারি',
+    'Low': 'সাধারণ'
   };
 
   return (
@@ -144,45 +144,45 @@ export default function TicketsView({ onSelectCustomer }) {
       <div className="glass-panel" style={{ padding: '1.25rem 1.5rem' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <h2 style={{ fontSize: '1.35rem', margin: 0 }}>গ্রাহক সেবা ও পণ্য এক্সচেঞ্জ ডেস্ক</h2>
+            <h2 style={{ fontSize: '1.35rem', margin: 0 }}>গ্রাহক সেবা ও রিটার্ন</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-              গ্রাহকের অভিযোগ, পণ্য পরিবর্তন বা ফেরত সংক্রান্ত আবেদন ও সন্তুষ্টি (CSAT) পর্যবেক্ষণ।
+              গ্রাহক অভিযোগ, রিটার্ন ও সেবা পর্যবেক্ষণ।
             </p>
           </div>
 
           <button className="btn btn-primary" onClick={() => setShowCreate(true)}>
-            <Plus size={16} /> নতুন সার্ভিস টিকিট খুলুন
+            <Plus size={16} /> + নতুন টিকিট
           </button>
         </div>
 
         {/* Filter controls */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginTop: '1.25rem' }}>
           <div className="input-group">
-            <label className="input-label">টিকিট স্ট্যাটাস</label>
+            <label className="input-label">স্ট্যাটাস</label>
             <select 
               className="form-control"
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             >
               <option value="All">সকল স্ট্যাটাস</option>
-              <option value="Open">উন্মুক্ত (Open)</option>
-              <option value="In Progress">চলমান (In Progress)</option>
-              <option value="Resolved">মীমাংসিত (Resolved)</option>
+              <option value="Open">উন্মুক্ত</option>
+              <option value="In Progress">চলমান</option>
+              <option value="Resolved">মীমাংসিত</option>
             </select>
           </div>
 
           <div className="input-group">
-            <label className="input-label">অগ্রাধিকার স্তর</label>
+            <label className="input-label">অগ্রাধিকার</label>
             <select 
               className="form-control"
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value)}
             >
               <option value="All">সকল অগ্রাধিকার</option>
-              <option value="Urgent">জরুরি (Urgent)</option>
-              <option value="High">উচ্চ (High)</option>
-              <option value="Medium">মাঝারি (Medium)</option>
-              <option value="Low">সাধারণ (Low)</option>
+              <option value="Urgent">জরুরি</option>
+              <option value="High">উচ্চ</option>
+              <option value="Medium">মাঝারি</option>
+              <option value="Low">সাধারণ</option>
             </select>
           </div>
 
@@ -248,7 +248,7 @@ export default function TicketsView({ onSelectCustomer }) {
                   </div>
 
                   <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', marginTop: '0.35rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <span>বিভাগ: <strong style={{ color: 'var(--text-main)' }}>{t.department}</strong></span>
+                    <span><strong style={{ color: 'var(--text-main)' }}>{t.department}</strong></span>
                     <span>•</span>
                     <span>ধরন: {t.type}</span>
                     <span>•</span>
@@ -271,10 +271,10 @@ export default function TicketsView({ onSelectCustomer }) {
                       fontSize: '0.8rem',
                       color: 'var(--success)'
                     }}>
-                      <strong>গৃহীত পদক্ষেপ:</strong> {t.resolution_notes}
+                      <strong>সমাধান:</strong> {t.resolution_notes}
                       {t.csat_score && (
                         <span style={{ marginLeft: '0.75rem', fontWeight: 700 }}>
-                          • গ্রাহক রেটিং: {'★'.repeat(t.csat_score)} ({t.csat_score}/৫)
+                          • রেটিং: {'★'.repeat(t.csat_score)} ({t.csat_score}/৫)
                         </span>
                       )}
                     </div>
@@ -294,7 +294,7 @@ export default function TicketsView({ onSelectCustomer }) {
                       className="btn btn-primary btn-sm"
                       onClick={() => setResolveTicket(t)}
                     >
-                      <CheckCircle size={14} /> সমাধান করুন
+                      <CheckCircle size={14} /> সমাধান
                     </button>
                   )}
                 </div>
@@ -309,7 +309,7 @@ export default function TicketsView({ onSelectCustomer }) {
         <div className="modal-overlay" onClick={() => setResolveTicket(null)}>
           <div className="modal-card" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2 style={{ fontSize: '1.2rem', margin: 0 }}>সার্ভিস টিকিট সমাধান করুন</h2>
+              <h2 style={{ fontSize: '1.2rem', margin: 0 }}>টিকিট সমাধান</h2>
               <button className="btn btn-secondary btn-icon" onClick={() => setResolveTicket(null)}>✕</button>
             </div>
 
@@ -321,19 +321,19 @@ export default function TicketsView({ onSelectCustomer }) {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">গৃহীত পদক্ষেপ ও সমাধান নোট *</label>
+                  <label className="input-label">সমাধান নোট *</label>
                   <textarea 
                     className="form-control"
                     rows={4}
                     required
-                    placeholder="যেমন: গ্রাহককে নতুন সাইজ এল প্রদান করা হয়েছে এবং সৌজন্যস্বরূপ ৫০ লয়্যালটি পয়েন্ট ক্রেডিট দেওয়া হয়েছে।"
+                    placeholder="গৃহীত পদক্ষেপ বা সমাধান নোট..."
                     value={resolutionNotes}
                     onChange={(e) => setResolutionNotes(e.target.value)}
                   />
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">গ্রাহক সন্তুষ্টি রেটিং (CSAT Score)</label>
+                  <label className="input-label">গ্রাহক রেটিং</label>
                   <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
                     {[1, 2, 3, 4, 5].map((stars) => (
                       <button 
@@ -354,7 +354,7 @@ export default function TicketsView({ onSelectCustomer }) {
                   বাতিল
                 </button>
                 <button type="submit" className="btn btn-success" disabled={resolving}>
-                  {resolving ? 'সংরক্ষণ হচ্ছে...' : 'সমাধান হিসেবে চিহ্নিত করুন'}
+                  {resolving ? 'সংরক্ষণ...' : 'সম্পন্ন করুন'}
                 </button>
               </div>
             </form>
@@ -367,14 +367,14 @@ export default function TicketsView({ onSelectCustomer }) {
         <div className="modal-overlay" onClick={() => setShowCreate(false)}>
           <div className="modal-card" style={{ maxWidth: '550px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2 style={{ fontSize: '1.2rem', margin: 0 }}>নতুন কাস্টমার সার্ভিস টিকিট খুলুন</h2>
+              <h2 style={{ fontSize: '1.2rem', margin: 0 }}>নতুন সার্ভিস টিকিট</h2>
               <button className="btn btn-secondary btn-icon" onClick={() => setShowCreate(false)}>✕</button>
             </div>
 
             <form onSubmit={handleCreate} className="modal-form" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 <div className="input-group">
-                  <label className="input-label">গ্রাহক নির্বাচন করুন *</label>
+                  <label className="input-label">গ্রাহক *</label>
                   <select 
                     className="form-control"
                     value={newTicket.customer_id}
@@ -389,12 +389,12 @@ export default function TicketsView({ onSelectCustomer }) {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">বিষয় / সমস্যার সারসংক্ষেপ *</label>
+                  <label className="input-label">বিষয় *</label>
                   <input 
                     type="text" 
                     className="form-control" 
                     required 
-                    placeholder="যেমন: খাতার পাতা ছেঁড়া বা ভুল আইটেম পরিবর্তন সংক্রান্ত"
+                    placeholder="সমস্যার সারসংক্ষেপ..."
                     value={newTicket.subject}
                     onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
                   />
@@ -415,38 +415,38 @@ export default function TicketsView({ onSelectCustomer }) {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">আবেদনের ধরন *</label>
+                    <label className="input-label">ধরন *</label>
                     <select 
                       className="form-control"
                       value={newTicket.type}
                       onChange={(e) => setNewTicket({ ...newTicket, type: e.target.value })}
                     >
-                      <option value="Return/Exchange">পণ্য পরিবর্তন / রিটার্ন</option>
-                      <option value="Complaint">পণ্য / সেবা সংক্রান্ত অভিযোগ</option>
-                      <option value="Inquiry">সাধারণ তথ্য অনুসন্ধান</option>
-                      <option value="Loyalty Issue">লয়্যালটি পয়েন্ট গরমিল</option>
-                      <option value="Feedback">প্রশংসা / গ্রাহক মতামত</option>
+                      <option value="Return/Exchange">রিটার্ন / এক্সচেঞ্জ</option>
+                      <option value="Complaint">অভিযোগ</option>
+                      <option value="Inquiry">অনুসন্ধান</option>
+                      <option value="Loyalty Issue">পয়েন্ট সংক্রান্ত</option>
+                      <option value="Feedback">মতামত</option>
                     </select>
                   </div>
                 </div>
 
                 <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label">অগ্রাধিকার স্তর</label>
+                    <label className="input-label">অগ্রাধিকার</label>
                     <select 
                       className="form-control"
                       value={newTicket.priority}
                       onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value })}
                     >
-                      <option value="Low">সাধারণ (Low)</option>
-                      <option value="Medium">মাঝারি (Medium)</option>
-                      <option value="High">উচ্চ (High)</option>
-                      <option value="Urgent">জরুরি (Urgent)</option>
+                      <option value="Low">সাধারণ</option>
+                      <option value="Medium">মাঝারি</option>
+                      <option value="High">উচ্চ</option>
+                      <option value="Urgent">জরুরি</option>
                     </select>
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">দায়িত্বপ্রাপ্ত প্রতিনিধি</label>
+                    <label className="input-label">দায়িত্বপ্রাপ্ত</label>
                     <input 
                       type="text" 
                       className="form-control" 
@@ -457,12 +457,12 @@ export default function TicketsView({ onSelectCustomer }) {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">বিস্তারিত বিবরণ ও পর্যবেক্ষণ *</label>
+                  <label className="input-label">বিবরণ *</label>
                   <textarea 
                     className="form-control"
                     rows={4}
                     required
-                    placeholder="গ্রাহকের দাবি, পণ্যের বারকোড, বর্তমান অবস্থা ইত্যাদি..."
+                    placeholder="সমস্যার বিস্তারিত বিবরণ..."
                     value={newTicket.details}
                     onChange={(e) => setNewTicket({ ...newTicket, details: e.target.value })}
                   />
@@ -474,7 +474,7 @@ export default function TicketsView({ onSelectCustomer }) {
                   বাতিল
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'তৈরি হচ্ছে...' : 'টিকিট তৈরি করুন'}
+                  {saving ? 'সংরক্ষণ...' : 'সংরক্ষণ করুন'}
                 </button>
               </div>
             </form>

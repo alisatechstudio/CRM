@@ -239,7 +239,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
           onClick={() => setMobilePane('catalog')}
         >
           <Package size={16} />
-          <span>পণ্য ক্যাটালগ ({products.length})</span>
+          <span>ক্যাটালগ ({products.length})</span>
         </button>
         <button 
           type="button" 
@@ -247,7 +247,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
           onClick={() => setMobilePane('cart')}
         >
           <ShoppingBag size={16} />
-          <span>চলতি কার্ট ({cart.reduce((s, it) => s + it.quantity, 0)})</span>
+          <span>কার্ট ({cart.reduce((s, it) => s + it.quantity, 0)})</span>
           {cart.length > 0 && (
             <span className="pos-tab-price-badge">৳{finalTotal.toFixed(0)}</span>
           )}
@@ -263,7 +263,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
               type="text"
               className="form-control"
               style={{ width: '100%', paddingLeft: '2.4rem' }}
-              placeholder="পণ্য খুঁজুন বা বারকোড স্ক্যান করুন (যেমন: 890100101)..."
+              placeholder="পণ্য বা বারকোড খুঁজুন..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -284,7 +284,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
             }}
           >
             <Barcode size={18} />
-            <span>বারকোড স্ক্যান</span>
+            <span>স্ক্যান</span>
           </button>
         </div>
 
@@ -294,7 +294,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
             className={`pos-dept-tab ${selectedDept === 'all' ? 'active' : ''}`}
             onClick={() => setSelectedDept('all')}
           >
-            সকল বিভাগ
+            সব বিভাগ
           </button>
           {activeDepartments.map((dept) => (
             <button
@@ -311,11 +311,11 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
         <div className="pos-grid">
           {loading ? (
             <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-              পণ্য তালিকা লোড হচ্ছে...
+              লোড হচ্ছে...
             </div>
           ) : products.length === 0 ? (
             <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-              এই ক্যাটাগরিতে কোনো পণ্য পাওয়া যায়নি।
+              কোনো পণ্য পাওয়া যায়নি
             </div>
           ) : (
             products.map((p) => {
@@ -376,7 +376,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
             style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', fontWeight: 700 }}
             onClick={() => setMobilePane('catalog')}
           >
-            ← আরো পণ্য নির্বাচন করুন (ক্যাটালগে ফিরে যান)
+            ← ক্যাটালগে ফিরে যান
           </button>
         </div>
 
@@ -384,11 +384,11 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
         <div className="pos-cart-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ShoppingBag size={18} style={{ color: 'var(--primary)' }} />
-            <h3 style={{ fontSize: '1rem', margin: 0 }}>সক্রিয় ক্যাশ রেজিস্টার</h3>
+            <h3 style={{ fontSize: '1rem', margin: 0 }}>ক্যাশ রেজিস্টার</h3>
           </div>
           {cart.length > 0 && (
             <button className="btn btn-secondary btn-sm" onClick={clearCart} title="কার্ট খালি করুন">
-              খালি করুন
+              রিসেট
             </button>
           )}
         </div>
@@ -407,7 +407,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
                   </span>
                 </div>
                 <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontFamily: 'var(--font-mono)', marginTop: '0.15rem' }}>
-                  {selectedCustomer.points_balance?.toLocaleString()} পয়েন্ট উপলব্ধ ({tierMultiplier}x রেট)
+                  {selectedCustomer.points_balance?.toLocaleString()} পয়েন্ট ({tierMultiplier}x রেট)
                 </div>
               </div>
               <button 
@@ -429,7 +429,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
                     type="text"
                     className="form-control"
                     style={{ width: '100%', fontSize: '0.8rem', paddingLeft: '2rem' }}
-                    placeholder="মেম্বার যুক্ত করুন (নাম, ফোন বা কার্ড #)..."
+                    placeholder="গ্রাহক খুঁজুন (ফোন / নাম)..."
                     value={customerSearch}
                     onChange={(e) => {
                       setCustomerSearch(e.target.value);
@@ -504,12 +504,12 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
           )}
         </div>
 
-        {/* Cart Line Items */}
+        {/* Cart Item Rows */}
         <div className="pos-cart-items">
           {cart.length === 0 ? (
             <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-              <p style={{ fontWeight: 600 }}>কার্ট বর্তমানে খালি</p>
-              <p style={{ fontSize: '0.78rem', marginTop: '0.35rem' }}>ক্যাটালগ থেকে পণ্য নির্বাচন করে চেকআউট শুরু করুন।</p>
+              <p style={{ fontWeight: 600 }}>কার্ট খালি</p>
+              <p style={{ fontSize: '0.78rem', marginTop: '0.35rem' }}>পণ্য যুক্ত করুন</p>
             </div>
           ) : (
             cart.map((item) => (
@@ -565,12 +565,12 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
               type="text"
               className="form-control"
               style={{ flex: 1, fontSize: '0.8rem', textTransform: 'uppercase' }}
-              placeholder="প্রোমো / ভাউচার কোড"
+              placeholder="ভাউচার কোড"
               value={couponCode}
               onChange={(e) => setCouponCode(e.target.value)}
             />
             <button type="submit" className="btn btn-secondary btn-sm">
-              প্রয়োগ
+              যোগ
             </button>
           </form>
 
@@ -616,7 +616,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem', fontWeight: 600 }}>
                 <Tag size={13} style={{ color: 'var(--accent)' }} />
-                <span>ম্যানুয়াল ক্যাশিয়ার ছাড় (Manual Discount)</span>
+                <span>ম্যানুয়াল ছাড়</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                 {manualDiscount > 0 && (
@@ -625,7 +625,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
                   </span>
                 )}
                 <span style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
-                  {showManualDiscount ? '▲ গোপন করুন' : '▼ প্রয়োগ করুন'}
+                  {showManualDiscount ? '▲ বন্ধ' : '▼ ছাড়'}
                 </span>
               </div>
             </div>
@@ -640,7 +640,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
                     style={{ flex: 1, fontSize: '0.72rem', padding: '0.25rem' }}
                     onClick={() => setManualDiscountType('fixed')}
                   >
-                    টাকার অংকে (৳ BDT)
+                    টাকা (৳)
                   </button>
                   <button
                     type="button"
@@ -648,7 +648,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
                     style={{ flex: 1, fontSize: '0.72rem', padding: '0.25rem' }}
                     onClick={() => setManualDiscountType('percent')}
                   >
-                    শতাংশে (% Percent)
+                    শতাংশ (%)
                   </button>
                 </div>
 
@@ -704,11 +704,11 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
                       value={manualDiscountReason}
                       onChange={(e) => setManualDiscountReason(e.target.value)}
                     >
-                      <option value="নিয়মিত কাস্টমার বিশেষ ছাড়">নিয়মিত ক্রেতা বিশেষ সম্মাননা</option>
-                      <option value="ম্যানেজার স্পেশাল ডিসকাউন্ট">ম্যানেজার স্পেশাল ডিসকাউন্ট</option>
-                      <option value="স্টেশনারি বাল্ক/পাইকারি সুবিধা">পাইকারি ও বাল্ক ক্রয় সুবিধা</option>
-                      <option value="ছাত্র ও শিক্ষক শিক্ষা সহায়তা">ছাত্র/শিক্ষক শিক্ষা সহায়তা</option>
-                      <option value="প্যাকেজিং হালকা ত্রুটি সমন্বয়">প্যাকেজিং ত্রুটি/স্ক্র্যাচ সমন্বয়</option>
+                      <option value="নিয়মিত কাস্টমার বিশেষ ছাড়">নিয়মিত গ্রাহক ছাড়</option>
+                      <option value="ম্যানেজার স্পেশাল ডিসকাউন্ট">ম্যানেজার বিশেষ ছাড়</option>
+                      <option value="স্টেশনারি বাল্ক/পাইকারি সুবিধা">বাল্ক ক্রয় সুবিধা</option>
+                      <option value="ছাত্র ও শিক্ষক শিক্ষা সহায়তা">শিক্ষা সহায়তা</option>
+                      <option value="প্যাকেজিং হালকা ত্রুটি সমন্বয়">প্যাকেজিং ত্রুটি সমন্বয়</option>
                     </select>
                   </div>
                 </div>
@@ -726,7 +726,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
               border: '1px solid var(--border-subtle)'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: 600 }}>
-                <span>লয়্যালটি পয়েন্ট রিডিম</span>
+                <span>পয়েন্ট রিডিম</span>
                 <span style={{ color: 'var(--primary)' }}>
                   {pointsToRedeem} পয়েন্ট (-৳{pointsDiscount.toFixed(2)})
                 </span>
@@ -746,24 +746,24 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
           {/* Itemized Math */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem', fontSize: '0.82rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.65rem' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
-              <span>উপমোট (Subtotal)</span>
+              <span>সাবটোটাল</span>
               <span style={{ fontFamily: 'var(--font-mono)' }}>৳{subtotal.toFixed(2)}</span>
             </div>
             {couponDiscount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--success)' }}>
-                <span>কুপন ভাউচার ছাড়</span>
+                <span>কুপন ছাড়</span>
                 <span style={{ fontFamily: 'var(--font-mono)' }}>-৳{couponDiscount.toFixed(2)}</span>
               </div>
             )}
             {manualDiscount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--accent)' }}>
-                <span>ম্যানুয়াল ছাড় ({manualDiscountReason})</span>
+                <span>ম্যানুয়াল ছাড়</span>
                 <span style={{ fontFamily: 'var(--font-mono)' }}>-৳{manualDiscount.toFixed(2)}</span>
               </div>
             )}
             {pointsDiscount > 0 && (
               <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--primary)' }}>
-                <span>পয়েন্ট ক্যাশব্যাক ছাড় ({pointsToRedeem} পয়েন্ট)</span>
+                <span>পয়েন্ট ছাড় ({pointsToRedeem})</span>
                 <span style={{ fontFamily: 'var(--font-mono)' }}>-৳{pointsDiscount.toFixed(2)}</span>
               </div>
             )}
@@ -772,7 +772,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
 
           {/* Net Total */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: '0.65rem', marginBottom: '0.75rem' }}>
-            <span style={{ fontWeight: 800, fontSize: '1rem' }}>সর্বমোট প্রদেয় বিল</span>
+            <span style={{ fontWeight: 800, fontSize: '1rem' }}>মোট প্রদেয় বিল</span>
             <span style={{ fontWeight: 800, fontSize: '1.4rem', fontFamily: 'var(--font-mono)', color: 'var(--text-main)' }}>
               ৳{finalTotal.toFixed(2)}
             </span>
@@ -780,7 +780,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
 
           {selectedCustomer && (
             <div style={{ fontSize: '0.75rem', color: 'var(--success)', marginBottom: '0.75rem', textAlign: 'center' }}>
-              ★ এই ক্রয়ে সদস্য পাবেন +{potentialPointsEarned} লয়্যালটি পয়েন্ট
+              ★ অর্জিত পয়েন্ট: +{potentialPointsEarned}
             </div>
           )}
 
@@ -806,7 +806,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
             disabled={cart.length === 0 || processing}
             onClick={handleCheckout}
           >
-            {processing ? 'চেকআউট প্রক্রিয়াকরণ চলছে...' : `পরিশোধ সম্পন্ন করুন ৳${finalTotal.toFixed(2)}`}
+            {processing ? 'প্রক্রিয়াকরণ...' : `পরিশোধ: ৳${finalTotal.toFixed(2)}`}
           </button>
         </div>
       </div>
@@ -823,9 +823,9 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <ShoppingBag size={18} />
-            <span>{cart.reduce((s, it) => s + it.quantity, 0)} টি আইটেম • ৳{finalTotal.toFixed(2)}</span>
+            <span>{cart.reduce((s, it) => s + it.quantity, 0)} পণ্য • ৳{finalTotal.toFixed(2)}</span>
           </div>
-          <span style={{ fontWeight: 800 }}>বিল পরিশোধ ➔</span>
+          <span style={{ fontWeight: 800 }}>পরিশোধ ➔</span>
         </button>
       )}
     </div>

@@ -41,7 +41,7 @@ export default function ReceiptModal({ orderId, onClose }) {
         <div className="modal-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)', fontWeight: 700, flex: 1, minWidth: 0 }}>
             <CheckCircle size={18} style={{ flexShrink: 0 }} /> 
-            <span style={{ wordBreak: 'break-word', minWidth: 0 }}>অর্ডার সফলভাবে সম্পন্ন</span>
+            <span style={{ wordBreak: 'break-word', minWidth: 0 }}>অর্ডার সম্পন্ন</span>
           </div>
           <button className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }} onClick={onClose}>
             <X size={16} />
@@ -104,34 +104,34 @@ export default function ReceiptModal({ orderId, onClose }) {
             {/* Financial Totals */}
             <div style={{ fontSize: '0.8rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>উপমোট:</span>
+                <span>সাবটোটাল:</span>
                 <span>৳{order.subtotal?.toFixed(2)}</span>
               </div>
               {order.discount_amount > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#059669' }}>
-                  <span>প্রোমো ভাউচার ছাড়:</span>
+                  <span>ভাউচার ছাড়:</span>
                   <span>-৳{order.discount_amount?.toFixed(2)}</span>
                 </div>
               )}
               {order.manual_discount > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#b45309' }}>
-                  <span>ম্যানুয়াল ছাড় {order.manual_discount_reason ? `(${order.manual_discount_reason})` : ''}:</span>
+                  <span>ম্যানুয়াল ছাড়:</span>
                   <span>-৳{order.manual_discount?.toFixed(2)}</span>
                 </div>
               )}
               {order.points_discount > 0 && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', color: '#4f46e5' }}>
-                  <span>লয়্যালটি পয়েন্ট ছাড় ({order.points_redeemed} পয়েন্ট):</span>
+                  <span>পয়েন্ট ছাড় ({order.points_redeemed}):</span>
                   <span>-৳{order.points_discount?.toFixed(2)}</span>
                 </div>
               )}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 900, fontSize: '1rem', marginTop: '0.35rem', borderTop: '1px solid #111', paddingTop: '0.35rem' }}>
-                <span>সর্বমোট পরিশোধিত:</span>
+                <span>মোট পরিশোধ:</span>
                 <span>৳{order.total?.toFixed(2)}</span>
               </div>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#4b5563' }}>
-                <span>পেমেন্ট মাধ্যম:</span>
+                <span>মাধ্যম:</span>
                 <span>{order.payment_method}</span>
               </div>
             </div>
@@ -139,8 +139,8 @@ export default function ReceiptModal({ orderId, onClose }) {
             <div className="thermal-divider" />
 
             <div className="thermal-receipt-center" style={{ fontSize: '0.75rem', color: '#374151' }}>
-              <div style={{ fontWeight: 700 }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকসে কেনাকাটার জন্য আন্তরিক ধন্যবাদ!</div>
-              <div>রসিদসহ ১৫ দিনের মধ্যে অক্ষত পণ্য পরিবর্তনযোগ্য।</div>
+              <div style={{ fontWeight: 700 }}>কেনাকাটার জন্য ধন্যবাদ!</div>
+              <div>১৫ দিনে পরিবর্তনযোগ্য।</div>
               <div style={{ marginTop: '0.5rem', fontFamily: 'monospace', fontSize: '0.7rem', letterSpacing: '0.2em' }}>
                 * |||||| | ||||| |||| || ||| *
               </div>
@@ -153,10 +153,10 @@ export default function ReceiptModal({ orderId, onClose }) {
 
         <div className="modal-footer">
           <button className="btn btn-secondary" onClick={onClose}>
-            বন্ধ করুন
+            বন্ধ
           </button>
           <button className="btn btn-primary" onClick={handlePrint}>
-            <Printer size={16} /> রসিদ প্রিন্ট করুন
+            <Printer size={16} /> প্রিন্ট
           </button>
         </div>
       </div>

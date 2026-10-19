@@ -29,13 +29,13 @@ export default function Sidebar({
   onOpenInstallModal
 }) {
   const navItems = [
-    { id: 'dashboard', label: 'এক্সিকিউটিভ ড্যাশবোর্ড', icon: LayoutDashboard },
-    { id: 'pos', label: 'পিওএস ক্যাশ কাউন্টার', icon: ShoppingCart },
-    { id: 'customers', label: 'কাস্টমার ৩৬০° সিআরএম', icon: Users },
-    { id: 'inventory', label: 'ডিপার্টমেন্ট ইনভেন্টরি', icon: Package },
-    { id: 'loyalty', label: 'লয়্যালটি ও রিওয়ার্ডস', icon: Award },
-    { id: 'campaigns', label: 'মার্কেটিং ক্যাম্পেইন', icon: Send },
-    { id: 'tickets', label: 'কাস্টমার সার্ভিস ও রিটার্ন', icon: LifeBuoy }
+    { id: 'dashboard', label: 'ড্যাশবোর্ড', icon: LayoutDashboard },
+    { id: 'pos', label: 'পিওএস কাউন্টার', icon: ShoppingCart },
+    { id: 'customers', label: 'কাস্টমার তালিকা', icon: Users },
+    { id: 'inventory', label: 'ইনভেন্টরি স্টক', icon: Package },
+    { id: 'loyalty', label: 'লয়্যালটি ও পয়েন্ট', icon: Award },
+    { id: 'campaigns', label: 'মার্কেটিং', icon: Send },
+    { id: 'tickets', label: 'সাপোর্ট ও রিটার্ন', icon: LifeBuoy }
   ];
 
   const handleNavClick = (tabId) => {
@@ -82,7 +82,7 @@ export default function Sidebar({
 
         {/* Navigation */}
         <nav className="nav-menu">
-          <div className="nav-label">দৈনন্দিন পরিচালনা</div>
+          <div className="nav-label">দৈনন্দিন</div>
           {navItems.slice(0, 3).map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
@@ -99,7 +99,7 @@ export default function Sidebar({
             );
           })}
 
-          <div className="nav-label">ব্যবস্থাপনা ও প্রবৃদ্ধি</div>
+          <div className="nav-label">ব্যবস্থাপনা</div>
           {navItems.slice(3).map((item) => {
             const Icon = item.icon;
             const isActive = currentTab === item.id;
@@ -160,7 +160,7 @@ export default function Sidebar({
               }}
             >
               <Download size={15} />
-              <span>অ্যাপ ইনস্টল করুন</span>
+              <span>অ্যাপ ইনস্টল</span>
             </button>
 
             <button 

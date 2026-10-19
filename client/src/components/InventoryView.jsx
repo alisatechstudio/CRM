@@ -479,10 +479,10 @@ export default function InventoryView() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
               <Package size={22} style={{ color: 'var(--primary)' }} />
-              <h2 style={{ fontSize: '1.35rem', margin: 0 }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস ইনভেন্টরি ও পণ্য ক্যাটালগ (CRUD)</h2>
+              <h2 style={{ fontSize: '1.35rem', margin: 0 }}>ইনভেন্টরি ও পণ্য ক্যাটালগ</h2>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.35rem' }}>
-              সকল কম্পিউটার এক্সেসরিজ, কসমেটিকস ও স্টেশনারি পণ্যের নতুন এসকেইউ সংযোজন, তথ্য সম্পাদনা, ড্যামেজ সমন্বয় ও সম্পূর্ণ ইনভেন্টরি নিয়ন্ত্রণ।
+              পণ্য স্টক, মূল্য ও ক্যাটাগরি ব্যবস্থাপনা।
             </p>
           </div>
 
@@ -494,10 +494,10 @@ export default function InventoryView() {
                 setShowAddDeptModal(true);
               }}
             >
-              <FolderPlus size={16} /> নতুন বিভাগ যুক্ত করুন
+              <FolderPlus size={16} /> + নতুন বিভাগ
             </button>
             <button className="btn btn-primary" onClick={handleOpenAddModal}>
-              <Plus size={16} /> নতুন পণ্য যুক্ত করুন
+              <Plus size={16} /> + নতুন পণ্য
             </button>
           </div>
         </div>
@@ -535,13 +535,13 @@ export default function InventoryView() {
         {/* Filter controls */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem', marginTop: '1.35rem' }}>
           <div className="input-group">
-            <label className="input-label">এসকেইউ বা বারকোড খুঁজুন</label>
+            <label className="input-label">পণ্য অনুসন্ধান</label>
             <div style={{ position: 'relative' }}>
               <input 
                 type="text"
                 className="form-control"
                 style={{ width: '100%', paddingLeft: '2.4rem' }}
-                placeholder="যেমন: বসুন্ধরা A4, ম্যাটাডোর, ক্যালকুলেটর..."
+                placeholder="নাম বা বারকোড খুঁজুন..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
@@ -550,13 +550,13 @@ export default function InventoryView() {
           </div>
 
           <div className="input-group">
-            <label className="input-label">বিভাগ নির্বাচন করুন</label>
+            <label className="input-label">বিভাগ</label>
             <select 
               className="form-control"
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
             >
-              <option value="all">সকল বিভাগ ({products.length} পণ্য)</option>
+              <option value="all">সব বিভাগ ({products.length})</option>
               {activeDepartments.map(d => (
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
@@ -564,17 +564,17 @@ export default function InventoryView() {
           </div>
 
           <div className="input-group">
-            <label className="input-label">ক্রমানুসার (Sorting)</label>
+            <label className="input-label">সর্ট</label>
             <div style={{ position: 'relative' }}>
               <select 
                 className="form-control"
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
               >
-                <option value="newest">🕒 সর্বশেষ সংযোজিত (শীর্ষে)</option>
-                <option value="name">🔤 নামানুসারে (A - Z)</option>
-                <option value="price_desc">💰 বিক্রয়মূল্য: বেশি থেকে কম</option>
-                <option value="price_asc">🏷️ বিক্রয়মূল্য: কম থেকে বেশি</option>
+                <option value="newest">🕒 নতুন সংযোজিত</option>
+                <option value="name">🔤 নাম (A - Z)</option>
+                <option value="price_desc">💰 মূল্য: বেশি থেকে কম</option>
+                <option value="price_asc">🏷️ মূল্য: কম থেকে বেশি</option>
                 <option value="stock_asc">📦 স্টক: কম থেকে বেশি</option>
                 <option value="stock_desc">📦 স্টক: বেশি থেকে কম</option>
                 <option value="oldest">📅 পুরাতন সংযোজিত</option>
@@ -583,25 +583,25 @@ export default function InventoryView() {
           </div>
 
           <div className="input-group">
-            <label className="input-label">মেয়াদ ফিল্টার (Date Filter)</label>
+            <label className="input-label">মেয়াদ ফিল্টার</label>
             <select 
               className="form-control"
               value={expiryFilter}
               onChange={(e) => setExpiryFilter(e.target.value)}
             >
-              <option value="all">সকল মেয়াদ স্থিতি</option>
-              <option value="expiring_30">⏳ দ্রুত মেয়াদ শেষ (৩০ দিন)</option>
-              <option value="expiring_60">⏳ ৬০ দিনের মধ্যে শেষ</option>
-              <option value="expiring_90">⏳ ৯০ দিনের মধ্যে শেষ</option>
-              <option value="expired">⚠ ইতিমধ্যে মেয়াদোত্তীর্ণ</option>
-              <option value="has_expiry">✓ মেয়াদ প্রযোজ্য পণ্যসমূহ</option>
-              <option value="no_expiry">🔒 প্রযোজ্য নয় (N/A)</option>
-              <option value="custom">📅 কাস্টম তারিখ রেঞ্জ (Custom)...</option>
+              <option value="all">সকল মেয়াদ</option>
+              <option value="expiring_30">⏳ মেয়াদ শেষ (৩০ দিন)</option>
+              <option value="expiring_60">⏳ মেয়াদ শেষ (৬০ দিন)</option>
+              <option value="expiring_90">⏳ মেয়াদ শেষ (৯০ দিন)</option>
+              <option value="expired">⚠ মেয়াদোত্তীর্ণ</option>
+              <option value="has_expiry">✓ মেয়াদ প্রযোজ্য</option>
+              <option value="no_expiry">🔒 প্রযোজ্য নয়</option>
+              <option value="custom">📅 কাস্টম তারিখ...</option>
             </select>
           </div>
 
           <div className="input-group">
-            <label className="input-label">ইনভেন্টরি স্থিতি</label>
+            <label className="input-label">স্টক ফিল্টার</label>
             <button 
               type="button"
               className={`btn ${lowStockOnly ? 'btn-danger' : 'btn-secondary'}`}
@@ -609,7 +609,7 @@ export default function InventoryView() {
               onClick={() => setLowStockOnly(!lowStockOnly)}
             >
               <AlertTriangle size={15} />
-              <span>{lowStockOnly ? 'কম স্টক ফিল্টার্ড' : 'সকল স্টক প্রদর্শিত'}</span>
+              <span>{lowStockOnly ? 'কম স্টক' : 'সকল স্টক'}</span>
             </button>
           </div>
         </div>
@@ -628,7 +628,7 @@ export default function InventoryView() {
             flexWrap: 'wrap'
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontWeight: 700, fontSize: '0.82rem' }}>
-              <Calendar size={15} /> কাস্টম মেয়াদ ফিল্টার:
+              <Calendar size={15} /> কাস্টম মেয়াদ:
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
               <label style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>শুরু:</label>
@@ -661,7 +661,7 @@ export default function InventoryView() {
               </button>
             )}
             <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)', marginLeft: 'auto' }}>
-              মোট ফিল্টার্ড পণ্য: {products.length} টি
+              মোট: {products.length} টি
             </span>
           </div>
         )}
@@ -673,15 +673,15 @@ export default function InventoryView() {
           <table className="data-table">
             <thead>
               <tr>
-                <th>পণ্যের নাম ও বারকোড</th>
+                <th>পণ্য ও বারকোড</th>
                 <th>বিভাগ</th>
                 <th>ক্যাটাগরি</th>
-                <th>বিক্রয় মূল্য (৳)</th>
-                <th>ক্রয়মূল্য (৳)</th>
-                <th>লাভের মার্জিন</th>
-                <th>বর্তমান স্টক</th>
-                <th>মেয়াদ (Expiry Date)</th>
-                <th style={{ textAlign: 'right' }}>কার্যক্রম (CRUD Actions)</th>
+                <th>বিক্রয়মূল্য</th>
+                <th>ক্রয়মূল্য</th>
+                <th>মার্জিন</th>
+                <th>স্টক</th>
+                <th>মেয়াদ</th>
+                <th style={{ textAlign: 'right' }}>অ্যাকশন</th>
               </tr>
             </thead>
             <tbody>
@@ -827,7 +827,7 @@ export default function InventoryView() {
                             border: '1px solid var(--border-subtle)',
                             whiteSpace: 'nowrap'
                           }}>
-                            প্রযোজ্য নয় (N/A)
+                            প্রযোজ্য নয়
                           </span>
                         )}
                       </td>
@@ -837,23 +837,23 @@ export default function InventoryView() {
                           {/* Edit Button */}
                           <button 
                             className="btn btn-secondary btn-sm"
-                            title="পণ্য ও মূল্য সম্পাদনা করুন"
+                            title="সম্পাদনা"
                             onClick={() => openEditModal(p)}
                             style={{ padding: '0.35rem 0.6rem' }}
                           >
                             <Edit2 size={13} style={{ color: 'var(--primary)' }} />
-                            <span>সম্পাদনা</span>
+                            <span>এডিট</span>
                           </button>
 
                           {/* Stock Adjust Button */}
                           <button 
                             className="btn btn-secondary btn-sm"
-                            title="ইনভেন্টরি চালান বা ড্যামেজ সমন্বয় করুন"
+                            title="স্টক সমন্বয়"
                             onClick={() => openAdjustModal(p)}
                             style={{ padding: '0.35rem 0.6rem' }}
                           >
                             <Sliders size={13} style={{ color: 'var(--accent)' }} />
-                            <span>স্টক ইন/আউট</span>
+                            <span>সমন্বয়</span>
                           </button>
 
                           {/* Quick +10 */}
@@ -926,7 +926,7 @@ export default function InventoryView() {
                     <div className="inv-card-alerts">
                       {isLow && (
                         <span className="inv-alert-badge low-stock">
-                          ⚠️ কম স্টক ({p.stock_qty} / সীমা {p.min_threshold})
+                          ⚠️ কম স্টক (সীমা {p.min_threshold})
                         </span>
                       )}
                       {isExpired && (
@@ -936,7 +936,7 @@ export default function InventoryView() {
                       )}
                       {!isExpired && diffDays !== null && diffDays <= 45 && (
                         <span className="inv-alert-badge expiring-soon">
-                          ⏳ মেয়াদ {diffDays} দিন বাকি ({p.expiry_date})
+                          ⏳ {diffDays} দিন বাকি ({p.expiry_date})
                         </span>
                       )}
                     </div>
@@ -974,7 +974,7 @@ export default function InventoryView() {
                       title="স্টক সমন্বয়"
                     >
                       <Sliders size={13} style={{ color: 'var(--accent)' }} />
-                      <span>স্টক সমন্বয়</span>
+                      <span>সমন্বয়</span>
                     </button>
                     <button 
                       type="button" 
@@ -1016,7 +1016,7 @@ export default function InventoryView() {
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flex: 1, minWidth: 0 }}>
                 <Plus size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-                <h2 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, wordBreak: 'break-word', minWidth: 0 }}>নতুন পণ্য সংযোজন (Add Product)</h2>
+                <h2 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, wordBreak: 'break-word', minWidth: 0 }}>নতুন পণ্য সংযোজন</h2>
               </div>
               <button className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }} onClick={() => setShowAddModal(false)}>
                 <X size={16} />
@@ -1026,12 +1026,12 @@ export default function InventoryView() {
             <form onSubmit={handleCreateProduct} className="modal-form" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 <div className="input-group">
-                  <label className="input-label">পণ্যের নাম (বাংলা) *</label>
+                  <label className="input-label">পণ্যের নাম *</label>
                   <input 
                     type="text" 
                     className="form-control" 
                     required 
-                    placeholder="যেমন: ডেল্টা লেভার আর্চ বক্স ফাইল (A4) / নিভিয়া সফট ক্রিম ১০০মি.লি."
+                    placeholder="পণ্যের নাম লিখুন..."
                     value={newProd.name}
                     onChange={(e) => setNewProd({ ...newProd, name: e.target.value })}
                   />
@@ -1041,7 +1041,7 @@ export default function InventoryView() {
                 <div className="modal-grid-dept" style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                      <label className="input-label" style={{ margin: 0 }}>বিভাগ (Department) *</label>
+                      <label className="input-label" style={{ margin: 0 }}>বিভাগ *</label>
                       <button 
                         type="button" 
                         onClick={() => {
@@ -1078,7 +1078,7 @@ export default function InventoryView() {
 
                   <div className="input-group">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                      <label className="input-label" style={{ margin: 0 }}>ক্যাটাগরি (Category) *</label>
+                      <label className="input-label" style={{ margin: 0 }}>ক্যাটাগরি *</label>
                       {!isCustomAddCategory ? (
                         <button 
                           type="button" 
@@ -1098,7 +1098,7 @@ export default function InventoryView() {
                             fontWeight: 600
                           }}
                         >
-                          + কাস্টম ক্যাটাগরি
+                          + নতুন ক্যাটাগরি
                         </button>
                       ) : (
                         <button 
@@ -1142,14 +1142,14 @@ export default function InventoryView() {
                         {getCategoriesForDept(newProd.department_id).map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
-                        <option value="__custom__">➕ নতুন কাস্টম ক্যাটাগরি লিখুন...</option>
+                        <option value="__custom__">+ নতুন ক্যাটাগরি...</option>
                       </select>
                     ) : (
                       <input 
                         type="text" 
                         className="form-control" 
                         required
-                        placeholder="ক্যাটাগরির নাম লিখুন (যেমন: ড্রয়িং শিট / লোশন)"
+                        placeholder="ক্যাটাগরির নাম..."
                         value={newProd.category}
                         onChange={(e) => {
                           setCustomAddCategory(e.target.value);
@@ -1165,7 +1165,7 @@ export default function InventoryView() {
                 <div className="modal-grid-barcode" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                      <label className="input-label" style={{ margin: 0 }}>বারকোড / এসকেইউ *</label>
+                      <label className="input-label" style={{ margin: 0 }}>বারকোড *</label>
                       <button 
                         type="button" 
                         onClick={generateRandomBarcode}
@@ -1180,7 +1180,7 @@ export default function InventoryView() {
                           fontWeight: 600
                         }}
                       >
-                        স্বয়ংক্রিয় তৈরি
+                        অটো কোড
                       </button>
                     </div>
                     <input 
@@ -1194,19 +1194,19 @@ export default function InventoryView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label" style={{ marginBottom: '0.35rem' }}>একক (Unit) *</label>
+                    <label className="input-label" style={{ marginBottom: '0.35rem' }}>একক *</label>
                     <select 
                       className="form-control"
                       value={newProd.unit}
                       onChange={(e) => setNewProd({ ...newProd, unit: e.target.value })}
                     >
-                      <option value="পিস">পিস (pcs)</option>
-                      <option value="প্যাকেট">প্যাকেট (pack)</option>
-                      <option value="রিম">রিম (ream)</option>
-                      <option value="বক্স">বক্স (box)</option>
-                      <option value="ডজন">ডজন (dozen)</option>
-                      <option value="সেট">সেট (set)</option>
-                      <option value="রোল">রোল (roll)</option>
+                      <option value="পিস">পিস</option>
+                      <option value="প্যাকেট">প্যাকেট</option>
+                      <option value="রিম">রিম</option>
+                      <option value="বক্স">বক্স</option>
+                      <option value="ডজন">ডজন</option>
+                      <option value="সেট">সেট</option>
+                      <option value="রোল">রোল</option>
                     </select>
                   </div>
                 </div>
@@ -1243,7 +1243,7 @@ export default function InventoryView() {
                 {/* Initial Stock & Threshold in 2 Columns */}
                 <div className="modal-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label">প্রারম্ভিক মজুদ স্টক</label>
+                    <label className="input-label">প্রারম্ভিক স্টক</label>
                     <input 
                       type="number" 
                       className="form-control" 
@@ -1253,7 +1253,7 @@ export default function InventoryView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">কম স্টক অ্যালার্ট সীমা</label>
+                    <label className="input-label">কম স্টক সীমা</label>
                     <input 
                       type="number" 
                       className="form-control" 
@@ -1281,10 +1281,10 @@ export default function InventoryView() {
                         onChange={(e) => setNewProd({ ...newProd, has_expiry: e.target.checked, expiry_date: e.target.checked ? (newProd.expiry_date || '') : '' })}
                         style={{ accentColor: 'var(--primary)', width: '17px', height: '17px' }}
                       />
-                      <span>এই পণ্যে মেয়াদোত্তীর্ণের তারিখ (Expiry Date) প্রযোজ্য</span>
+                      <span>মেয়াদোত্তীর্ণের তারিখ প্রযোজ্য</span>
                     </label>
                     <span style={{ fontSize: '0.74rem', color: newProd.has_expiry ? 'var(--primary)' : 'var(--text-dim)', fontWeight: 600 }}>
-                      {newProd.has_expiry ? 'তারিখ প্রযোজ্য' : 'প্রযোজ্য নয় (Not Applicable)'}
+                      {newProd.has_expiry ? 'প্রযোজ্য' : 'প্রযোজ্য নয়'}
                     </span>
                   </div>
 
@@ -1298,12 +1298,12 @@ export default function InventoryView() {
                         onChange={(e) => setNewProd({ ...newProd, expiry_date: e.target.value })}
                       />
                       <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                        কসমেটিকস, ক্রিম, লোশন, আঠা বা কালির মেয়াদ
+                        মেয়াদ নির্ধারণ করুন
                       </span>
                     </div>
                   ) : (
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
-                      🔒 স্টেশনারি বা দীর্ঘমেয়াদী সামগ্রীতে মেয়াদ প্রয়োজন না হলে এটি বন্ধ রাখুন।
+                      মেয়াদ প্রয়োজন না হলে বন্ধ রাখুন।
                     </div>
                   )}
                 </div>
@@ -1314,7 +1314,7 @@ export default function InventoryView() {
                   বাতিল
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'সংরক্ষণ হচ্ছে...' : 'ক্যাটালগে যুক্ত করুন'}
+                  {saving ? 'সংরক্ষণ...' : 'সংরক্ষণ করুন'}
                 </button>
               </div>
             </form>
@@ -1329,7 +1329,7 @@ export default function InventoryView() {
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flex: 1, minWidth: 0 }}>
                 <Edit2 size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-                <h2 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, wordBreak: 'break-word', minWidth: 0 }}>পণ্য ও মূল্য সম্পাদনা (Edit Product)</h2>
+                <h2 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, wordBreak: 'break-word', minWidth: 0 }}>পণ্য সম্পাদনা</h2>
               </div>
               <button className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }} onClick={() => setShowEditModal(false)}>
                 <X size={16} />
@@ -1353,7 +1353,7 @@ export default function InventoryView() {
                 <div className="modal-grid-dept" style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                      <label className="input-label" style={{ margin: 0 }}>বিভাগ (Department) *</label>
+                      <label className="input-label" style={{ margin: 0 }}>বিভাগ *</label>
                       <button 
                         type="button" 
                         onClick={() => {
@@ -1390,7 +1390,7 @@ export default function InventoryView() {
 
                   <div className="input-group">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
-                      <label className="input-label" style={{ margin: 0 }}>ক্যাটাগরি (Category) *</label>
+                      <label className="input-label" style={{ margin: 0 }}>ক্যাটাগরি *</label>
                       {!isCustomEditCategory ? (
                         <button 
                           type="button" 
@@ -1410,7 +1410,7 @@ export default function InventoryView() {
                             fontWeight: 600
                           }}
                         >
-                          + কাস্টম ক্যাটাগরি
+                          + নতুন ক্যাটাগরি
                         </button>
                       ) : (
                         <button 
@@ -1454,14 +1454,14 @@ export default function InventoryView() {
                         {getCategoriesForDept(editForm.department_id, editingProduct?.category).map(cat => (
                           <option key={cat} value={cat}>{cat}</option>
                         ))}
-                        <option value="__custom__">➕ নতুন কাস্টম ক্যাটাগরি লিখুন...</option>
+                        <option value="__custom__">+ নতুন ক্যাটাগরি...</option>
                       </select>
                     ) : (
                       <input 
                         type="text" 
                         className="form-control" 
                         required
-                        placeholder="ক্যাটাগরির নাম লিখুন (যেমন: ড্রয়িং শিট / লোশন)"
+                        placeholder="ক্যাটাগরির নাম..."
                         value={editForm.category}
                         onChange={(e) => {
                           setCustomEditCategory(e.target.value);
@@ -1476,7 +1476,7 @@ export default function InventoryView() {
                 {/* Barcode & Unit */}
                 <div className="modal-grid-barcode" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label" style={{ marginBottom: '0.35rem' }}>বারকোড / এসকেইউ *</label>
+                    <label className="input-label" style={{ marginBottom: '0.35rem' }}>বারকোড *</label>
                     <input 
                       type="text" 
                       className="form-control" 
@@ -1487,19 +1487,19 @@ export default function InventoryView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label" style={{ marginBottom: '0.35rem' }}>একক (Unit) *</label>
+                    <label className="input-label" style={{ marginBottom: '0.35rem' }}>একক *</label>
                     <select 
                       className="form-control"
                       value={editForm.unit}
                       onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
                     >
-                      <option value="পিস">পিস (pcs)</option>
-                      <option value="প্যাকেট">প্যাকেট (pack)</option>
-                      <option value="রিম">রিম (ream)</option>
-                      <option value="বক্স">বক্স (box)</option>
-                      <option value="ডজন">ডজন (dozen)</option>
-                      <option value="সেট">সেট (set)</option>
-                      <option value="রোল">রোল (roll)</option>
+                      <option value="পিস">পিস</option>
+                      <option value="প্যাকেট">প্যাকেট</option>
+                      <option value="রিম">রিম</option>
+                      <option value="বক্স">বক্স</option>
+                      <option value="ডজন">ডজন</option>
+                      <option value="সেট">সেট</option>
+                      <option value="রোল">রোল</option>
                     </select>
                   </div>
                 </div>
@@ -1533,7 +1533,7 @@ export default function InventoryView() {
                 {/* Current Stock & Threshold in 2 Columns */}
                 <div className="modal-grid-2col" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label">বর্তমান মজুদ স্টক</label>
+                    <label className="input-label">বর্তমান স্টক</label>
                     <input 
                       type="number" 
                       className="form-control" 
@@ -1543,7 +1543,7 @@ export default function InventoryView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">কম স্টক অ্যালার্ট সীমা</label>
+                    <label className="input-label">কম স্টক সীমা</label>
                     <input 
                       type="number" 
                       className="form-control" 
@@ -1571,10 +1571,10 @@ export default function InventoryView() {
                         onChange={(e) => setEditForm({ ...editForm, has_expiry: e.target.checked, expiry_date: e.target.checked ? (editForm.expiry_date || '') : '' })}
                         style={{ accentColor: 'var(--primary)', width: '17px', height: '17px' }}
                       />
-                      <span>এই পণ্যে মেয়াদোত্তীর্ণের তারিখ (Expiry Date) প্রযোজ্য</span>
+                      <span>মেয়াদোত্তীর্ণের তারিখ প্রযোজ্য</span>
                     </label>
                     <span style={{ fontSize: '0.74rem', color: editForm.has_expiry ? 'var(--primary)' : 'var(--text-dim)', fontWeight: 600 }}>
-                      {editForm.has_expiry ? 'তারিখ প্রযোজ্য' : 'প্রযোজ্য নয় (Not Applicable)'}
+                      {editForm.has_expiry ? 'প্রযোজ্য' : 'প্রযোজ্য নয়'}
                     </span>
                   </div>
 
@@ -1588,12 +1588,12 @@ export default function InventoryView() {
                         onChange={(e) => setEditForm({ ...editForm, expiry_date: e.target.value })}
                       />
                       <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                        মেয়াদ উত্তীর্ণের তারিখ নির্ধারণ করুন
+                        মেয়াদ নির্ধারণ করুন
                       </span>
                     </div>
                   ) : (
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
-                      🔒 স্টেশনারি বা সাধারণ সামগ্রীতে মেয়াদ প্রযোজ্য না হলে বন্ধ রাখুন।
+                      মেয়াদ প্রয়োজন না হলে বন্ধ রাখুন।
                     </div>
                   )}
                 </div>
@@ -1612,8 +1612,8 @@ export default function InventoryView() {
                     gap: '0.5rem',
                     fontSize: '0.86rem'
                   }}>
-                    <span>একক প্রতি আনুমানিক লাভ: <strong>৳{(parseFloat(editForm.price) - parseFloat(editForm.cost || 0)).toFixed(2)}</strong></span>
-                    <span>লাভের শতকরা হার (মার্জিন): <strong style={{ color: 'var(--success)' }}>
+                    <span>এককে লাভ: <strong>৳{(parseFloat(editForm.price) - parseFloat(editForm.cost || 0)).toFixed(2)}</strong></span>
+                    <span>মার্জিন: <strong style={{ color: 'var(--success)' }}>
                       {(((parseFloat(editForm.price) - parseFloat(editForm.cost || 0)) / parseFloat(editForm.price)) * 100).toFixed(1)}%
                     </strong></span>
                   </div>
@@ -1625,7 +1625,7 @@ export default function InventoryView() {
                   বাতিল
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'আপডেট হচ্ছে...' : 'পরিবর্তন সংরক্ষণ করুন'}
+                  {saving ? 'সংরক্ষণ...' : 'সংরক্ষণ করুন'}
                 </button>
               </div>
             </form>
@@ -1640,7 +1640,7 @@ export default function InventoryView() {
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', flex: 1, minWidth: 0 }}>
                 <Sliders size={18} style={{ color: 'var(--accent)', flexShrink: 0 }} />
-                <h2 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, wordBreak: 'break-word', minWidth: 0 }}>ইনভেন্টরি স্টক সমন্বয় (Stock Adjustment)</h2>
+                <h2 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, wordBreak: 'break-word', minWidth: 0 }}>স্টক সমন্বয়</h2>
               </div>
               <button className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }} onClick={() => setShowAdjustModal(false)}>
                 <X size={16} />
@@ -1657,7 +1657,7 @@ export default function InventoryView() {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label" style={{ marginBottom: '0.45rem' }}>সমন্বয়ের ধরণ নির্বাচন করুন *</label>
+                  <label className="input-label" style={{ marginBottom: '0.45rem' }}>সমন্বয়ের ধরন *</label>
                   <div className="stock-adjust-btn-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.65rem' }}>
                     <button
                       type="button"
@@ -1665,7 +1665,7 @@ export default function InventoryView() {
                       style={{ justifyContent: 'center', fontSize: '0.82rem', padding: '0.55rem 0.75rem' }}
                       onClick={() => setAdjustType('add')}
                     >
-                      <ArrowUpRight size={14} /> স্টক বৃদ্ধি (+)
+                      <ArrowUpRight size={14} /> বৃদ্ধি (+)
                     </button>
                     <button
                       type="button"
@@ -1673,7 +1673,7 @@ export default function InventoryView() {
                       style={{ justifyContent: 'center', fontSize: '0.82rem', padding: '0.55rem 0.75rem' }}
                       onClick={() => setAdjustType('remove')}
                     >
-                      <ArrowDownRight size={14} /> ড্যামেজ/হ্রাস (-)
+                      <ArrowDownRight size={14} /> হ্রাস (-)
                     </button>
                     <button
                       type="button"
@@ -1681,14 +1681,14 @@ export default function InventoryView() {
                       style={{ justifyContent: 'center', fontSize: '0.82rem', padding: '0.55rem 0.75rem' }}
                       onClick={() => setAdjustType('set')}
                     >
-                      সরাসরি সেট
+                      নতুন সংখ্যা
                     </button>
                   </div>
                 </div>
 
                 <div className="input-group">
                   <label className="input-label">
-                    {adjustType === 'add' ? 'যোগ করার পরিমাণ (Quantity to Add)' : adjustType === 'remove' ? 'কর্তন করার পরিমাণ (Quantity to Deduct)' : 'নতুন মোট স্টক সংখ্যা (Set Exact Count)'} *
+                    {adjustType === 'add' ? 'যোগ করার পরিমাণ' : adjustType === 'remove' ? 'কর্তন করার পরিমাণ' : 'নতুন মোট স্টক'} *
                   </label>
                   <input 
                     type="number"
@@ -1701,7 +1701,7 @@ export default function InventoryView() {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">সমন্বয়ের কারণ / নোট *</label>
+                  <label className="input-label">সমন্বয়ের কারণ *</label>
                   <select 
                     className="form-control"
                     value={adjustReason}
@@ -1724,7 +1724,7 @@ export default function InventoryView() {
                   borderRadius: 'var(--radius-sm)',
                   border: '1px solid var(--border-subtle)'
                 }}>
-                  সমন্বয়ের পর প্রত্যাশিত নতুন স্টক হবে:{' '}
+                  সমন্বয়ের পর নতুন স্টক:{' '}
                   <strong style={{ color: 'var(--text-main)', fontFamily: 'var(--font-mono)' }}>
                     {adjustType === 'add' ? adjustingProduct.stock_qty + parseInt(adjustQty || 0, 10) :
                      adjustType === 'remove' ? Math.max(0, adjustingProduct.stock_qty - parseInt(adjustQty || 0, 10)) :
@@ -1738,7 +1738,7 @@ export default function InventoryView() {
                   বাতিল
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={saving}>
-                  {saving ? 'প্রক্রিয়াকরণ হচ্ছে...' : 'স্টক আপডেট সম্পন্ন করুন'}
+                  {saving ? 'সংরক্ষণ...' : 'সংরক্ষণ করুন'}
                 </button>
               </div>
             </form>
@@ -1753,7 +1753,7 @@ export default function InventoryView() {
             <div className="modal-header">
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', color: 'var(--danger)', flex: 1, minWidth: 0 }}>
                 <ShieldAlert size={20} style={{ flexShrink: 0 }} />
-                <h2 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, wordBreak: 'break-word', minWidth: 0 }}>পণ্য মুছে ফেলার সতর্কতা</h2>
+                <h2 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, wordBreak: 'break-word', minWidth: 0 }}>পণ্য মুছে ফেলা</h2>
               </div>
               <button className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }} onClick={() => setShowDeleteModal(false)}>
                 <X size={16} />
@@ -1762,7 +1762,7 @@ export default function InventoryView() {
 
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
               <p style={{ fontSize: '0.92rem', margin: 0, lineHeight: 1.5 }}>
-                আপনি কি নিশ্চিতভাবে এই পণ্যটি মিজান কম্পিউটার অ্যান্ড কসমেটিকসের ক্যাটালগ থেকে মুছে ফেলতে চান?
+                আপনি কি নিশ্চিতভাবে এই পণ্যটি ক্যাটালগ থেকে মুছে ফেলতে চান?
               </p>
 
               <div style={{ 
@@ -1779,13 +1779,13 @@ export default function InventoryView() {
               </div>
 
               <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
-                দ্রষ্টব্য: যদি এই পণ্যের অধীনে পূর্বে কোনো বিক্রয় চালান (অর্ডার) তৈরি হয়ে থাকে, তবে হিসাবের ভারসাম্য রক্ষার্থে এটি মুছে ফেলা যাবে না। সেক্ষেত্রে স্টক ০ করে সংরক্ষণ করতে পারেন।
+                নোট: এই পণ্যের কোনো পূর্বের অর্ডার থাকলে এটি মোছা যাবে না; সেক্ষেত্রে স্টক ০ করুন।
               </p>
             </div>
 
             <div className="modal-footer">
               <button type="button" className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
-                বাতিল করুন
+                বাতিল
               </button>
               <button 
                 type="button" 
@@ -1793,7 +1793,7 @@ export default function InventoryView() {
                 disabled={saving}
                 onClick={handleDeleteProduct}
               >
-                {saving ? 'মুছে ফেলা হচ্ছে...' : 'হ্যাঁ, পণ্যটি মুছে ফেলুন'}
+                {saving ? 'মুছছি...' : 'মুছে ফেলুন'}
               </button>
             </div>
           </div>
@@ -1810,8 +1810,8 @@ export default function InventoryView() {
                   <FolderPlus size={18} />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <h2 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, wordBreak: 'break-word' }}>নতুন বিভাগ সংযোজন (Add Department)</h2>
-                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)', wordBreak: 'break-word' }}>ইনভেন্টরি ক্যাটালগ ও পিওএস-এর জন্য নতুন পণ্য বিভাগ তৈরি করুন</p>
+                  <h2 style={{ fontSize: '1.15rem', margin: 0, fontWeight: 700, wordBreak: 'break-word' }}>নতুন বিভাগ সংযোজন</h2>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)', wordBreak: 'break-word' }}>ক্যাটালগ ও পিওএস-এর জন্য নতুন বিভাগ</p>
                 </div>
               </div>
               <button className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }} onClick={() => setShowAddDeptModal(false)}>
@@ -1822,12 +1822,12 @@ export default function InventoryView() {
             <form onSubmit={handleCreateDepartment} className="modal-form" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 <div className="input-group">
-                  <label className="input-label">বিভাগের নাম (Department Name) *</label>
+                  <label className="input-label">বিভাগের নাম *</label>
                   <input 
                     type="text" 
                     className="form-control" 
                     required 
-                    placeholder="যেমন: কম্পিউটার ও আইটি সামগ্রী, উপহার ও খেলনা..."
+                    placeholder="বিভাগের নাম লিখুন..."
                     value={newDeptForm.name}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -1842,8 +1842,8 @@ export default function InventoryView() {
 
                 <div className="input-group">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label className="input-label">বিভাগ কোড (Department Code)</label>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>যেমন: ITAC, GIFT, BOOK (ঐচ্ছিক)</span>
+                    <label className="input-label">বিভাগ কোড</label>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>ঐচ্ছিক (যেমন: ITAC)</span>
                   </div>
                   <input 
                     type="text" 
@@ -1857,8 +1857,8 @@ export default function InventoryView() {
 
                 <div className="input-group">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <label className="input-label">প্রাথমিক ক্যাটাগরি তালিকা</label>
-                    <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>কমা (,) দিয়ে আলাদা করুন</span>
+                    <label className="input-label">প্রাথমিক ক্যাটাগরি</label>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>কমা দিয়ে আলাদা করুন</span>
                   </div>
                   <input 
                     type="text" 
@@ -1870,11 +1870,11 @@ export default function InventoryView() {
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">বিবরণ (Description)</label>
+                  <label className="input-label">বিবরণ</label>
                   <textarea 
                     className="form-control" 
                     rows={2}
-                    placeholder="বিভাগের সংক্ষিপ্ত পরিচিতি..."
+                    placeholder="বিভাগের সংক্ষিপ্ত বিবরণ..."
                     value={newDeptForm.description}
                     onChange={(e) => setNewDeptForm({ ...newDeptForm, description: e.target.value })}
                   />
@@ -1886,7 +1886,7 @@ export default function InventoryView() {
                   বাতিল
                 </button>
                 <button type="submit" className="btn btn-primary" disabled={savingDept}>
-                  <Plus size={15} /> {savingDept ? 'সংরক্ষণ হচ্ছে...' : 'বিভাগ তৈরি করুন'}
+                  <Plus size={15} /> {savingDept ? 'সংরক্ষণ...' : 'সংরক্ষণ করুন'}
                 </button>
               </div>
             </form>

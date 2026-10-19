@@ -52,7 +52,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
             <div className="brand-icon" style={{ width: '28px', height: '28px', flexShrink: 0 }}>
               <UserPlus size={16} />
             </div>
-            <h2 style={{ fontSize: '1.15rem', margin: 0, wordBreak: 'break-word' }}>মিজান মেম্বার নিবন্ধন ফরম</h2>
+            <h2 style={{ fontSize: '1.15rem', margin: 0, wordBreak: 'break-word' }}>নতুন গ্রাহক নিবন্ধন</h2>
           </div>
           <button className="btn btn-secondary btn-icon" onClick={onClose} style={{ flexShrink: 0 }}>
             <X size={16} />
@@ -72,29 +72,29 @@ export default function NewCustomerModal({ onClose, onCreated }) {
               gap: '0.5rem'
             }}>
               <Award size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-              <span>নতুন সদস্যরা স্বয়ংক্রিয়ভাবে একটি <strong>ব্রোঞ্জ লয়্যালটি কার্ড</strong> এবং <strong>৫০ ওয়েলকাম বোনাস পয়েন্ট</strong> পাবেন।</span>
+              <span>নতুন গ্রাহক ব্রোঞ্জ কার্ড ও <strong>৫০ পয়েন্ট ওয়েলকাম বোনাস</strong> পাবেন।</span>
             </div>
 
             <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="input-group">
-                <label className="input-label">নামের প্রথম অংশ *</label>
+                <label className="input-label">প্রথম নাম *</label>
                 <input 
                   type="text" 
                   className="form-control" 
                   required 
-                  placeholder="যেমন: ড. আরিফুল"
+                  placeholder="আরিফুল"
                   value={formData.first_name}
                   onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
                 />
               </div>
 
               <div className="input-group">
-                <label className="input-label">নামের শেষ অংশ *</label>
+                <label className="input-label">শেষ নাম *</label>
                 <input 
                   type="text" 
                   className="form-control" 
                   required 
-                  placeholder="যেমন: ইসলাম"
+                  placeholder="ইসলাম"
                   value={formData.last_name}
                   onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
                 />
@@ -103,7 +103,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
 
             <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="input-group">
-                <label className="input-label">ইমেইল ঠিকানা *</label>
+                <label className="input-label">ইমেইল *</label>
                 <input 
                   type="email" 
                   className="form-control" 
@@ -115,12 +115,12 @@ export default function NewCustomerModal({ onClose, onCreated }) {
               </div>
 
               <div className="input-group">
-                <label className="input-label">মোবাইল ফোন নম্বর *</label>
+                <label className="input-label">ফোন নম্বর *</label>
                 <input 
                   type="tel" 
                   className="form-control" 
                   required 
-                  placeholder="+৮৮০ ১৭১১-২৩৪৫৬৭"
+                  placeholder="০১৭xxxxxxxx"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                 />
@@ -129,7 +129,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
 
             <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="input-group">
-                <label className="input-label">পছন্দের স্টেশনারি বিভাগ</label>
+                <label className="input-label">পছন্দের বিভাগ</label>
                 <select 
                   className="form-control"
                   value={formData.preferred_department}
@@ -144,7 +144,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
               </div>
 
               <div className="input-group">
-                <label className="input-label">জন্মতারিখ (বিশেষ অফারের জন্য)</label>
+                <label className="input-label">জন্মতারিখ</label>
                 <input 
                   type="date" 
                   className="form-control" 
@@ -155,7 +155,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
             </div>
 
             <div className="input-group">
-              <label className="input-label">গ্রাহক পারসোনা ট্যাগ</label>
+              <label className="input-label">ট্যাগ</label>
               <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', marginBottom: '0.35rem' }}>
                 {formData.tags.map(t => (
                   <span key={t} style={{ 
@@ -181,7 +181,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
               <input 
                 type="text" 
                 className="form-control" 
-                placeholder="ট্যাগ লিখে এন্টার চাপুন (যেমন: বিশ্ববিদ্যালয় শিক্ষক, করপোরেট ক্লায়েন্ট)..."
+                placeholder="ট্যাগ লিখে Enter চাপুন..."
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={handleAddTag}
@@ -189,11 +189,11 @@ export default function NewCustomerModal({ onClose, onCreated }) {
             </div>
 
             <div className="input-group">
-              <label className="input-label">প্রাথমিক নোট ও পছন্দ</label>
+              <label className="input-label">নোট</label>
               <textarea 
                 className="form-control" 
                 rows={2} 
-                placeholder="গ্রাহকের বিশেষ পছন্দ, প্রিয় ব্র্যান্ড, প্রতিষ্ঠানের নাম ইত্যাদি..."
+                placeholder="বিশেষ নোট বা তথ্য..."
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
               />
@@ -205,7 +205,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
               বাতিল
             </button>
             <button type="submit" className="btn btn-primary" disabled={saving}>
-              {saving ? 'নিবন্ধন হচ্ছে...' : 'নিবন্ধন ও সদস্য কার্ড তৈরি'}
+              {saving ? 'সংরক্ষণ হচ্ছে...' : 'সংরক্ষণ করুন'}
             </button>
           </div>
         </form>
