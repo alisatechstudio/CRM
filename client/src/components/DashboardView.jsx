@@ -77,7 +77,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '60vh' }}>
         <div style={{ textAlign: 'center', color: 'var(--text-muted)' }}>
           <Sparkles size={32} style={{ animation: 'spin 2s linear infinite', color: 'var(--primary)' }} />
-          <p style={{ marginTop: '0.75rem', fontWeight: 600 }}>এক্সিকিউটিভ অ্যানালিটিক্স লোড হচ্ছে...</p>
+          <p style={{ marginTop: '0.75rem', fontWeight: 600 }}>তথ্য লোড হচ্ছে...</p>
         </div>
       </div>
     );
@@ -89,7 +89,6 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
     tierDistribution = [], 
     topSpenders = [], 
     recentOrders = [], 
-    ticketSummary = {},
     expenseBreakdown = [],
     recentExpenses = []
   } = analytics;
@@ -187,27 +186,12 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       <div className="glass-panel dashboard-welcome-banner">
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            <Sparkles size={14} /> মিজান কম্পিউটার অ্যান্ড কসমেটিকস • সেলস, ব্যয় ও প্রফিট অ্যানালিটিক্স
+            <Sparkles size={14} /> সেলস ও বিজনেস ওভারভিউ
           </div>
-          <h1 className="dashboard-main-title">মিজান কম্পিউটার অ্যান্ড কসমেটিকস (Mijan Computer & Cosmetics) সামগ্রিক পারফরম্যান্স</h1>
+          <h1 className="dashboard-main-title">মিজান কম্পিউটার অ্যান্ড কসমেটিকস</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
-            কম্পিউটার এক্সেসরিজ, কসমেটিকস, গিফট আইটেম ও স্টেশনারি পণ্যের লাইভ বিক্রয়, পরিচালন ব্যয় ও নিট মুনাফা বিশ্লেষণ।
+            বিক্রয়, ব্যয় ও নিট মুনাফার লাইভ হিসাব
           </p>
-        </div>
-
-        <div className="dashboard-csat-wrap">
-          <div style={{ 
-            textAlign: 'right', 
-            padding: '0.65rem 1.15rem', 
-            background: 'var(--bg-surface)', 
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-subtle)'
-          }}>
-            <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>সিএসএটি সন্তুষ্টি</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--success)', marginTop: '0.15rem' }}>
-              ★ {ticketSummary.avgCsat || '4.8'} / ৫.০
-            </div>
-          </div>
         </div>
       </div>
 
@@ -215,18 +199,18 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       <div className="glass-panel dashboard-filter-bar">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
           <Calendar size={18} style={{ color: 'var(--primary)' }} />
-          <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>হিসাব ও অ্যানালিটিক্স সময়কাল:</span>
+          <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>সময়কাল:</span>
         </div>
 
         <div className="dashboard-filter-pills">
           {[
-            { id: 'all', label: 'সব সময় (All)' },
-            { id: 'today', label: 'আজ (Today)' },
+            { id: 'all', label: 'সব সময়' },
+            { id: 'today', label: 'আজ' },
             { id: 'yesterday', label: 'গতকাল' },
-            { id: 'last_7_days', label: 'বিগত ৭ দিন' },
-            { id: 'last_30_days', label: 'বিগত ৩০ দিন' },
+            { id: 'last_7_days', label: '৭ দিন' },
+            { id: 'last_30_days', label: '৩০ দিন' },
             { id: 'this_month', label: 'চলতি মাস' },
-            { id: 'custom', label: 'কাস্টম তারিখ...' }
+            { id: 'custom', label: 'কাস্টম...' }
           ].map(item => (
             <button
               key={item.id}
@@ -264,7 +248,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
           }}
           onClick={handleOpenAddExpense}
         >
-          <Plus size={16} /> নতুন খরচ ভাউচার
+          <Plus size={16} /> + খরচ যোগ
         </button>
 
         {period === 'custom' && (
@@ -278,7 +262,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
             borderTop: '1px solid var(--border-subtle)', 
             flexWrap: 'wrap' 
           }}>
-            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>তারিখ থেকে:</label>
+            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>শুরু:</label>
             <input 
               type="date" 
               className="form-control" 
@@ -286,7 +270,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
               value={fromDate} 
               onChange={e => setFromDate(e.target.value)} 
             />
-            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>তারিখ পর্যন্ত:</label>
+            <label style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>শেষ:</label>
             <input 
               type="date" 
               className="form-control" 
@@ -300,7 +284,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
               style={{ padding: '0.35rem 0.75rem', fontSize: '0.8rem' }} 
               onClick={handleCustomDateApply}
             >
-              প্রয়োগ করুন
+              ফিল্টার
             </button>
             {(fromDate || toDate) && (
               <button 
@@ -321,10 +305,10 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         {/* KPI 1: Gross Revenue */}
         <div className="kpi-card" style={{ '--card-accent': '#6366f1', '--card-bg-accent': 'rgba(99, 102, 241, 0.12)' }}>
           <div>
-            <div className="kpi-title">মোট বিক্রয় রাজস্ব</div>
+            <div className="kpi-title">মোট বিক্রয়</div>
             <div className="kpi-value">৳{(kpis.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             <div className="kpi-trend" style={{ color: 'var(--success)' }}>
-              <TrendingUp size={13} /> {kpis.totalOrders || 0} টি চেকআউট অর্ডার
+              <TrendingUp size={13} /> {kpis.totalOrders || 0} টি অর্ডার
             </div>
           </div>
           <div className="kpi-icon-wrap" style={{ color: '#6366f1', background: 'rgba(99, 102, 241, 0.12)' }}>
@@ -335,12 +319,12 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         {/* KPI 2: Gross Profit */}
         <div className="kpi-card" style={{ '--card-accent': '#10b981', '--card-bg-accent': 'rgba(16, 185, 129, 0.12)' }}>
           <div>
-            <div className="kpi-title">গ্রস প্রফিট (মোট লাভ)</div>
+            <div className="kpi-title">গ্রস লাভ</div>
             <div className="kpi-value" style={{ color: '#10b981' }}>
               ৳{(kpis.grossProfit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="kpi-trend" style={{ color: '#10b981' }}>
-              <TrendingUp size={13} /> মার্জিন: {kpis.grossMarginPct || 0}% (ক্রয়মূল্য বাদে)
+              <TrendingUp size={13} /> মার্জিন: {kpis.grossMarginPct || 0}%
             </div>
           </div>
           <div className="kpi-icon-wrap" style={{ color: '#10b981', background: 'rgba(16, 185, 129, 0.12)' }}>
@@ -351,12 +335,12 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         {/* KPI 3: Operating Expenses */}
         <div className="kpi-card" style={{ '--card-accent': '#f43f5e', '--card-bg-accent': 'rgba(244, 63, 94, 0.12)' }}>
           <div>
-            <div className="kpi-title">দোকান পরিচালন ব্যয়</div>
+            <div className="kpi-title">দোকান খরচ</div>
             <div className="kpi-value" style={{ color: '#f43f5e' }}>
               ৳{(kpis.totalExpenses || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="kpi-trend" style={{ color: 'var(--text-muted)' }}>
-              <Receipt size={13} style={{ color: '#f43f5e' }} /> {expenseBreakdown.length || 0} টি খাতে নিয়মিত খরচ
+              <Receipt size={13} style={{ color: '#f43f5e' }} /> {expenseBreakdown.length || 0} টি খাত
             </div>
           </div>
           <div className="kpi-icon-wrap" style={{ color: '#f43f5e', background: 'rgba(244, 63, 94, 0.12)' }}>
@@ -370,18 +354,18 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
           '--card-bg-accent': (kpis.netProfit >= 0) ? 'rgba(139, 92, 246, 0.12)' : 'rgba(239, 68, 68, 0.12)' 
         }}>
           <div>
-            <div className="kpi-title">নিট মুনাফা (নেট লাভ)</div>
+            <div className="kpi-title">নিট লাভ</div>
             <div className="kpi-value" style={{ color: (kpis.netProfit >= 0) ? '#8b5cf6' : '#ef4444' }}>
               ৳{(kpis.netProfit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="kpi-trend" style={{ color: (kpis.netProfit >= 0) ? 'var(--success)' : '#ef4444' }}>
               {kpis.netProfit >= 0 ? (
                 <>
-                  <TrendingUp size={13} /> নিট মার্জিন: {kpis.netMarginPct || 0}% (লাভজনক)
+                  <TrendingUp size={13} /> মার্জিন: {kpis.netMarginPct || 0}%
                 </>
               ) : (
                 <>
-                  <TrendingDown size={13} /> নিট ক্ষতি: {Math.abs(kpis.netMarginPct || 0)}%
+                  <TrendingDown size={13} /> ক্ষতি: {Math.abs(kpis.netMarginPct || 0)}%
                 </>
               )}
             </div>
@@ -397,10 +381,10 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         {/* KPI 5: Average Basket Size */}
         <div className="kpi-card" style={{ '--card-accent': '#06b6d4', '--card-bg-accent': 'rgba(6, 182, 212, 0.12)' }}>
           <div>
-            <div className="kpi-title">গড় বাস্কেট মূল্য (AOV)</div>
+            <div className="kpi-title">গড় বাস্কেট (AOV)</div>
             <div className="kpi-value">৳{(kpis.avgBasketSize || 0).toFixed(2)}</div>
             <div className="kpi-trend" style={{ color: 'var(--text-muted)' }}>
-              মোট ছাড় প্রদান: ৳{(kpis.totalDiscountsGiven || 0).toFixed(2)}
+              মোট ছাড়: ৳{(kpis.totalDiscountsGiven || 0).toFixed(2)}
             </div>
           </div>
           <div className="kpi-icon-wrap" style={{ color: '#06b6d4', background: 'rgba(6, 182, 212, 0.12)' }}>
@@ -411,10 +395,10 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         {/* KPI 6: Total Items Sold */}
         <div className="kpi-card" style={{ '--card-accent': '#f59e0b', '--card-bg-accent': 'rgba(245, 158, 11, 0.12)' }}>
           <div>
-            <div className="kpi-title">মোট বিক্রি হওয়া পণ্য</div>
+            <div className="kpi-title">বিক্রিত পণ্য</div>
             <div className="kpi-value">{kpis.totalUnitsSold || 0} টি</div>
             <div className="kpi-trend" style={{ color: 'var(--text-muted)' }}>
-              <Package size={13} style={{ color: '#f59e0b' }} /> ইনভেন্টরি পণ্য সরবরাহ
+              <Package size={13} style={{ color: '#f59e0b' }} /> মোট ডেলিভারি
             </div>
           </div>
           <div className="kpi-icon-wrap" style={{ color: '#f59e0b', background: 'rgba(245, 158, 11, 0.12)' }}>
@@ -425,10 +409,10 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         {/* KPI 7: Registered CRM Members */}
         <div className="kpi-card" style={{ '--card-accent': '#ec4899', '--card-bg-accent': 'rgba(236, 72, 153, 0.12)' }}>
           <div>
-            <div className="kpi-title">নিবন্ধিত সিআরএম মেম্বার</div>
+            <div className="kpi-title">নিবন্ধিত গ্রাহক</div>
             <div className="kpi-value">{kpis.totalCustomers || 0} জন</div>
             <div className="kpi-trend" style={{ color: '#ec4899' }}>
-              <Award size={13} /> {(kpis.totalPointsLiability || 0).toLocaleString()} পয়েন্ট দায়বদ্ধতা
+              <Award size={13} /> {(kpis.totalPointsLiability || 0).toLocaleString()} পয়েন্ট বকেয়া
             </div>
           </div>
           <div className="kpi-icon-wrap" style={{ color: '#ec4899', background: 'rgba(236, 72, 153, 0.12)' }}>
@@ -439,12 +423,12 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         {/* KPI 8: Churn Risk */}
         <div className="kpi-card" style={{ '--card-accent': '#ea580c', '--card-bg-accent': 'rgba(234, 88, 12, 0.12)' }}>
           <div>
-            <div className="kpi-title">ঝুঁকিপূর্ণ কাস্টমার</div>
+            <div className="kpi-title">অনুপস্থিত গ্রাহক</div>
             <div className="kpi-value" style={{ color: (kpis.churnAtRiskCount || 0) > 0 ? '#ea580c' : 'inherit' }}>
               {kpis.churnAtRiskCount || 0} জন
             </div>
             <div className="kpi-trend" style={{ color: 'var(--text-dim)' }}>
-              <AlertTriangle size={13} style={{ color: '#ea580c' }} /> বিশেষ অফার যোগ্য
+              <AlertTriangle size={13} style={{ color: '#ea580c' }} /> ৩০+ দিন অনুপস্থিত
             </div>
           </div>
           <div className="kpi-icon-wrap" style={{ color: '#ea580c', background: 'rgba(234, 88, 12, 0.12)' }}>
@@ -458,16 +442,16 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <PieChart size={18} style={{ color: 'var(--primary)' }} />
           <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)' }}>
-            আয়-ব্যয় ও প্রফিট সমীকরণ (Financial P&L Statement):
+            আয়-ব্যয় হিসাব:
           </span>
         </div>
         <div className="dashboard-pnl-chips">
           <div style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', padding: '0.28rem 0.65rem', borderRadius: 'var(--radius-sm)' }}>
-            মোট বিক্রয়: ৳{(kpis.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            বিক্রয়: ৳{(kpis.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <span style={{ color: 'var(--text-muted)' }}>➖</span>
           <div style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#fbbf24', padding: '0.28rem 0.65rem', borderRadius: 'var(--radius-sm)' }}>
-            ক্রয়মূল্য (COGS): ৳{(kpis.totalCogs || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            ক্রয়মূল্য: ৳{(kpis.totalCogs || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <span style={{ color: 'var(--text-muted)' }}>🟰</span>
           <div style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#34d399', padding: '0.28rem 0.65rem', borderRadius: 'var(--radius-sm)' }}>
@@ -475,7 +459,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
           </div>
           <span style={{ color: 'var(--text-muted)' }}>➖</span>
           <div style={{ background: 'rgba(244, 63, 94, 0.15)', color: '#fb7185', padding: '0.28rem 0.65rem', borderRadius: 'var(--radius-sm)' }}>
-            দোকান খরচ: ৳{(kpis.totalExpenses || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            খরচ: ৳{(kpis.totalExpenses || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
           <span style={{ color: 'var(--text-muted)' }}>🟰</span>
           <div style={{ 
@@ -485,7 +469,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
             borderRadius: 'var(--radius-sm)',
             boxShadow: (kpis.netProfit >= 0) ? '0 0 12px rgba(139, 92, 246, 0.3)' : '0 0 12px rgba(239, 68, 68, 0.3)'
           }}>
-            নিট মুনাফা: ৳{(kpis.netProfit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            নিট লাভ: ৳{(kpis.netProfit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
         </div>
       </div>
@@ -496,8 +480,8 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>খাতভিত্তিক ব্যয়ের অনুপাত বিশ্লেষণ</h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>দোকান পরিচালনা খরচের ক্যাটাগরিভিত্তিক বণ্টন ও শতাংশ</p>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>খাতভিত্তিক ব্যয়</h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>ক্যাটাগরি অনুযায়ী খরচের অনুপাত</p>
             </div>
             <span className="badge badge-primary" style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', padding: '0.35rem 0.75rem' }}>
               মোট: ৳{(kpis.totalExpenses || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -514,7 +498,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                       <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem' }}>
                         <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: color }} />
                         <span style={{ fontWeight: 600 }}>{cat.category}</span>
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>({cat.count} টি ভাউচার)</span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>({cat.count})</span>
                       </div>
                       <div style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
                         ৳{cat.totalAmount?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
@@ -552,14 +536,14 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                 margin: 'auto 0'
               }}>
                 <Receipt size={28} style={{ color: 'var(--text-dim)', marginBottom: '0.5rem' }} />
-                <div>নির্বাচিত সময়কালের মধ্যে কোনো ব্যয়ের হিসাব পাওয়া যায়নি</div>
+                <div>কোনো খরচের হিসাব পাওয়া যায়নি</div>
                 <button
                   type="button"
                   className="btn btn-secondary btn-sm"
                   style={{ marginTop: '0.75rem' }}
                   onClick={handleOpenAddExpense}
                 >
-                  <Plus size={14} /> প্রথম খরচ যুক্ত করুন
+                  <Plus size={14} /> খরচ যোগ করুন
                 </button>
               </div>
             )}
@@ -570,8 +554,8 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>সাম্প্রতিক খরচের ভাউচারসমূহ</h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>দৈনন্দিন পরিচালিত দোকান খরচের লাইভ হিসাব</p>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>সাম্প্রতিক খরচ</h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>সর্বশেষ ভাউচার তালিকা</p>
             </div>
             <button
               type="button"
@@ -579,7 +563,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
               style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem' }}
               onClick={handleOpenAddExpense}
             >
-              <Plus size={14} /> নতুন এন্ট্রি
+              <Plus size={14} /> + নতুন
             </button>
           </div>
 
@@ -617,7 +601,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                         </span>
                       </div>
                       <div style={{ fontSize: '0.76rem', color: 'var(--text-dim)' }}>
-                        তারিখ: {exp.date} • {exp.payment_method} {exp.notes ? `• ${exp.notes}` : ''}
+                        {exp.date} • {exp.payment_method}{exp.notes ? ` • ${exp.notes}` : ''}
                       </div>
                     </div>
 
@@ -638,7 +622,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                           padding: '0.35rem',
                           borderRadius: 'var(--radius-sm)'
                         }}
-                        title="এই খরচটি মুছে ফেলুন"
+                        title="মুছে ফেলুন"
                         onClick={() => handleDeleteExpense(exp.id, exp.title)}
                       >
                         <Trash2 size={15} />
@@ -658,7 +642,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                 border: '1px dashed var(--border-subtle)',
                 margin: 'auto 0'
               }}>
-                এখনো কোনো খরচের ভাউচার যুক্ত করা হয়নি
+                কোনো খরচের ভাউচার নেই
               </div>
             )}
           </div>
@@ -671,11 +655,11 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>বিভাগ ভিত্তিক বিক্রয় বিশ্লেষণ</h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>ডিপার্টমেন্ট অনুযায়ী বিক্রয় ও রাজস্ব অংশীদারিত্ব</p>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>বিভাগভিত্তিক বিক্রয়</h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>বিভাগ অনুযায়ী বিক্রয় অনুপাত</p>
             </div>
             <span className="btn btn-secondary btn-sm" style={{ pointerEvents: 'none', fontSize: '0.75rem', padding: '0.3rem 0.65rem' }}>
-              সকল বিভাগ
+              সব বিভাগ
             </span>
           </div>
 
@@ -694,7 +678,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                       <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
                         ৳{dept.revenue?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                         <span style={{ color: 'var(--text-dim)', fontWeight: 400, marginLeft: '0.5rem', fontSize: '0.75rem' }}>
-                          ({dept.units_sold} ইউনিট)
+                          ({dept.units_sold} টি)
                         </span>
                       </span>
                     </div>
@@ -728,7 +712,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                       <span style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
                         ৳০.০০
                         <span style={{ color: 'var(--text-dim)', fontWeight: 400, marginLeft: '0.5rem', fontSize: '0.75rem' }}>
-                          (০ ইউনিট)
+                          (০ টি)
                         </span>
                       </span>
                     </div>
@@ -757,7 +741,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                   borderRadius: 'var(--radius-sm)',
                   border: '1px dashed var(--border-subtle)'
                 }}>
-                  💡 পিওএস থেকে চেকআউট সম্পন্ন হলে বিভাগভিত্তিক বিক্রয় স্বয়ংক্রিয়ভাবে লাইভ হবে
+                  💡 চেকআউট সম্পন্ন হলে বিভাগভিত্তিক বিক্রয় যুক্ত হবে
                 </div>
               </div>
             )}
@@ -767,8 +751,8 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         {/* Loyalty Tier Distribution */}
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ marginBottom: '1.25rem' }}>
-            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>গ্রাহক টিয়ার বণ্টন অনুপাত</h3>
-            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>লয়্যালটি মেম্বারশিপের স্তর বিন্যাস</p>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>গ্রাহক টিয়ার বিন্যাস</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>মেম্বারশিপ ক্যাটাগরি</p>
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1, justifyContent: 'center' }}>
@@ -777,11 +761,11 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
               const pct = Math.round((t.count / totalCust) * 100);
 
               const tierLabels = {
-                VIP: 'ভিআইপি (VIP)',
-                Platinum: 'প্ল্যাটিনাম (Platinum)',
-                Gold: 'গোল্ড (Gold)',
-                Silver: 'সিলভার (Silver)',
-                Bronze: 'ব্রোঞ্জ (Bronze)'
+                VIP: 'ভিআইপি',
+                Platinum: 'প্ল্যাটিনাম',
+                Gold: 'গোল্ড',
+                Silver: 'সিলভার',
+                Bronze: 'ব্রোঞ্জ'
               };
 
               return (
@@ -814,8 +798,8 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>শীর্ষ ভিআইপি ক্রেতাবৃন্দ</h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>সর্বোচ্চ লাইফটাইম ভ্যালু (এলটিভি) গ্রাহক</p>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>শীর্ষ ক্রেতা</h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>সর্বোচ্চ কেনাকাটাকারী গ্রাহক</p>
             </div>
           </div>
 
@@ -823,18 +807,18 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
             <table className="data-table">
               <thead>
                 <tr>
-                  <th>গ্রাহকের নাম</th>
-                  <th>টিয়ার</th>
-                  <th>মোট কেনাকাটা</th>
-                  <th>পয়েন্ট</th>
-                  <th>অ্যাকশন</th>
+                  <th>গ্রাহক</th>
+                  <th>টিয়ার</th>
+                  <th>মোট ক্রয়</th>
+                  <th>পয়েন্ট</th>
+                  <th>বিস্তারিত</th>
                 </tr>
               </thead>
               <tbody>
                 {topSpenders.length === 0 ? (
                   <tr>
                     <td colSpan="5" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      এখনো কোনো কেনাকাটার তথ্য পাওয়া যায়নি
+                      কোনো কেনাকাটার তথ্য নেই
                     </td>
                   </tr>
                 ) : (
@@ -875,8 +859,8 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>সাম্প্রতিক পিওএস ক্যাশ লেনদেন</h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>লাইভ চেকআউট ও রসিদ প্রবাহ</p>
+              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>সাম্প্রতিক লেনদেন</h3>
+              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>সর্বশেষ বিক্রয় রসিদ</p>
             </div>
           </div>
 
@@ -892,7 +876,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                 border: '1px dashed var(--border-subtle)',
                 margin: 'auto 0'
               }}>
-                এখনো কোনো বিক্রয় রসিদ তৈরি হয়নি
+                কোনো বিক্রয় রসিদ নেই
               </div>
             ) : (
               recentOrders.map((ord) => (
@@ -917,7 +901,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                       <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>• {ord.store_name}</span>
                     </div>
                     <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
-                      {ord.first_name ? `${ord.first_name} ${ord.last_name}` : 'সাধারণ অতিথি'} • {ord.payment_method}
+                      {ord.first_name ? `${ord.first_name} ${ord.last_name}` : 'অতিথি'} • {ord.payment_method}
                     </div>
                   </div>
 
@@ -959,8 +943,8 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                   <Receipt size={18} />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, wordBreak: 'break-word' }}>নতুন দোকান খরচ যুক্ত করুন</h3>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', wordBreak: 'break-word' }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস পরিচালন ব্যয় এন্ট্রি</div>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, wordBreak: 'break-word' }}>নতুন খরচ যুক্ত করুন</h3>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', wordBreak: 'break-word' }}>পরিচালন ব্যয় এন্ট্রি</div>
                 </div>
               </div>
               <button 
@@ -991,13 +975,13 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
 
                 <div>
                   <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>
-                    খরচের বিবরণ / টাইটেল <span style={{ color: '#f43f5e' }}>*</span>
+                    খরচের বিবরণ <span style={{ color: '#f43f5e' }}>*</span>
                   </label>
                   <input
                     type="text"
                     required
                     className="form-control"
-                    placeholder="যেমন: চলতি মাসের দোকান ভাড়া, বিদ্যুৎ বিল, কুরিয়ার পার্সেল..."
+                    placeholder="যেমন: দোকান ভাড়া, বিদ্যুৎ বিল, কুরিয়ার..."
                     value={expenseForm.title}
                     onChange={e => setExpenseForm({ ...expenseForm, title: e.target.value })}
                   />
@@ -1006,7 +990,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                 <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
                   <div>
                     <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>
-                      খরচের খাত (ক্যাটাগরি) <span style={{ color: '#f43f5e' }}>*</span>
+                      খরচের খাত <span style={{ color: '#f43f5e' }}>*</span>
                     </label>
                     <select
                       className="form-control"
@@ -1021,7 +1005,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
 
                   <div>
                     <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>
-                      পরিমাণ (টাকা ৳) <span style={{ color: '#f43f5e' }}>*</span>
+                      টাকার পরিমাণ (৳) <span style={{ color: '#f43f5e' }}>*</span>
                     </label>
                     <input
                       type="number"
@@ -1039,7 +1023,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                 <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
                   <div>
                     <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>
-                      খরচের তারিখ
+                      তারিখ
                     </label>
                     <input
                       type="date"
@@ -1052,7 +1036,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
 
                   <div>
                     <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>
-                      পরিশোধের মাধ্যম
+                      পেমেন্ট মাধ্যম
                     </label>
                     <select
                       className="form-control"
@@ -1068,12 +1052,12 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
 
                 <div>
                   <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>
-                    নোট / ভাউচার ও মেমো নম্বর (ঐচ্ছিক)
+                    নোট / মেমো নং (ঐচ্ছিক)
                   </label>
                   <textarea
                     rows={2}
                     className="form-control"
-                    placeholder="অতিরিক্ত কোনো তথ্য বা মেমো নম্বর থাকলে এখানে লিখুন..."
+                    placeholder="মেমো নম্বর বা অতিরিক্ত তথ্য..."
                     value={expenseForm.notes}
                     onChange={e => setExpenseForm({ ...expenseForm, notes: e.target.value })}
                   />
@@ -1099,7 +1083,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                     fontWeight: 700
                   }}
                 >
-                  {isSubmittingExpense ? 'সংরক্ষণ হচ্ছে...' : 'ভাউচার সংরক্ষণ করুন'}
+                  {isSubmittingExpense ? 'সংরক্ষণ হচ্ছে...' : 'সংরক্ষণ করুন'}
                 </button>
               </div>
             </form>
