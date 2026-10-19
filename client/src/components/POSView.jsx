@@ -10,7 +10,8 @@ import {
   X, 
   Tag, 
   ShoppingBag,
-  AlertCircle
+  AlertCircle,
+  Package
 } from 'lucide-react';
 import { api } from '../api';
 import { DEFAULT_DEPARTMENTS } from '../constants/departments';
@@ -32,6 +33,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customerSearch, setCustomerSearch] = useState('');
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [mobilePane, setMobilePane] = useState('catalog'); // 'catalog' | 'cart' on mobile
 
   // Discounts state
   const [couponCode, setCouponCode] = useState('');
@@ -125,6 +127,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
     setSelectedCustomer(null);
     setManualDiscountValue('');
     setShowManualDiscount(false);
+    setMobilePane('catalog');
   };
 
   // Calculation helpers
@@ -216,6 +219,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
 
       const result = await api.checkout(payload);
       clearCart();
+      setMobilePane('catalog');
       loadData(); // reload product stock
       onOpenReceipt(result.orderId);
     } catch (err) {
@@ -227,8 +231,31 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
 
   return (
     <div className="pos-layout">
+      {/* Mobile Pane Switcher (Phone / Tablet <= 1024px) */}
+      <div className="pos-mobile-pane-switcher">
+        <button 
+          type="button" 
+          className={`pos-mobile-pane-tab ${mobilePane === 'catalog' ? 'active' : ''}`}
+          onClick={() => setMobilePane('catalog')}
+        >
+          <Package size={16} />
+          <span>পণ্য ক্যাটালগ ({products.length})</span>
+        </button>
+        <button 
+          type="button" 
+          className={`pos-mobile-pane-tab ${mobilePane === 'cart' ? 'active' : ''}`}
+          onClick={() => setMobilePane('cart')}
+        >
+          <ShoppingBag size={16} />
+          <span>চলতি কার্ট ({cart.reduce((s, it) => s + it.quantity, 0)})</span>
+          {cart.length > 0 && (
+            <span className="pos-tab-price-badge">৳{finalTotal.toFixed(0)}</span>
+          )}
+        </button>
+      </div>
+
       {/* LEFT: Product Catalog & Fast Department Tabs */}
-      <div className="pos-catalog-panel">
+      <div className={`pos-catalog-panel ${mobilePane !== 'catalog' ? 'pos-pane-hidden-mobile' : ''}`}>
         {/* Search & Scan Header */}
         <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
           <div style={{ position: 'relative', flex: 1 }}>
@@ -340,7 +367,19 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
       </div>
 
       {/* RIGHT: Active Cart, Loyalty Lookup, Discounts & Checkout */}
-      <div className="pos-cart-panel">
+      <div className={`pos-cart-panel ${mobilePane !== 'cart' ? 'pos-pane-hidden-mobile' : ''}`}>
+        {/* Mobile Back-to-Catalog Return Banner */}
+        <div className="pos-mobile-back-to-catalog">
+          <button 
+            type="button" 
+            className="btn btn-secondary btn-sm"
+            style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', fontWeight: 700 }}
+            onClick={() => setMobilePane('catalog')}
+          >
+            ← আরো পণ্য নির্বাচন করুন (ক্যাটালগে ফিরে যান)
+          </button>
+        </div>
+
         {/* Cart Header & Customer Lookup */}
         <div className="pos-cart-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -773,13 +812,13 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
       </div>
 
       {/* Mobile Floating Cart Summary Pill */}
-      {cart.length > 0 && (
+      {cart.length > 0 && mobilePane === 'catalog' && (
         <button 
           type="button" 
           className="mobile-floating-cart-pill"
           onClick={() => {
-            const el = document.querySelector('.pos-cart-panel');
-            if (el) el.scrollIntoView({ behavior: 'smooth' });
+            setMobilePane('cart');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

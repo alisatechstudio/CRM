@@ -1265,7 +1265,41 @@ p, span, label {
   to { transform: translateY(0); opacity: 1; }
 }
 
+/* Base desktop visibility controls for responsive cards/tables */
+.desktop-table-view {
+  display: block;
+}
+
+.inventory-mobile-card-list {
+  display: none;
+}
+
+.customer-mobile-card-list {
+  display: none;
+}
+
+.customer-filters-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1.25rem;
+}
+
+.pos-mobile-pane-switcher {
+  display: none !important;
+}
+
+.pos-mobile-back-to-catalog {
+  display: none !important;
+}
+
 /* Responsive Breakpoints & Mobile Native App-like Experience */
+@media (min-width: 1025px) {
+  .pos-pane-hidden-mobile {
+    display: flex !important;
+  }
+}
+
 @media (max-width: 1024px) {
   /* Layout App Container */
   .app-container {
@@ -1349,12 +1383,12 @@ p, span, label {
     display: flex;
   }
 
-  /* POS Layout */
+  /* POS Mobile Layout & Segmented Switcher */
   .pos-layout {
     grid-template-columns: 1fr;
     height: auto;
     overflow: visible;
-    gap: 1.25rem;
+    gap: 0.75rem;
   }
 
   .pos-catalog-panel {
@@ -1365,21 +1399,81 @@ p, span, label {
   .pos-grid {
     max-height: 480px;
   }
+
+  .pos-mobile-pane-switcher {
+    display: flex !important;
+    gap: 0.45rem;
+    background: var(--bg-surface-elevated);
+    padding: 0.35rem;
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 0.75rem;
+    width: 100%;
+  }
+
+  .pos-mobile-pane-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.65rem 0.6rem;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .pos-mobile-pane-tab:active {
+    transform: scale(0.97);
+  }
+
+  .pos-mobile-pane-tab.active {
+    background: var(--bg-card);
+    color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-color: var(--border-subtle);
+  }
+
+  .pos-tab-price-badge {
+    background: var(--primary);
+    color: #ffffff;
+    font-size: 0.72rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-weight: 800;
+  }
+
+  .pos-mobile-back-to-catalog {
+    display: block !important;
+    padding: 0.75rem 1rem 0.25rem;
+  }
+
+  .pos-pane-hidden-mobile {
+    display: none !important;
+  }
 }
 
 @media (max-width: 768px) {
   /* Mobile Header */
   .top-navbar {
-    height: 58px;
-    padding: 0 0.85rem;
+    height: 56px;
+    padding: 0 0.75rem;
   }
 
   .top-nav-title {
-    font-size: 0.95rem;
+    font-size: 0.92rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-width: 170px;
+    max-width: 160px;
   }
 
   .top-nav-subtitle {
@@ -1391,10 +1485,18 @@ p, span, label {
   }
 
   .top-nav-action-btn {
-    padding: 0.4rem 0.55rem;
-    min-width: 34px;
-    height: 34px;
+    padding: 0;
+    min-width: 36px;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
     justify-content: center;
+    align-items: center;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .top-nav-action-btn:active {
+    transform: scale(0.92);
   }
 
   .staff-pill {
@@ -1404,8 +1506,19 @@ p, span, label {
     margin-left: 0;
   }
 
+  .staff-avatar {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+
   .staff-info {
     display: none;
+  }
+
+  /* Prevent awkward iOS zoom on input focus */
+  input, select, textarea {
+    font-size: 16px !important;
   }
 
   /* Mobile Content Padding */
@@ -1415,6 +1528,347 @@ p, span, label {
 
   .glass-panel {
     padding: 1rem 0.85rem;
+    border-radius: var(--radius-md);
+  }
+
+  /* Responsive card views instead of scrolling data tables */
+  .desktop-table-view {
+    display: none !important;
+  }
+
+  /* Inventory Mobile Cards */
+  .inventory-mobile-card-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 0.85rem 0.65rem;
+  }
+
+  .inventory-mobile-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 0.95rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: transform var(--transition-fast), border-color var(--transition-fast);
+  }
+
+  .inventory-mobile-card.highlighted {
+    border-left: 4px solid var(--success);
+    background: rgba(16, 185, 129, 0.08);
+  }
+
+  .inventory-mobile-card:active {
+    transform: scale(0.99);
+  }
+
+  .inv-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .inv-card-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--text-main);
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    flex-wrap: wrap;
+  }
+
+  .inv-highlight-badge {
+    background: var(--success);
+    color: #ffffff;
+    font-size: 0.62rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 999px;
+    font-weight: 800;
+  }
+
+  .inv-card-meta {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+    margin-top: 0.35rem;
+  }
+
+  .inv-dept-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--primary);
+    background: rgba(99, 102, 241, 0.12);
+    padding: 0.15rem 0.45rem;
+    border-radius: var(--radius-sm);
+  }
+
+  .inv-cat-tag {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    background: var(--bg-surface);
+    padding: 0.15rem 0.45rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .inv-barcode-tag {
+    font-size: 0.7rem;
+    color: var(--text-dim);
+    font-family: var(--font-mono);
+  }
+
+  .inv-card-alerts {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  .inv-alert-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-sm);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    width: fit-content;
+  }
+
+  .inv-alert-badge.low-stock {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+
+  .inv-alert-badge.expired {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+  }
+
+  .inv-alert-badge.expiring-soon {
+    background: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+  }
+
+  .inv-card-numbers-grid {
+    display: grid;
+    grid-template-columns: 1.1fr 1.3fr 1fr;
+    gap: 0.45rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 0.6rem 0.75rem;
+  }
+
+  .inv-number-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .inv-number-label {
+    font-size: 0.68rem;
+    color: var(--text-dim);
+    font-weight: 600;
+  }
+
+  .inv-number-val {
+    font-size: 0.95rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+  }
+
+  .inv-number-val.price {
+    color: var(--text-main);
+  }
+
+  .inv-number-val.cost {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  .inv-margin-badge {
+    font-size: 0.72rem;
+    margin-left: 0.2rem;
+    font-weight: 700;
+  }
+
+  .inv-number-val.stock {
+    color: var(--text-main);
+  }
+
+  .inv-number-val.stock.low {
+    color: var(--danger);
+  }
+
+  .inv-card-actions {
+    display: grid;
+    grid-template-columns: 1.3fr 0.7fr 1fr 38px;
+    gap: 0.4rem;
+    align-items: center;
+  }
+
+  .inv-card-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.3rem;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 0.45rem 0.4rem;
+    height: 38px;
+    border-radius: var(--radius-md);
+  }
+
+  .inv-card-btn.quick-plus {
+    font-weight: 800;
+    color: var(--success);
+  }
+
+  .inv-card-btn.delete {
+    color: var(--danger);
+  }
+
+  /* Customers Mobile */
+  .customer-filters-grid {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  .customer-mobile-card-list {
+    display: flex !important;
+    flex-direction: column;
+    gap: 0.85rem;
+    padding: 0.85rem 0.65rem;
+  }
+
+  .customer-mobile-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  }
+
+  .cust-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .cust-card-name {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--text-main);
+  }
+
+  .cust-card-dept {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.15rem;
+  }
+
+  .cust-card-badges {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex-wrap: wrap;
+  }
+
+  .cust-card-contact-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  .cust-tel-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #10b981;
+    background: rgba(16, 185, 129, 0.12);
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    text-decoration: none;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    transition: all var(--transition-fast);
+  }
+
+  .cust-tel-btn:active {
+    transform: scale(0.96);
+    background: rgba(16, 185, 129, 0.25);
+  }
+
+  .cust-card-num {
+    font-family: var(--font-mono);
+    font-size: 0.76rem;
+    color: var(--primary);
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .cust-metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.45rem;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 0.65rem 0.75rem;
+  }
+
+  .cust-metric-box {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .cust-metric-label {
+    font-size: 0.66rem;
+    color: var(--text-dim);
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .cust-metric-val {
+    font-size: 0.95rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    color: var(--text-main);
+  }
+
+  .cust-metric-val.points {
+    color: var(--primary);
+  }
+
+  .cust-view-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    padding: 0.65rem;
+    font-weight: 700;
+    font-size: 0.86rem;
     border-radius: var(--radius-md);
   }
 
@@ -1613,6 +2067,21 @@ p, span, label {
   .data-table td {
     padding: 0.65rem 0.75rem;
     font-size: 0.78rem;
+  }
+
+  /* Compact phones refinements */
+  .top-navbar {
+    padding: 0 0.55rem;
+  }
+
+  .top-nav-title {
+    max-width: 135px;
+    font-size: 0.88rem;
+  }
+
+  .inv-card-actions {
+    grid-template-columns: 1.2fr 0.8fr 1fr 36px;
+    gap: 0.35rem;
   }
 }
 

@@ -63,7 +63,7 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
         </div>
 
         {/* Filter Controls Row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr 1fr', gap: '1rem', marginTop: '1.25rem' }}>
+        <div className="customer-filters-grid">
           {/* Search Box */}
           <div className="input-group">
             <label className="input-label">গ্রাহক অনুসন্ধান</label>
@@ -134,7 +134,7 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
 
       {/* Customers Table */}
       <div className="glass-panel" style={{ padding: 0 }}>
-        <div className="data-table-container" style={{ border: 'none' }}>
+        <div className="data-table-container desktop-table-view" style={{ border: 'none' }}>
           <table className="data-table">
             <thead>
               <tr>
@@ -232,6 +232,74 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Touch-Friendly Customer Cards */}
+        <div className="customer-mobile-card-list">
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+              গ্রাহক প্রোফাইল লোড হচ্ছে...
+            </div>
+          ) : customers.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+              ফিল্টার অনুযায়ী কোনো গ্রাহক পাওয়া যায়নি।
+            </div>
+          ) : (
+            customers.map((c) => (
+              <div key={c.id} className="customer-mobile-card">
+                {/* Header: Name & Badges */}
+                <div className="cust-card-header">
+                  <div>
+                    <div className="cust-card-name">{c.first_name} {c.last_name}</div>
+                    <div className="cust-card-dept">পছন্দ: {c.preferred_department}</div>
+                  </div>
+                  <div className="cust-card-badges">
+                    <span className={`tier-badge tier-${c.tier}`}>{c.tier}</span>
+                    <span className={`status-pill status-${c.churn_risk === 'High' ? 'high' : c.churn_risk === 'Medium' ? 'medium' : 'low'}`}>
+                      ● {c.churn_risk === 'High' ? 'উচ্চ ঝুঁকি' : c.churn_risk === 'Medium' ? 'মাঝারি' : 'কম ঝুঁকি'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* Contact Row: Tap to call & Card */}
+                <div className="cust-card-contact-row">
+                  <a href={`tel:${c.phone}`} className="cust-tel-btn" title="সরাসরি কল করুন">
+                    <Phone size={13} />
+                    <span>{c.phone}</span>
+                  </a>
+                  <span className="cust-card-num">
+                    <CreditCard size={12} /> {c.card_number}
+                  </span>
+                </div>
+
+                {/* Metrics Grid */}
+                <div className="cust-metrics-grid">
+                  <div className="cust-metric-box">
+                    <div className="cust-metric-label">মোট কেনাকাটা</div>
+                    <div className="cust-metric-val">৳{c.total_spent?.toLocaleString('en-US', { minimumFractionDigits: 0 })}</div>
+                  </div>
+                  <div className="cust-metric-box">
+                    <div className="cust-metric-label">পয়েন্ট ব্যালেন্স</div>
+                    <div className="cust-metric-val points">{c.points_balance?.toLocaleString()}</div>
+                  </div>
+                  <div className="cust-metric-box">
+                    <div className="cust-metric-label">ভিজিট সংখ্যা</div>
+                    <div className="cust-metric-val">{c.visit_count} বার</div>
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <button 
+                  type="button" 
+                  className="btn btn-secondary btn-sm cust-view-btn"
+                  onClick={() => onSelectCustomer(c.id)}
+                >
+                  <Eye size={15} />
+                  <span>৩৬০° কাস্টমার প্রোফাইল ও ইতিহাস</span>
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

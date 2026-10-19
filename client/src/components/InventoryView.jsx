@@ -669,7 +669,7 @@ export default function InventoryView() {
 
       {/* Products Table */}
       <div className="glass-panel" style={{ padding: 0 }}>
-        <div className="data-table-container" style={{ border: 'none' }}>
+        <div className="data-table-container desktop-table-view" style={{ border: 'none' }}>
           <table className="data-table">
             <thead>
               <tr>
@@ -883,6 +883,129 @@ export default function InventoryView() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile Touch-Friendly Product Cards (Rendered on Mobile <= 768px) */}
+        <div className="inventory-mobile-card-list">
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+              পণ্য তালিকা লোড হচ্ছে...
+            </div>
+          ) : products.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)' }}>
+              কোনো পণ্য পাওয়া যায়নি।
+            </div>
+          ) : (
+            products.map((p) => {
+              const isLow = p.stock_qty <= p.min_threshold;
+              const marginPct = p.price > 0 ? (((p.price - p.cost) / p.price) * 100).toFixed(0) : 0;
+              const isHighlighted = p.id === highlightedId;
+              const today = new Date().toISOString().split('T')[0];
+              const isExpired = p.has_expiry && p.expiry_date && p.expiry_date < today;
+              const diffDays = p.has_expiry && p.expiry_date ? Math.round((new Date(p.expiry_date) - new Date(today)) / (1000 * 60 * 60 * 24)) : null;
+
+              return (
+                <div key={p.id} className={`inventory-mobile-card ${isHighlighted ? 'highlighted' : ''}`}>
+                  {/* Header: Name and Category Meta */}
+                  <div className="inv-card-header">
+                    <div>
+                      <div className="inv-card-title">
+                        {p.name}
+                        {isHighlighted && <span className="inv-highlight-badge">✨ নতুন</span>}
+                      </div>
+                      <div className="inv-card-meta">
+                        <span className="inv-dept-tag">{p.department_name}</span>
+                        <span className="inv-cat-tag">{p.category}</span>
+                        <span className="inv-barcode-tag">#{p.barcode}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Alerts row: Low stock / Expiry */}
+                  {(isLow || isExpired || (diffDays !== null && diffDays <= 45)) && (
+                    <div className="inv-card-alerts">
+                      {isLow && (
+                        <span className="inv-alert-badge low-stock">
+                          ⚠️ কম স্টক ({p.stock_qty} / সীমা {p.min_threshold})
+                        </span>
+                      )}
+                      {isExpired && (
+                        <span className="inv-alert-badge expired">
+                          ⚠ মেয়াদোত্তীর্ণ ({p.expiry_date})
+                        </span>
+                      )}
+                      {!isExpired && diffDays !== null && diffDays <= 45 && (
+                        <span className="inv-alert-badge expiring-soon">
+                          ⏳ মেয়াদ {diffDays} দিন বাকি ({p.expiry_date})
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 3-Column Financial & Stock Metrics */}
+                  <div className="inv-card-numbers-grid">
+                    <div className="inv-number-box">
+                      <div className="inv-number-label">বিক্রয়মূল্য</div>
+                      <div className="inv-number-val price">৳{p.price.toFixed(2)}</div>
+                    </div>
+                    <div className="inv-number-box">
+                      <div className="inv-number-label">ক্রয় ও মার্জিন</div>
+                      <div className="inv-number-val cost">
+                        ৳{p.cost.toFixed(2)}
+                        <span className="inv-margin-badge" style={{ color: marginPct >= 30 ? 'var(--success)' : marginPct >= 15 ? 'var(--warning)' : 'var(--danger)' }}>
+                          ({marginPct}%)
+                        </span>
+                      </div>
+                    </div>
+                    <div className="inv-number-box">
+                      <div className="inv-number-label">বর্তমান স্টক</div>
+                      <div className={`inv-number-val stock ${isLow ? 'low' : ''}`}>
+                        {p.stock_qty} {p.unit}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Touch Action Buttons */}
+                  <div className="inv-card-actions">
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary btn-sm inv-card-btn"
+                      onClick={() => openAdjustModal(p)}
+                      title="স্টক সমন্বয়"
+                    >
+                      <Sliders size={13} style={{ color: 'var(--accent)' }} />
+                      <span>স্টক সমন্বয়</span>
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary btn-sm inv-card-btn quick-plus"
+                      onClick={() => handleQuickStockAdjust(p.id, 10)}
+                      title="দ্রুত ১০ টি রিস্টক করুন"
+                    >
+                      <span>+১০</span>
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary btn-sm inv-card-btn"
+                      onClick={() => openEditModal(p)}
+                      title="তথ্য সম্পাদনা"
+                    >
+                      <Edit2 size={13} style={{ color: 'var(--primary)' }} />
+                      <span>এডিট</span>
+                    </button>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary btn-sm inv-card-btn delete"
+                      onClick={() => openDeleteModal(p)}
+                      title="মুছে ফেলুন"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

@@ -23,7 +23,7 @@ export default function TopNav({
   return (
     <header className="top-navbar">
       {/* Left side: Hamburger (Mobile) + Title / Store info */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', minWidth: 0, flex: 1 }}>
         {/* Mobile Hamburger Menu Toggle */}
         <button
           type="button"
@@ -48,7 +48,7 @@ export default function TopNav({
       </div>
 
       {/* Right side: Action Buttons & Staff Avatar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexShrink: 0 }}>
         {/* Desktop POS shortcut */}
         {currentTab !== 'pos' && (
           <button className="btn btn-secondary btn-sm desktop-only-btn" onClick={onQuickPOS}>
