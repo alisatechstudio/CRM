@@ -197,7 +197,14 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
         customer_id: selectedCustomer ? selectedCustomer.id : null,
         store_id: activeStore?.id || 'store_1',
         cashier_name: 'মিজানুর রহমান',
-        items: cart.map(c => ({ id: c.id, quantity: c.quantity })),
+        items: cart.map(c => ({ 
+          id: c.id, 
+          productId: c.id, 
+          product_id: c.id,
+          qty: c.quantity, 
+          quantity: c.quantity,
+          barcode: c.barcode 
+        })),
         coupon_code: appliedCoupon ? appliedCoupon.coupon.code : null,
         manual_discount_type: manualDiscountType === 'percent' ? 'percentage' : 'fixed',
         manual_discount_value: manualDiscount > 0 ? parsedManualVal : 0,

@@ -610,29 +610,50 @@ router.post('/pos/checkout', async (req, res) => {
     const verifiedItems = [];
 
     for (const item of items) {
-      const prod = await Product.findOne({ id: item.productId });
-      if (!prod) {
-        return res.status(400).json({ error: `পণ্য ID ${item.productId} খুঁজে পাওয়া যায়নি` });
-      }
-      if (prod.stock_qty < item.qty) {
-        return res.status(400).json({ error: `পর্যাপ্ত স্টক নেই: ${prod.name} (মজুদ: ${prod.stock_qty})` });
+      const pId = item.productId || item.product_id || item.id;
+      const rawQty = item.qty !== undefined ? item.qty : item.quantity;
+      const pQty = parseInt(rawQty !== undefined ? rawQty : 1, 10);
+
+      if (!pId) {
+        return res.status(400).json({ error: 'কার্টের পণ্যের আইডি পাওয়া যায়নি' });
       }
 
-      const lineTotal = Number((prod.price * item.qty).toFixed(2));
+      if (isNaN(pQty) || pQty <= 0) {
+        return res.status(400).json({ error: 'পণ্যের সঠিক পরিমাণ (Quantity) দিন' });
+      }
+
+      let prod = await Product.findOne({ id: pId });
+      if (!prod && item.barcode) {
+        prod = await Product.findOne({ barcode: String(item.barcode).trim() });
+      }
+      if (!prod) {
+        return res.status(400).json({ error: `পণ্য ID '${pId}' খুঁজে পাওয়া যায়নি` });
+      }
+
+      if (prod.stock_qty < pQty) {
+        return res.status(400).json({ 
+          error: `পর্যাপ্ত স্টক নেই: ${prod.name} (চাহিদা: ${pQty}, বর্তমান মজুদ: ${prod.stock_qty})` 
+        });
+      }
+
+      const lineTotal = Number((prod.price * pQty).toFixed(2));
       subtotal += lineTotal;
 
       const dept = await Department.findOne({ id: prod.department_id }).lean();
+      const fallbackDept = DEFAULT_DEPARTMENTS.find(d => d.id === prod.department_id);
       verifiedItems.push({
         productId: prod.id,
+        id: prod.id,
         name: prod.name,
-        deptName: dept?.name || 'স্টেশনারি',
+        deptName: dept?.name || fallbackDept?.name || 'স্টেশনারি',
         unitPrice: prod.price,
-        qty: item.qty,
+        qty: pQty,
+        quantity: pQty,
         lineTotal
       });
 
       // Deduct stock
-      prod.stock_qty = Math.max(0, prod.stock_qty - item.qty);
+      prod.stock_qty = Math.max(0, prod.stock_qty - pQty);
       await prod.save();
     }
 
