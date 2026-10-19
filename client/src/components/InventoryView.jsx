@@ -474,19 +474,19 @@ export default function InventoryView() {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Header Panel */}
-      <div className="glass-panel" style={{ padding: '1.25rem 1.5rem' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
+      <div className="glass-panel" style={{ padding: '1.5rem 1.75rem' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1.25rem' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
               <Package size={22} style={{ color: 'var(--primary)' }} />
               <h2 style={{ fontSize: '1.35rem', margin: 0 }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস ইনভেন্টরি ও পণ্য ক্যাটালগ (CRUD)</h2>
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.35rem' }}>
               সকল কম্পিউটার এক্সেসরিজ, কসমেটিকস ও স্টেশনারি পণ্যের নতুন এসকেইউ সংযোজন, তথ্য সম্পাদনা, ড্যামেজ সমন্বয় ও সম্পূর্ণ ইনভেন্টরি নিয়ন্ত্রণ।
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.85rem', alignItems: 'center', flexWrap: 'wrap' }}>
             <button 
               className="btn btn-secondary" 
               onClick={() => {
@@ -497,7 +497,7 @@ export default function InventoryView() {
               <FolderPlus size={16} /> নতুন বিভাগ যুক্ত করুন
             </button>
             <button className="btn btn-primary" onClick={handleOpenAddModal}>
-              <Plus size={16} /> নতুন স্টেশনারি পণ্য যুক্ত করুন
+              <Plus size={16} /> নতুন পণ্য যুক্ত করুন
             </button>
           </div>
         </div>
@@ -508,13 +508,13 @@ export default function InventoryView() {
             background: 'rgba(16, 185, 129, 0.12)',
             border: '1px solid rgba(16, 185, 129, 0.35)',
             color: 'var(--success)',
-            padding: '0.75rem 1rem',
+            padding: '0.85rem 1.25rem',
             borderRadius: 'var(--radius-md)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             gap: '0.75rem',
-            marginTop: '1rem',
+            marginTop: '1.25rem',
             fontWeight: 600,
             fontSize: '0.88rem',
             animation: 'fadeIn 0.3s ease'
@@ -533,7 +533,7 @@ export default function InventoryView() {
         )}
 
         {/* Filter controls */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr 1fr', gap: '0.85rem', marginTop: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))', gap: '1rem', marginTop: '1.35rem' }}>
           <div className="input-group">
             <label className="input-label">এসকেইউ বা বারকোড খুঁজুন</label>
             <div style={{ position: 'relative' }}>
@@ -889,11 +889,11 @@ export default function InventoryView() {
       {/* =================== MODAL 1: CREATE NEW PRODUCT =================== */}
       {showAddModal && (
         <div className="modal-overlay" onClick={() => setShowAddModal(false)}>
-          <div className="modal-card" style={{ maxWidth: '580px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card" style={{ maxWidth: '650px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                 <Plus size={18} style={{ color: 'var(--primary)' }} />
-                <h2 style={{ fontSize: '1.2rem', margin: 0 }}>নতুন স্টেশনারি পণ্য সংযোজন</h2>
+                <h2 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 700 }}>নতুন পণ্য সংযোজন (Add Product)</h2>
               </div>
               <button className="btn btn-secondary btn-icon" onClick={() => setShowAddModal(false)}>
                 <X size={16} />
@@ -901,14 +901,14 @@ export default function InventoryView() {
             </div>
 
             <form onSubmit={handleCreateProduct}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
                 <div className="input-group">
                   <label className="input-label">পণ্যের নাম (বাংলা) *</label>
                   <input 
                     type="text" 
                     className="form-control" 
                     required 
-                    placeholder="যেমন: ডেল্টা লেভার আর্চ বক্স ফাইল (A4)"
+                    placeholder="যেমন: ডেল্টা লেভার আর্চ বক্স ফাইল (A4) / নিভিয়া সফট ক্রিম ১০০মি.লি."
                     value={newProd.name}
                     onChange={(e) => setNewProd({ ...newProd, name: e.target.value })}
                   />
@@ -917,15 +917,24 @@ export default function InventoryView() {
                 {/* Department & Category Side by Side */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label className="input-label">বিভাগ (Department) *</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                      <label className="input-label" style={{ margin: 0 }}>বিভাগ (Department) *</label>
                       <button 
                         type="button" 
                         onClick={() => {
                           setNewDeptForm({ name: '', code: '', description: '', initialCategories: '' });
                           setShowAddDeptModal(true);
                         }}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                        style={{ 
+                          background: 'rgba(99, 102, 241, 0.1)', 
+                          border: '1px solid rgba(99, 102, 241, 0.25)', 
+                          color: 'var(--primary)', 
+                          fontSize: '0.72rem', 
+                          cursor: 'pointer', 
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '4px',
+                          fontWeight: 600
+                        }}
                       >
                         + নতুন বিভাগ
                       </button>
@@ -945,8 +954,8 @@ export default function InventoryView() {
                   </div>
 
                   <div className="input-group">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label className="input-label">ক্যাটাগরি (Category) *</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                      <label className="input-label" style={{ margin: 0 }}>ক্যাটাগরি (Category) *</label>
                       {!isCustomAddCategory ? (
                         <button 
                           type="button" 
@@ -955,7 +964,16 @@ export default function InventoryView() {
                             setCustomAddCategory('');
                             setNewProd(prev => ({ ...prev, category: '' }));
                           }}
-                          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                          style={{ 
+                            background: 'rgba(99, 102, 241, 0.1)', 
+                            border: '1px solid rgba(99, 102, 241, 0.25)', 
+                            color: 'var(--primary)', 
+                            fontSize: '0.72rem', 
+                            cursor: 'pointer', 
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '4px',
+                            fontWeight: 600
+                          }}
                         >
                           + কাস্টম ক্যাটাগরি
                         </button>
@@ -965,9 +983,18 @@ export default function InventoryView() {
                           onClick={() => {
                             setIsCustomAddCategory(false);
                             const cats = getCategoriesForDept(newProd.department_id);
-                            setNewProd(prev => ({ ...prev, category: cats[0] || 'সাধারণ স্টেশনারি' }));
+                            setNewProd(prev => ({ ...prev, category: cats[0] || 'সাধারণ ক্যাটাগরি' }));
                           }}
-                          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                          style={{ 
+                            background: 'rgba(99, 102, 241, 0.1)', 
+                            border: '1px solid rgba(99, 102, 241, 0.25)', 
+                            color: 'var(--primary)', 
+                            fontSize: '0.72rem', 
+                            cursor: 'pointer', 
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '4px',
+                            fontWeight: 600
+                          }}
                         >
                           তালিকা থেকে
                         </button>
@@ -999,7 +1026,7 @@ export default function InventoryView() {
                         type="text" 
                         className="form-control" 
                         required
-                        placeholder="ক্যাটাগরির নাম লিখুন (যেমন: ড্রয়িং শিট)"
+                        placeholder="ক্যাটাগরির নাম লিখুন (যেমন: ড্রয়িং শিট / লোশন)"
                         value={newProd.category}
                         onChange={(e) => {
                           setCustomAddCategory(e.target.value);
@@ -1014,12 +1041,21 @@ export default function InventoryView() {
                 {/* Barcode & Unit */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label className="input-label">বারকোড / এসকেইউ *</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                      <label className="input-label" style={{ margin: 0 }}>বারকোড / এসকেইউ *</label>
                       <button 
                         type="button" 
                         onClick={generateRandomBarcode}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                        style={{ 
+                          background: 'rgba(99, 102, 241, 0.1)', 
+                          border: '1px solid rgba(99, 102, 241, 0.25)', 
+                          color: 'var(--primary)', 
+                          fontSize: '0.72rem', 
+                          cursor: 'pointer', 
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '4px',
+                          fontWeight: 600
+                        }}
                       >
                         স্বয়ংক্রিয় তৈরি
                       </button>
@@ -1035,7 +1071,7 @@ export default function InventoryView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">একক (Unit) *</label>
+                    <label className="input-label" style={{ marginBottom: '0.35rem' }}>একক (Unit) *</label>
                     <select 
                       className="form-control"
                       value={newProd.unit}
@@ -1052,8 +1088,8 @@ export default function InventoryView() {
                   </div>
                 </div>
 
-                {/* Price, Cost, Stock, Min Threshold */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.75rem' }}>
+                {/* Price, Cost in 2 Columns */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <label className="input-label">বিক্রয় মূল্য (৳) *</label>
                     <input 
@@ -1079,9 +1115,12 @@ export default function InventoryView() {
                       onChange={(e) => setNewProd({ ...newProd, cost: e.target.value })}
                     />
                   </div>
+                </div>
 
+                {/* Initial Stock & Threshold in 2 Columns */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label">প্রারম্ভিক স্টক</label>
+                    <label className="input-label">প্রারম্ভিক মজুদ স্টক</label>
                     <input 
                       type="number" 
                       className="form-control" 
@@ -1091,7 +1130,7 @@ export default function InventoryView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">কম স্টক সীমা</label>
+                    <label className="input-label">কম স্টক অ্যালার্ট সীমা</label>
                     <input 
                       type="number" 
                       className="form-control" 
@@ -1104,30 +1143,30 @@ export default function InventoryView() {
                 {/* Expiry Date Section */}
                 <div style={{
                   background: 'var(--bg-app)',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--radius-sm)',
+                  padding: '1rem 1.25rem',
+                  borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-subtle)',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.5rem'
+                  gap: '0.75rem'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', margin: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.86rem', fontWeight: 600, cursor: 'pointer', margin: 0 }}>
                       <input 
                         type="checkbox"
                         checked={newProd.has_expiry}
                         onChange={(e) => setNewProd({ ...newProd, has_expiry: e.target.checked, expiry_date: e.target.checked ? (newProd.expiry_date || '') : '' })}
-                        style={{ accentColor: 'var(--primary)', width: '16px', height: '16px' }}
+                        style={{ accentColor: 'var(--primary)', width: '17px', height: '17px' }}
                       />
                       <span>এই পণ্যে মেয়াদোত্তীর্ণের তারিখ (Expiry Date) প্রযোজ্য</span>
                     </label>
-                    <span style={{ fontSize: '0.72rem', color: newProd.has_expiry ? 'var(--primary)' : 'var(--text-dim)', fontWeight: 600 }}>
+                    <span style={{ fontSize: '0.74rem', color: newProd.has_expiry ? 'var(--primary)' : 'var(--text-dim)', fontWeight: 600 }}>
                       {newProd.has_expiry ? 'তারিখ প্রযোজ্য' : 'প্রযোজ্য নয় (Not Applicable)'}
                     </span>
                   </div>
 
                   {newProd.has_expiry ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '0.75rem', alignItems: 'center', marginTop: '0.25rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '0.85rem', alignItems: 'center', marginTop: '0.25rem' }}>
                       <input 
                         type="date"
                         className="form-control"
@@ -1135,13 +1174,13 @@ export default function InventoryView() {
                         value={newProd.expiry_date}
                         onChange={(e) => setNewProd({ ...newProd, expiry_date: e.target.value })}
                       />
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                        আঠা, পেইন্ট, কালি বা ডায়েরির মতো পণ্যের মেয়াদ
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        কসমেটিকস, ক্রিম, লোশন, আঠা বা কালির মেয়াদ
                       </span>
                     </div>
                   ) : (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                      🔒 খাতা, কাগজ, কলম, ফাইল বা জ্যামিতি সামগ্রীতে কোনো মেয়াদ প্রযোজ্য নয় (Not Applicable)।
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
+                      🔒 স্টেশনারি বা দীর্ঘমেয়াদী সামগ্রীতে মেয়াদ প্রয়োজন না হলে এটি বন্ধ রাখুন।
                     </div>
                   )}
                 </div>
@@ -1163,11 +1202,11 @@ export default function InventoryView() {
       {/* =================== MODAL 2: EDIT PRODUCT (UPDATE) =================== */}
       {showEditModal && editingProduct && (
         <div className="modal-overlay" onClick={() => setShowEditModal(false)}>
-          <div className="modal-card" style={{ maxWidth: '580px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card" style={{ maxWidth: '650px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                 <Edit2 size={18} style={{ color: 'var(--primary)' }} />
-                <h2 style={{ fontSize: '1.2rem', margin: 0 }}>পণ্য ও মূল্য সম্পাদনা</h2>
+                <h2 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 700 }}>পণ্য ও মূল্য সম্পাদনা (Edit Product)</h2>
               </div>
               <button className="btn btn-secondary btn-icon" onClick={() => setShowEditModal(false)}>
                 <X size={16} />
@@ -1175,7 +1214,7 @@ export default function InventoryView() {
             </div>
 
             <form onSubmit={handleUpdateProduct}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
                 <div className="input-group">
                   <label className="input-label">পণ্যের নাম *</label>
                   <input 
@@ -1190,15 +1229,24 @@ export default function InventoryView() {
                 {/* Department & Category Side by Side */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label className="input-label">বিভাগ (Department) *</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                      <label className="input-label" style={{ margin: 0 }}>বিভাগ (Department) *</label>
                       <button 
                         type="button" 
                         onClick={() => {
                           setNewDeptForm({ name: '', code: '', description: '', initialCategories: '' });
                           setShowAddDeptModal(true);
                         }}
-                        style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                        style={{ 
+                          background: 'rgba(99, 102, 241, 0.1)', 
+                          border: '1px solid rgba(99, 102, 241, 0.25)', 
+                          color: 'var(--primary)', 
+                          fontSize: '0.72rem', 
+                          cursor: 'pointer', 
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '4px',
+                          fontWeight: 600
+                        }}
                       >
                         + নতুন বিভাগ
                       </button>
@@ -1218,8 +1266,8 @@ export default function InventoryView() {
                   </div>
 
                   <div className="input-group">
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <label className="input-label">ক্যাটাগরি (Category) *</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.35rem' }}>
+                      <label className="input-label" style={{ margin: 0 }}>ক্যাটাগরি (Category) *</label>
                       {!isCustomEditCategory ? (
                         <button 
                           type="button" 
@@ -1228,7 +1276,16 @@ export default function InventoryView() {
                             setCustomEditCategory('');
                             setEditForm(prev => ({ ...prev, category: '' }));
                           }}
-                          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                          style={{ 
+                            background: 'rgba(99, 102, 241, 0.1)', 
+                            border: '1px solid rgba(99, 102, 241, 0.25)', 
+                            color: 'var(--primary)', 
+                            fontSize: '0.72rem', 
+                            cursor: 'pointer', 
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '4px',
+                            fontWeight: 600
+                          }}
                         >
                           + কাস্টম ক্যাটাগরি
                         </button>
@@ -1240,7 +1297,16 @@ export default function InventoryView() {
                             const cats = getCategoriesForDept(editForm.department_id, editingProduct?.category);
                             setEditForm(prev => ({ ...prev, category: cats[0] || 'সাধারণ ক্যাটাগরি' }));
                           }}
-                          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                          style={{ 
+                            background: 'rgba(99, 102, 241, 0.1)', 
+                            border: '1px solid rgba(99, 102, 241, 0.25)', 
+                            color: 'var(--primary)', 
+                            fontSize: '0.72rem', 
+                            cursor: 'pointer', 
+                            padding: '0.2rem 0.6rem',
+                            borderRadius: '4px',
+                            fontWeight: 600
+                          }}
                         >
                           তালিকা থেকে
                         </button>
@@ -1272,7 +1338,7 @@ export default function InventoryView() {
                         type="text" 
                         className="form-control" 
                         required
-                        placeholder="ক্যাটাগরির নাম লিখুন (যেমন: ড্রয়িং শিট)"
+                        placeholder="ক্যাটাগরির নাম লিখুন (যেমন: ড্রয়িং শিট / লোশন)"
                         value={editForm.category}
                         onChange={(e) => {
                           setCustomEditCategory(e.target.value);
@@ -1287,7 +1353,7 @@ export default function InventoryView() {
                 {/* Barcode & Unit */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label">বারকোড / এসকেইউ *</label>
+                    <label className="input-label" style={{ marginBottom: '0.35rem' }}>বারকোড / এসকেইউ *</label>
                     <input 
                       type="text" 
                       className="form-control" 
@@ -1298,7 +1364,7 @@ export default function InventoryView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">একক (Unit) *</label>
+                    <label className="input-label" style={{ marginBottom: '0.35rem' }}>একক (Unit) *</label>
                     <select 
                       className="form-control"
                       value={editForm.unit}
@@ -1315,8 +1381,8 @@ export default function InventoryView() {
                   </div>
                 </div>
 
-                {/* Price, Cost, Stock, Min Threshold */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.75rem' }}>
+                {/* Price, Cost in 2 Columns */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <label className="input-label">বিক্রয় মূল্য (৳) *</label>
                     <input 
@@ -1339,7 +1405,10 @@ export default function InventoryView() {
                       onChange={(e) => setEditForm({ ...editForm, cost: e.target.value })}
                     />
                   </div>
+                </div>
 
+                {/* Current Stock & Threshold in 2 Columns */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <label className="input-label">বর্তমান মজুদ স্টক</label>
                     <input 
@@ -1364,30 +1433,30 @@ export default function InventoryView() {
                 {/* Expiry Date Section in Edit Modal */}
                 <div style={{
                   background: 'var(--bg-app)',
-                  padding: '0.75rem',
-                  borderRadius: 'var(--radius-sm)',
+                  padding: '1rem 1.25rem',
+                  borderRadius: 'var(--radius-md)',
                   border: '1px solid var(--border-subtle)',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '0.5rem'
+                  gap: '0.75rem'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', fontSize: '0.82rem', fontWeight: 600, cursor: 'pointer', margin: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem' }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', fontSize: '0.86rem', fontWeight: 600, cursor: 'pointer', margin: 0 }}>
                       <input 
                         type="checkbox"
                         checked={editForm.has_expiry}
                         onChange={(e) => setEditForm({ ...editForm, has_expiry: e.target.checked, expiry_date: e.target.checked ? (editForm.expiry_date || '') : '' })}
-                        style={{ accentColor: 'var(--primary)', width: '16px', height: '16px' }}
+                        style={{ accentColor: 'var(--primary)', width: '17px', height: '17px' }}
                       />
                       <span>এই পণ্যে মেয়াদোত্তীর্ণের তারিখ (Expiry Date) প্রযোজ্য</span>
                     </label>
-                    <span style={{ fontSize: '0.72rem', color: editForm.has_expiry ? 'var(--primary)' : 'var(--text-dim)', fontWeight: 600 }}>
+                    <span style={{ fontSize: '0.74rem', color: editForm.has_expiry ? 'var(--primary)' : 'var(--text-dim)', fontWeight: 600 }}>
                       {editForm.has_expiry ? 'তারিখ প্রযোজ্য' : 'প্রযোজ্য নয় (Not Applicable)'}
                     </span>
                   </div>
 
                   {editForm.has_expiry ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '0.75rem', alignItems: 'center', marginTop: '0.25rem' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.8fr', gap: '0.85rem', alignItems: 'center', marginTop: '0.25rem' }}>
                       <input 
                         type="date"
                         className="form-control"
@@ -1395,13 +1464,13 @@ export default function InventoryView() {
                         value={editForm.expiry_date}
                         onChange={(e) => setEditForm({ ...editForm, expiry_date: e.target.value })}
                       />
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
                         মেয়াদ উত্তীর্ণের তারিখ নির্ধারণ করুন
                       </span>
                     </div>
                   ) : (
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                      🔒 খাতা, কাগজ, কলম বা সাধারণ সামগ্রীতে মেয়াদ প্রযোজ্য নয় (Not Applicable)।
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
+                      🔒 স্টেশনারি বা সাধারণ সামগ্রীতে মেয়াদ প্রযোজ্য না হলে বন্ধ রাখুন।
                     </div>
                   )}
                 </div>
@@ -1410,15 +1479,15 @@ export default function InventoryView() {
                 {parseFloat(editForm.price) > 0 && parseFloat(editForm.cost) >= 0 && (
                   <div style={{ 
                     background: 'var(--bg-app)', 
-                    padding: '0.65rem 0.85rem', 
-                    borderRadius: 'var(--radius-sm)',
+                    padding: '0.85rem 1.15rem', 
+                    borderRadius: 'var(--radius-md)',
                     border: '1px solid var(--border-subtle)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    fontSize: '0.82rem'
+                    fontSize: '0.86rem'
                   }}>
-                    <span>একক প্রতি লাভ: <strong>৳{(parseFloat(editForm.price) - parseFloat(editForm.cost || 0)).toFixed(2)}</strong></span>
+                    <span>একক প্রতি আনুমানিক লাভ: <strong>৳{(parseFloat(editForm.price) - parseFloat(editForm.cost || 0)).toFixed(2)}</strong></span>
                     <span>লাভের শতকরা হার (মার্জিন): <strong style={{ color: 'var(--success)' }}>
                       {(((parseFloat(editForm.price) - parseFloat(editForm.cost || 0)) / parseFloat(editForm.price)) * 100).toFixed(1)}%
                     </strong></span>
@@ -1442,11 +1511,11 @@ export default function InventoryView() {
       {/* =================== MODAL 3: STOCK ADJUSTMENT =================== */}
       {showAdjustModal && adjustingProduct && (
         <div className="modal-overlay" onClick={() => setShowAdjustModal(false)}>
-          <div className="modal-card" style={{ maxWidth: '500px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                 <Sliders size={18} style={{ color: 'var(--accent)' }} />
-                <h2 style={{ fontSize: '1.2rem', margin: 0 }}>ইনভেন্টরি স্টক সমন্বয়</h2>
+                <h2 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 700 }}>ইনভেন্টরি স্টক সমন্বয় (Stock Adjustment)</h2>
               </div>
               <button className="btn btn-secondary btn-icon" onClick={() => setShowAdjustModal(false)}>
                 <X size={16} />
@@ -1454,21 +1523,21 @@ export default function InventoryView() {
             </div>
 
             <form onSubmit={handleExecuteStockAdjust}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ background: 'var(--bg-app)', padding: '0.75rem', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
-                  <div style={{ fontWeight: 700, fontSize: '0.92rem' }}>{adjustingProduct.name}</div>
-                  <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)', marginTop: '0.2rem' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
+                <div style={{ background: 'var(--bg-app)', padding: '1rem 1.25rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-subtle)' }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.96rem' }}>{adjustingProduct.name}</div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-dim)', marginTop: '0.35rem' }}>
                     বর্তমান স্টক: <strong style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>{adjustingProduct.stock_qty} {adjustingProduct.unit}</strong> | বারকোড: {adjustingProduct.barcode}
                   </div>
                 </div>
 
                 <div className="input-group">
-                  <label className="input-label">সমন্বয়ের ধরণ নির্বাচন করুন *</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem' }}>
+                  <label className="input-label" style={{ marginBottom: '0.45rem' }}>সমন্বয়ের ধরণ নির্বাচন করুন *</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.65rem' }}>
                     <button
                       type="button"
                       className={`btn btn-sm ${adjustType === 'add' ? 'btn-success' : 'btn-secondary'}`}
-                      style={{ justifyContent: 'center', fontSize: '0.78rem' }}
+                      style={{ justifyContent: 'center', fontSize: '0.82rem', padding: '0.55rem 0.75rem' }}
                       onClick={() => setAdjustType('add')}
                     >
                       <ArrowUpRight size={14} /> স্টক বৃদ্ধি (+)
@@ -1476,7 +1545,7 @@ export default function InventoryView() {
                     <button
                       type="button"
                       className={`btn btn-sm ${adjustType === 'remove' ? 'btn-danger' : 'btn-secondary'}`}
-                      style={{ justifyContent: 'center', fontSize: '0.78rem' }}
+                      style={{ justifyContent: 'center', fontSize: '0.82rem', padding: '0.55rem 0.75rem' }}
                       onClick={() => setAdjustType('remove')}
                     >
                       <ArrowDownRight size={14} /> ড্যামেজ/হ্রাস (-)
@@ -1484,7 +1553,7 @@ export default function InventoryView() {
                     <button
                       type="button"
                       className={`btn btn-sm ${adjustType === 'set' ? 'btn-primary' : 'btn-secondary'}`}
-                      style={{ justifyContent: 'center', fontSize: '0.78rem' }}
+                      style={{ justifyContent: 'center', fontSize: '0.82rem', padding: '0.55rem 0.75rem' }}
                       onClick={() => setAdjustType('set')}
                     >
                       সরাসরি সেট
@@ -1522,7 +1591,14 @@ export default function InventoryView() {
                   </select>
                 </div>
 
-                <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                <div style={{ 
+                  fontSize: '0.84rem', 
+                  color: 'var(--text-muted)', 
+                  padding: '0.75rem 1rem', 
+                  background: 'var(--bg-app)', 
+                  borderRadius: 'var(--radius-sm)',
+                  border: '1px solid var(--border-subtle)'
+                }}>
                   সমন্বয়ের পর প্রত্যাশিত নতুন স্টক হবে:{' '}
                   <strong style={{ color: 'var(--text-main)', fontFamily: 'var(--font-mono)' }}>
                     {adjustType === 'add' ? adjustingProduct.stock_qty + parseInt(adjustQty || 0, 10) :
@@ -1548,36 +1624,36 @@ export default function InventoryView() {
       {/* =================== MODAL 4: DELETE PRODUCT CONFIRMATION =================== */}
       {showDeleteModal && deletingProduct && (
         <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="modal-card" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card" style={{ maxWidth: '480px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--danger)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem', color: 'var(--danger)' }}>
                 <ShieldAlert size={20} />
-                <h2 style={{ fontSize: '1.2rem', margin: 0 }}>পণ্য মুছে ফেলার সতর্কতা</h2>
+                <h2 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 700 }}>পণ্য মুছে ফেলার সতর্কতা</h2>
               </div>
               <button className="btn btn-secondary btn-icon" onClick={() => setShowDeleteModal(false)}>
                 <X size={16} />
               </button>
             </div>
 
-            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-              <p style={{ fontSize: '0.9rem', margin: 0 }}>
+            <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <p style={{ fontSize: '0.92rem', margin: 0, lineHeight: 1.5 }}>
                 আপনি কি নিশ্চিতভাবে এই পণ্যটি মিজান কম্পিউটার অ্যান্ড কসমেটিকসের ক্যাটালগ থেকে মুছে ফেলতে চান?
               </p>
 
               <div style={{ 
                 background: 'var(--danger-bg)', 
-                padding: '0.75rem', 
-                borderRadius: 'var(--radius-sm)', 
+                padding: '1rem 1.25rem', 
+                borderRadius: 'var(--radius-md)', 
                 border: '1px solid var(--danger-border)',
-                fontSize: '0.82rem'
+                fontSize: '0.85rem'
               }}>
-                <div style={{ fontWeight: 700, color: 'var(--danger)' }}>{deletingProduct.name}</div>
-                <div style={{ color: 'var(--text-dim)', marginTop: '0.2rem' }}>
+                <div style={{ fontWeight: 700, color: 'var(--danger)', fontSize: '0.94rem' }}>{deletingProduct.name}</div>
+                <div style={{ color: 'var(--text-dim)', marginTop: '0.35rem' }}>
                   বারকোড: {deletingProduct.barcode} | বর্তমান মজুদ: {deletingProduct.stock_qty} {deletingProduct.unit}
                 </div>
               </div>
 
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: 0 }}>
+              <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.5 }}>
                 দ্রষ্টব্য: যদি এই পণ্যের অধীনে পূর্বে কোনো বিক্রয় চালান (অর্ডার) তৈরি হয়ে থাকে, তবে হিসাবের ভারসাম্য রক্ষার্থে এটি মুছে ফেলা যাবে না। সেক্ষেত্রে স্টক ০ করে সংরক্ষণ করতে পারেন।
               </p>
             </div>
@@ -1602,15 +1678,15 @@ export default function InventoryView() {
       {/* =================== MODAL 5: ADD NEW DEPARTMENT =================== */}
       {showAddDeptModal && (
         <div className="modal-overlay" onClick={() => setShowAddDeptModal(false)}>
-          <div className="modal-card" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
+          <div className="modal-card" style={{ maxWidth: '540px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-                <div className="brand-icon" style={{ width: '32px', height: '32px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
+                <div className="brand-icon" style={{ width: '34px', height: '34px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <FolderPlus size={18} />
                 </div>
                 <div>
-                  <h2 style={{ fontSize: '1.2rem', margin: 0 }}>নতুন বিভাগ সংযোজন (Add Department)</h2>
-                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>ইনভেন্টরি ক্যাটালগ ও পিওএস-এর জন্য নতুন পণ্য বিভাগ তৈরি করুন</p>
+                  <h2 style={{ fontSize: '1.25rem', margin: 0, fontWeight: 700 }}>নতুন বিভাগ সংযোজন (Add Department)</h2>
+                  <p style={{ margin: 0, fontSize: '0.8rem', color: 'var(--text-muted)' }}>ইনভেন্টরি ক্যাটালগ ও পিওএস-এর জন্য নতুন পণ্য বিভাগ তৈরি করুন</p>
                 </div>
               </div>
               <button className="btn btn-secondary btn-icon" onClick={() => setShowAddDeptModal(false)}>
@@ -1619,7 +1695,7 @@ export default function InventoryView() {
             </div>
 
             <form onSubmit={handleCreateDepartment}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.15rem' }}>
                 <div className="input-group">
                   <label className="input-label">বিভাগের নাম (Department Name) *</label>
                   <input 
@@ -1680,7 +1756,7 @@ export default function InventoryView() {
                 </div>
               </div>
 
-              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+              <div className="modal-footer">
                 <button type="button" className="btn btn-secondary" onClick={() => setShowAddDeptModal(false)}>
                   বাতিল
                 </button>
