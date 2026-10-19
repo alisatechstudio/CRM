@@ -20,6 +20,7 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
   const [search, setSearch] = useState('');
   const [tierFilter, setTierFilter] = useState('All');
   const [churnFilter, setChurnFilter] = useState('All');
+  const [dueFilter, setDueFilter] = useState('All');
   const [sortBy, setSortBy] = useState('total_spent');
   const [sortOrder, setSortOrder] = useState('DESC');
 
@@ -30,8 +31,8 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
         search,
         tier: tierFilter,
         churn_risk: churnFilter,
-        sort_by: sortBy,
-        order: sortOrder
+        due_filter: dueFilter === 'has_due' ? 'has_due' : dueFilter === 'no_due' ? 'no_due' : undefined,
+        sort: sortBy
       });
       setCustomers(data);
     } catch (err) {
@@ -43,7 +44,7 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
 
   useEffect(() => {
     loadCustomers();
-  }, [search, tierFilter, churnFilter, sortBy, sortOrder]);
+  }, [search, tierFilter, churnFilter, dueFilter, sortBy, sortOrder]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -115,6 +116,20 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
             </select>
           </div>
 
+          {/* Due Filter */}
+          <div className="input-group">
+            <label className="input-label">বকেয়া বাকি</label>
+            <select 
+              className="form-control"
+              value={dueFilter}
+              onChange={(e) => setDueFilter(e.target.value)}
+            >
+              <option value="All">সব কাস্টমার</option>
+              <option value="has_due">বাকি আছে (Dues)</option>
+              <option value="no_due">বাকি নেই (No Due)</option>
+            </select>
+          </div>
+
           {/* Sort By */}
           <div className="input-group">
             <label className="input-label">সর্ট</label>
@@ -124,6 +139,7 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
               onChange={(e) => setSortBy(e.target.value)}
             >
               <option value="total_spent">মোট ক্রয় (৳)</option>
+              <option value="due_balance">বকেয়া বাকি (৳)</option>
               <option value="points_balance">পয়েন্ট</option>
               <option value="visit_count">ভিজিট</option>
               <option value="last_visit">সর্বশেষ ভিজিট</option>
@@ -199,9 +215,15 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
                       <div style={{ fontWeight: 800, fontFamily: 'var(--font-mono)', fontSize: '0.95rem' }}>
                         ৳{c.total_spent?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
-                        গড় ৳{(c.visit_count > 0 ? c.total_spent / c.visit_count : 0).toFixed(2)}/ভিজিট
-                      </div>
+                      {c.due_balance > 0 ? (
+                        <div style={{ fontSize: '0.72rem', color: 'var(--danger)', fontWeight: 700 }}>
+                          বাকি: ৳{c.due_balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                        </div>
+                      ) : (
+                        <div style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>
+                          গড় ৳{(c.visit_count > 0 ? c.total_spent / c.visit_count : 0).toFixed(2)}/ভিজিট
+                        </div>
+                      )}
                     </td>
 
                     <td>
@@ -273,11 +295,17 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
                 </div>
 
                 {/* Metrics Grid */}
-                <div className="cust-metrics-grid">
+                <div className="cust-metrics-grid" style={{ gridTemplateColumns: c.due_balance > 0 ? '1fr 1fr 1fr 1fr' : undefined }}>
                   <div className="cust-metric-box">
                     <div className="cust-metric-label">মোট ক্রয়</div>
                     <div className="cust-metric-val">৳{c.total_spent?.toLocaleString('en-US', { minimumFractionDigits: 0 })}</div>
                   </div>
+                  {c.due_balance > 0 && (
+                    <div className="cust-metric-box" style={{ background: 'rgba(239, 68, 68, 0.1)' }}>
+                      <div className="cust-metric-label" style={{ color: 'var(--danger)' }}>বাকি</div>
+                      <div className="cust-metric-val" style={{ color: 'var(--danger)', fontWeight: 800 }}>৳{c.due_balance.toLocaleString('en-US', { minimumFractionDigits: 0 })}</div>
+                    </div>
+                  )}
                   <div className="cust-metric-box">
                     <div className="cust-metric-label">পয়েন্ট</div>
                     <div className="cust-metric-val points">{c.points_balance?.toLocaleString()}</div>

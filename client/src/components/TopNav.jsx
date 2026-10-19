@@ -14,6 +14,7 @@ export default function TopNav({
     dashboard: 'ড্যাশবোর্ড',
     pos: 'পিওএস কাউন্টার',
     customers: 'কাস্টমার তালিকা',
+    dues: 'বাকি খাতা ও দেনা-পাওনা',
     inventory: 'ইনভেন্টরি স্টক',
     loyalty: 'লয়্যালটি ও পয়েন্ট',
     campaigns: 'মার্কেটিং ক্যাম্পেইন',

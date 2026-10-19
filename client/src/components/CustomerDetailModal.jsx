@@ -11,7 +11,10 @@ import {
   Edit3, 
   PlusCircle, 
   Sparkles,
-  FileText
+  FileText,
+  BookOpen,
+  CheckCircle,
+  AlertCircle
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -24,6 +27,13 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
   const [adjustAmount, setAdjustAmount] = useState('');
   const [adjustReason, setAdjustReason] = useState('গ্রাহক সৌজন্য / প্রমোশনাল পয়েন্ট');
   const [adjusting, setAdjusting] = useState(false);
+
+  // Due collection state
+  const [collectAmount, setCollectAmount] = useState('');
+  const [collectMethod, setCollectMethod] = useState('নগদ (Cash)');
+  const [collectNotes, setCollectNotes] = useState('');
+  const [collecting, setCollecting] = useState(false);
+  const [showCollectForm, setShowCollectForm] = useState(false);
 
   // Edit notes state
   const [notes, setNotes] = useState('');
@@ -60,6 +70,33 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
       alert(err.message);
     } finally {
       setAdjusting(false);
+    }
+  };
+
+  const handleCollectDue = async (e) => {
+    e.preventDefault();
+    const amt = parseFloat(collectAmount);
+    if (!amt || amt <= 0) {
+      alert('সঠিক পরিশোধের পরিমাণ (টাকা) দিন');
+      return;
+    }
+
+    try {
+      setCollecting(true);
+      await api.collectDue({
+        customer_id: customer.id,
+        amount: amt,
+        payment_method: collectMethod,
+        notes: collectNotes
+      });
+      setCollectAmount('');
+      setCollectNotes('');
+      setShowCollectForm(false);
+      await fetchCustomer();
+    } catch (err) {
+      alert('বাকি আদায় ব্যর্থ: ' + err.message);
+    } finally {
+      setCollecting(false);
     }
   };
 
@@ -164,6 +201,31 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
                 ৳{(customer.points_balance).toFixed(2)} সমমূল্য
               </div>
             </div>
+
+            <div style={{ background: (customer.due_balance > 0) ? 'rgba(239, 68, 68, 0.08)' : undefined }}>
+              <div style={{ fontSize: '0.75rem', color: (customer.due_balance > 0) ? 'var(--danger)' : 'var(--text-dim)', fontWeight: 600 }}>
+                বকেয়া বাকি
+              </div>
+              <div style={{ fontSize: '1.2rem', fontWeight: 800, fontFamily: 'var(--font-mono)', color: (customer.due_balance > 0) ? 'var(--danger)' : 'var(--text-main)' }}>
+                ৳{(customer.due_balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+              </div>
+              <div style={{ fontSize: '0.72rem', color: (customer.due_balance > 0) ? 'var(--danger)' : 'var(--success)', marginTop: '0.15rem' }}>
+                {customer.due_balance > 0 ? (
+                  <button 
+                    type="button" 
+                    className="btn btn-sm btn-primary" 
+                    style={{ fontSize: '0.65rem', padding: '0.1rem 0.4rem', background: 'var(--danger)', borderColor: 'var(--danger)' }}
+                    onClick={() => {
+                      setActiveTab('dues');
+                      setShowCollectForm(true);
+                      setCollectAmount(String(customer.due_balance));
+                    }}
+                  >
+                    আদায় করুন
+                  </button>
+                ) : 'বাকি নেই'}
+              </div>
+            </div>
           </div>
 
           {/* Sub Navigation Tabs */}
@@ -173,6 +235,13 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
               onClick={() => setActiveTab('purchases')}
             >
               <ShoppingBag size={14} /> ক্রয় ({customer.orders?.length || 0})
+            </button>
+            <button 
+              className={`btn btn-sm ${activeTab === 'dues' ? 'btn-primary' : 'btn-secondary'}`}
+              onClick={() => setActiveTab('dues')}
+              style={{ color: customer.due_balance > 0 ? 'var(--danger)' : undefined, fontWeight: customer.due_balance > 0 ? 700 : undefined }}
+            >
+              <BookOpen size={14} /> বাকি খাতা {customer.due_balance > 0 ? `(৳${customer.due_balance.toFixed(0)})` : ''}
             </button>
             <button 
               className={`btn btn-sm ${activeTab === 'loyalty' ? 'btn-primary' : 'btn-secondary'}`}
@@ -215,8 +284,23 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
                     gap: '0.5rem'
                   }}>
                     <div style={{ minWidth: 0, flex: '1 1 200px' }}>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem', wordBreak: 'break-word' }}>
-                        {ord.order_number} • বিল ৳{ord.total.toFixed(2)}
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', wordBreak: 'break-word', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                        <span>{ord.order_number} • মোট ৳{ord.total.toFixed(2)}</span>
+                        {ord.payment_status === 'Due' && (
+                          <span className="status-pill" style={{ background: 'rgba(239, 68, 68, 0.15)', color: 'var(--danger)', fontSize: '0.7rem' }}>
+                            বাকি: ৳{(ord.due_amount || 0).toFixed(2)}
+                          </span>
+                        )}
+                        {ord.payment_status === 'Partial' && (
+                          <span className="status-pill" style={{ background: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)', fontSize: '0.7rem' }}>
+                            জমা: ৳{(ord.paid_amount || 0).toFixed(2)} • বাকি: ৳{(ord.due_amount || 0).toFixed(2)}
+                          </span>
+                        )}
+                        {(!ord.payment_status || ord.payment_status === 'Paid') && (
+                          <span className="status-pill" style={{ background: 'rgba(16, 185, 129, 0.15)', color: 'var(--success)', fontSize: '0.7rem' }}>
+                            পরিশোধিত
+                          </span>
+                        )}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
                         {ord.created_at} • {ord.store_name} • {ord.payment_method}
@@ -235,6 +319,211 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
                     </button>
                   </div>
                 ))
+              )}
+            </div>
+          )}
+
+          {/* TAB: DUES / BAKI KHATA */}
+          {activeTab === 'dues' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+              {/* Due Balance Card & Action Banner */}
+              <div style={{
+                padding: '1rem',
+                borderRadius: 'var(--radius-md)',
+                background: (customer.due_balance > 0) ? 'rgba(239, 68, 68, 0.08)' : 'rgba(16, 185, 129, 0.08)',
+                border: `1px solid ${(customer.due_balance > 0) ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '1rem'
+              }}>
+                <div>
+                  <div style={{ fontSize: '0.8rem', color: 'var(--text-dim)', fontWeight: 600 }}>
+                    বর্তমান মোট বকেয়া বাকি
+                  </div>
+                  <div style={{ fontSize: '1.6rem', fontWeight: 900, fontFamily: 'var(--font-mono)', color: (customer.due_balance > 0) ? 'var(--danger)' : 'var(--success)' }}>
+                    ৳{(customer.due_balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                  </div>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
+                    {customer.due_balance > 0 ? 'এই গ্রাহকের নিকট দোকান বকেয়া পাওনা রয়েছে' : 'কোনো বকেয়া বা দেনা নেই'}
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {customer.due_balance > 0 && (
+                    <button
+                      type="button"
+                      className="btn btn-primary btn-sm"
+                      style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}
+                      onClick={() => {
+                        setShowCollectForm(!showCollectForm);
+                        if (!collectAmount) setCollectAmount(String(customer.due_balance));
+                      }}
+                    >
+                      {showCollectForm ? 'ফর্ম লুকান' : 'বাকি আদায় / পরিশোধ'}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* Quick Due Collection Form */}
+              {showCollectForm && (
+                <form onSubmit={handleCollectDue} style={{
+                  padding: '1rem',
+                  borderRadius: 'var(--radius-md)',
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-subtle)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '0.75rem'
+                }}>
+                  <div style={{ fontWeight: 700, fontSize: '0.9rem', color: 'var(--text-main)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>বকেয়া জমা / কিস্তি আদায় ফরম</span>
+                    <button 
+                      type="button" 
+                      className="btn btn-secondary btn-sm" 
+                      style={{ fontSize: '0.7rem', padding: '0.15rem 0.5rem' }}
+                      onClick={() => setCollectAmount(String(customer.due_balance))}
+                    >
+                      সম্পূর্ণ বাকি (৳{customer.due_balance}) নির্বাচন
+                    </button>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '0.75rem' }}>
+                    <div>
+                      <label className="input-label">জমার পরিমাণ (টাকা) *</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0.01"
+                        max={customer.due_balance}
+                        className="form-control"
+                        placeholder="টাকার পরিমাণ লিখুন"
+                        value={collectAmount}
+                        onChange={(e) => setCollectAmount(e.target.value)}
+                        required
+                        style={{ fontFamily: 'var(--font-mono)', fontWeight: 700 }}
+                      />
+                    </div>
+                    <div>
+                      <label className="input-label">পেমেন্ট মেথড</label>
+                      <select
+                        className="form-control"
+                        value={collectMethod}
+                        onChange={(e) => setCollectMethod(e.target.value)}
+                      >
+                        <option value="নগদ (Cash)">নগদ (Cash)</option>
+                        <option value="বিকাশ (bKash)">বিকাশ (bKash)</option>
+                        <option value="নগদ (Nagad)">নগদ (Nagad)</option>
+                        <option value="রকেট (Rocket)">রকেট (Rocket)</option>
+                        <option value="ব্যাংক / কার্ড (Bank/Card)">ব্যাংক / কার্ড (Bank/Card)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="input-label">নোট / মন্তব্য (ঐচ্ছিক)</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        placeholder="উদাঃ বাকি পরিশোধ / কিস্তি জমা"
+                        value={collectNotes}
+                        onChange={(e) => setCollectNotes(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0.25rem' }}>
+                    <button
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      onClick={() => setShowCollectForm(false)}
+                    >
+                      বাতিল
+                    </button>
+                    <button
+                      type="submit"
+                      className="btn btn-primary btn-sm"
+                      disabled={collecting || !collectAmount || parseFloat(collectAmount) <= 0}
+                    >
+                      {collecting ? 'জমা হচ্ছে...' : 'জমা নিশ্চিত করুন'}
+                    </button>
+                  </div>
+                </form>
+              )}
+
+              {/* Transactions History Ledger */}
+              <div style={{ fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-dim)', marginTop: '0.5rem' }}>
+                বাকি লেনদেন ও আদায়ের ইতিহাস ({customer.dueTransactions?.length || 0})
+              </div>
+
+              {(!customer.dueTransactions || customer.dueTransactions.length === 0) ? (
+                <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1.5rem', background: 'var(--bg-surface)', borderRadius: 'var(--radius-md)' }}>
+                  কোনো বাকি লেনদেন পাওয়া যায়নি।
+                </p>
+              ) : (
+                <div className="data-table-container">
+                  <table className="data-table">
+                    <thead>
+                      <tr>
+                        <th>তারিখ</th>
+                        <th>ধরন</th>
+                        <th>পরিমাণ</th>
+                        <th>পূর্বের বাকি</th>
+                        <th>অবশিষ্ট বাকি</th>
+                        <th>মেথড / নোট</th>
+                        <th>অর্ডারের রসিদ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {customer.dueTransactions.map((tx) => (
+                        <tr key={tx.id}>
+                          <td style={{ fontSize: '0.75rem', color: 'var(--text-dim)', whiteSpace: 'nowrap' }}>
+                            {tx.date}
+                          </td>
+                          <td>
+                            <span style={{
+                              fontSize: '0.75rem',
+                              fontWeight: 700,
+                              color: tx.type === 'New_Due' ? 'var(--danger)' : 'var(--success)'
+                            }}>
+                              {tx.type === 'New_Due' ? 'বাকি সৃষ্টি' : 'বকেয়া পরিশোধ'}
+                            </span>
+                          </td>
+                          <td style={{
+                            fontWeight: 800,
+                            fontFamily: 'var(--font-mono)',
+                            color: tx.type === 'New_Due' ? 'var(--danger)' : 'var(--success)'
+                          }}>
+                            {tx.type === 'New_Due' ? `+৳${tx.amount.toFixed(2)}` : `-৳${tx.amount.toFixed(2)}`}
+                          </td>
+                          <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-dim)' }}>
+                            ৳{(tx.previous_due || 0).toFixed(2)}
+                          </td>
+                          <td style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', fontWeight: 700 }}>
+                            ৳{(tx.remaining_due || 0).toFixed(2)}
+                          </td>
+                          <td style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                            <div>{tx.payment_method || '-'}</div>
+                            {tx.notes && <div style={{ color: 'var(--text-dim)' }}>{tx.notes}</div>}
+                          </td>
+                          <td>
+                            {tx.order_id ? (
+                              <button
+                                className="btn btn-secondary btn-sm"
+                                style={{ fontSize: '0.7rem', padding: '0.15rem 0.4rem' }}
+                                onClick={() => onOpenReceipt(tx.order_id)}
+                              >
+                                রসিদ দেখুন
+                              </button>
+                            ) : (
+                              <span style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>-</span>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               )}
             </div>
           )}

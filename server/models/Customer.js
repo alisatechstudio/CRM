@@ -12,6 +12,7 @@ const customerSchema = new mongoose.Schema({
   lifetime_points: { type: Number, default: 0 },
   total_spent: { type: Number, default: 0 },
   visit_count: { type: Number, default: 0 },
+  due_balance: { type: Number, default: 0 },
   last_visit: String,
   join_date: String,
   birthday: String,

@@ -127,10 +127,32 @@ export default function ReceiptModal({ orderId, onClose }) {
               )}
 
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 900, fontSize: '1rem', marginTop: '0.35rem', borderTop: '1px solid #111', paddingTop: '0.35rem' }}>
-                <span>মোট পরিশোধ:</span>
+                <span>মোট বিল:</span>
                 <span>৳{order.total?.toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#4b5563' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', fontWeight: 600 }}>
+                <span>জমা / পরিশোধ:</span>
+                <span>৳{(order.paid_amount !== undefined ? order.paid_amount : order.total)?.toFixed(2)}</span>
+              </div>
+              {(order.due_amount > 0 || (order.total - (order.paid_amount ?? order.total) > 0)) && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: 800, color: '#dc2626' }}>
+                  <span>বাকি (Due):</span>
+                  <span>৳{(order.due_amount || (order.total - (order.paid_amount ?? order.total)))?.toFixed(2)}</span>
+                </div>
+              )}
+              {order.change_amount > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: '#059669', fontWeight: 600 }}>
+                  <span>ফেরত (Change):</span>
+                  <span>৳{order.change_amount?.toFixed(2)}</span>
+                </div>
+              )}
+              {order.customer_due_balance > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#b91c1c', borderTop: '1px dashed #d1d5db', paddingTop: '0.25rem', marginTop: '0.2rem' }}>
+                  <span>গ্রাহকের সর্বমোট বাকি:</span>
+                  <span>৳{order.customer_due_balance?.toFixed(2)}</span>
+                </div>
+              )}
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#4b5563', marginTop: '0.2rem' }}>
                 <span>মাধ্যম:</span>
                 <span>{order.payment_method}</span>
               </div>

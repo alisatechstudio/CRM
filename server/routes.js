@@ -11,6 +11,7 @@ const Coupon = require('./models/Coupon');
 const Campaign = require('./models/Campaign');
 const SupportTicket = require('./models/SupportTicket');
 const Expense = require('./models/Expense');
+const DueTransaction = require('./models/DueTransaction');
 const SystemMeta = require('./models/SystemMeta');
 
 // Helper to retrieve active PIN
@@ -174,12 +175,14 @@ router.delete('/departments/:id', async (req, res) => {
 // =================== CUSTOMERS ===================
 router.get('/customers', async (req, res) => {
   try {
-    const { search, tier, churn_risk, preferred_department, sort = 'last_visit' } = req.query;
+    const { search, tier, churn_risk, preferred_department, due_filter, sort = 'last_visit' } = req.query;
     const filter = {};
 
     if (tier && tier !== 'All') filter.tier = tier;
     if (churn_risk && churn_risk !== 'All') filter.churn_risk = churn_risk;
     if (preferred_department && preferred_department !== 'All') filter.preferred_department = preferred_department;
+    if (due_filter === 'has_due') filter.due_balance = { $gt: 0 };
+    if (due_filter === 'no_due') filter.due_balance = { $lte: 0 };
 
     if (search) {
       const reg = new RegExp(search, 'i');
@@ -197,7 +200,8 @@ router.get('/customers', async (req, res) => {
       'points_balance': { points_balance: -1 },
       'visit_count': { visit_count: -1 },
       'name': { first_name: 1 },
-      'last_visit': { last_visit: -1 }
+      'last_visit': { last_visit: -1 },
+      'due_balance': { due_balance: -1 }
     };
 
     const customers = await Customer.find(filter).sort(sortMap[sort] || { last_visit: -1 }).lean();
@@ -212,20 +216,23 @@ router.get('/customers/:id', async (req, res) => {
     const customer = await Customer.findOne({ id: req.params.id }).lean();
     if (!customer) return res.status(404).json({ error: 'গ্রাহক খুঁজে পাওয়া যায়নি' });
 
-    const [orders, loyalty, tickets] = await Promise.all([
-      Order.find({ customer_id: customer.id }).sort({ created_at: -1 }).limit(20).lean(),
+    const [orders, loyalty, tickets, dueTransactions] = await Promise.all([
+      Order.find({ customer_id: customer.id }).sort({ created_at: -1 }).limit(30).lean(),
       LoyaltyTransaction.find({ customer_id: customer.id }).sort({ created_at: -1 }).limit(30).lean(),
-      SupportTicket.find({ customer_id: customer.id }).sort({ created_at: -1 }).lean()
+      SupportTicket.find({ customer_id: customer.id }).sort({ created_at: -1 }).lean(),
+      DueTransaction.find({ customer_id: customer.id }).sort({ createdAt: -1, date: -1 }).limit(50).lean()
     ]);
 
     const aov = customer.visit_count > 0 ? (customer.total_spent / customer.visit_count).toFixed(2) : '0.00';
 
     res.json({
       ...customer,
+      due_balance: customer.due_balance || 0,
       aov: Number(aov),
       orders,
       loyalty,
-      tickets
+      tickets,
+      dueTransactions: dueTransactions || []
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -605,7 +612,8 @@ router.post('/pos/checkout', async (req, res) => {
       manual_discount_amount,
       manual_discount_reason = '',
       points_to_redeem = 0,
-      payment_method = 'নগদ (Cash)'
+      payment_method = 'নগদ (Cash)',
+      paid_amount
     } = req.body;
 
     if (!items || !items.length) {
@@ -721,6 +729,32 @@ router.post('/pos/checkout', async (req, res) => {
     const tax = 0; // Stationery zero VAT in BD
     const total = Number(netTaxable.toFixed(2));
 
+    // Due & partial payment calculation
+    let finalPaidAmount = total;
+    let dueAmount = 0;
+    let changeAmount = 0;
+    let paymentStatus = 'Paid';
+
+    if (paid_amount !== undefined && paid_amount !== null && paid_amount !== '') {
+      const parsedPaid = Number(parseFloat(paid_amount).toFixed(2));
+      if (!isNaN(parsedPaid)) {
+        if (parsedPaid < total) {
+          finalPaidAmount = Math.max(0, parsedPaid);
+          dueAmount = Number((total - finalPaidAmount).toFixed(2));
+          paymentStatus = finalPaidAmount > 0 ? 'Partial' : 'Due';
+        } else {
+          finalPaidAmount = total;
+          changeAmount = Number((parsedPaid - total).toFixed(2));
+          dueAmount = 0;
+          paymentStatus = 'Paid';
+        }
+      }
+    }
+
+    if (dueAmount > 0 && !customer) {
+      return res.status(400).json({ error: 'বাকি বিক্রির জন্য গ্রাহক/মেম্বার নির্বাচন করা আবশ্যক' });
+    }
+
     const orderId = 'ord_' + Date.now();
     const orderNumber = `ORD-2026-${Math.floor(1000 + Math.random() * 9000)}`;
     const createdAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
@@ -749,6 +783,10 @@ router.post('/pos/checkout', async (req, res) => {
       points_discount: pointsDiscount,
       tax,
       total,
+      paid_amount: finalPaidAmount,
+      due_amount: dueAmount,
+      change_amount: changeAmount,
+      payment_status: paymentStatus,
       payment_method,
       status: 'Completed',
       created_at: createdAt,
@@ -757,6 +795,28 @@ router.post('/pos/checkout', async (req, res) => {
 
     let earnedPoints = 0;
     if (customer) {
+      // If customer has due created
+      if (dueAmount > 0) {
+        const prevDue = customer.due_balance || 0;
+        const newDue = Number((prevDue + dueAmount).toFixed(2));
+        customer.due_balance = newDue;
+
+        await DueTransaction.create({
+          id: 'due_' + Date.now(),
+          customer_id: customer.id,
+          order_id: orderId,
+          order_number: orderNumber,
+          type: 'New_Due',
+          amount: dueAmount,
+          previous_due: prevDue,
+          remaining_due: newDue,
+          payment_method,
+          notes: `চালান #${orderNumber}-এ বাকি`,
+          collected_by: cashier_name || 'মিজানুর রহমান',
+          date: createdAt
+        });
+      }
+
       let multiplier = 1.0;
       if (customer.tier === 'Silver') multiplier = 1.25;
       else if (customer.tier === 'Gold') multiplier = 1.5;
@@ -820,12 +880,17 @@ router.post('/pos/checkout', async (req, res) => {
       pointsDiscount,
       tax,
       total,
+      paidAmount: finalPaidAmount,
+      dueAmount,
+      changeAmount,
+      paymentStatus,
       payment_method,
       createdAt,
       earnedPoints,
       items: verifiedItems,
       customerName: customer ? `${customer.first_name} ${customer.last_name}` : 'সাধারণ খুচরা ক্রেতা',
-      customerCard: customer ? customer.card_number : null
+      customerCard: customer ? customer.card_number : null,
+      customerDueBalance: customer ? (customer.due_balance || 0) : 0
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -883,6 +948,11 @@ router.get('/orders/:id', async (req, res) => {
 
     res.json({
       ...order,
+      paid_amount: order.paid_amount !== undefined ? order.paid_amount : order.total,
+      due_amount: order.due_amount || 0,
+      change_amount: order.change_amount || 0,
+      payment_status: order.payment_status || (order.due_amount > 0 ? 'Due' : 'Paid'),
+      customer_due_balance: customer?.due_balance || 0,
       first_name: customer?.first_name || '',
       last_name: customer?.last_name || '',
       email: customer?.email || '',
@@ -1335,6 +1405,162 @@ router.delete('/expenses/:id', async (req, res) => {
   }
 });
 
+// =================== DUE MANAGEMENT (বাকি খাতা ও দেনা-পাওনা) ===================
+router.get('/dues', async (req, res) => {
+  try {
+    const { search, filter = 'due' } = req.query; // 'due', 'all', 'cleared'
+    const customerQuery = {};
+    if (filter === 'due') {
+      customerQuery.due_balance = { $gt: 0 };
+    } else if (filter === 'cleared') {
+      customerQuery.due_balance = { $lte: 0 };
+    }
+
+    if (search) {
+      const reg = new RegExp(search, 'i');
+      customerQuery.$or = [
+        { first_name: reg },
+        { last_name: reg },
+        { card_number: reg },
+        { phone: reg }
+      ];
+    }
+
+    const [allCustomers, matchingCustomers, recentTransactions] = await Promise.all([
+      Customer.find().lean(),
+      Customer.find(customerQuery).sort({ due_balance: -1, last_visit: -1 }).lean(),
+      DueTransaction.find().sort({ createdAt: -1, date: -1 }).limit(40).lean()
+    ]);
+
+    const totalDue = allCustomers.reduce((acc, c) => acc + (c.due_balance || 0), 0);
+    const customersWithDueCount = allCustomers.filter(c => (c.due_balance || 0) > 0).length;
+
+    // Calculate today's collections
+    const todayPrefix = new Date().toISOString().split('T')[0];
+    const todayCollected = recentTransactions
+      .filter(t => t.type === 'Payment' && t.date && t.date.startsWith(todayPrefix))
+      .reduce((acc, t) => acc + (t.amount || 0), 0);
+
+    const custMap = {};
+    for (const c of allCustomers) custMap[c.id] = c;
+
+    const enrichedTransactions = recentTransactions.map(t => ({
+      ...t,
+      customer_name: custMap[t.customer_id] ? `${custMap[t.customer_id].first_name} ${custMap[t.customer_id].last_name}` : 'গ্রাহক',
+      customer_card: custMap[t.customer_id]?.card_number || '',
+      customer_phone: custMap[t.customer_id]?.phone || ''
+    }));
+
+    res.json({
+      totalDue: Number(totalDue.toFixed(2)),
+      customersWithDueCount,
+      todayCollected: Number(todayCollected.toFixed(2)),
+      customers: matchingCustomers,
+      recentTransactions: enrichedTransactions
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/dues/collect', async (req, res) => {
+  try {
+    const { customer_id, amount, payment_method = 'নগদ (Cash)', notes = '', collected_by = 'মিজানুর রহমান' } = req.body;
+    if (!customer_id) {
+      return res.status(400).json({ error: 'গ্রাহক নির্বাচন করুন' });
+    }
+    const paymentAmount = Number(parseFloat(amount).toFixed(2));
+    if (isNaN(paymentAmount) || paymentAmount <= 0) {
+      return res.status(400).json({ error: 'সঠিক পরিশোধের পরিমাণ (টাকা) দিন' });
+    }
+
+    const customer = await Customer.findOne({ id: customer_id });
+    if (!customer) {
+      return res.status(404).json({ error: 'গ্রাহক খুঁজে পাওয়া যায়নি' });
+    }
+
+    const currentDue = Number((customer.due_balance || 0).toFixed(2));
+    if (currentDue <= 0) {
+      return res.status(400).json({ error: 'এই গ্রাহকের কোনো বকেয়া বাকি নেই' });
+    }
+
+    const actualPaid = Math.min(paymentAmount, currentDue);
+    const remainingDue = Number(Math.max(0, currentDue - actualPaid).toFixed(2));
+    customer.due_balance = remainingDue;
+    await customer.save();
+
+    const createdAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const transactionId = 'due_pay_' + Date.now();
+
+    const transaction = await DueTransaction.create({
+      id: transactionId,
+      customer_id: customer.id,
+      type: 'Payment',
+      amount: actualPaid,
+      previous_due: currentDue,
+      remaining_due: remainingDue,
+      payment_method,
+      notes: notes.trim() || 'বাকি আদায় পরিশোধ',
+      collected_by: collected_by || 'মিজানুর রহমান',
+      date: createdAt
+    });
+
+    // Settle/allocate into oldest unpaid orders
+    const dueOrders = await Order.find({ 
+      customer_id: customer.id, 
+      due_amount: { $gt: 0 } 
+    }).sort({ created_at: 1 });
+
+    let unallocatedPayment = actualPaid;
+    for (const ord of dueOrders) {
+      if (unallocatedPayment <= 0) break;
+      const orderDue = ord.due_amount || 0;
+      if (unallocatedPayment >= orderDue) {
+        ord.paid_amount = Number(((ord.paid_amount || 0) + orderDue).toFixed(2));
+        ord.due_amount = 0;
+        ord.payment_status = 'Paid';
+        unallocatedPayment = Number((unallocatedPayment - orderDue).toFixed(2));
+      } else {
+        ord.paid_amount = Number(((ord.paid_amount || 0) + unallocatedPayment).toFixed(2));
+        ord.due_amount = Number((orderDue - unallocatedPayment).toFixed(2));
+        ord.payment_status = 'Partial';
+        unallocatedPayment = 0;
+      }
+      await ord.save();
+    }
+
+    res.status(201).json({
+      success: true,
+      message: `সফলভাবে ৳${actualPaid.toFixed(2)} বাকি আদায় করা হয়েছে`,
+      customer,
+      transaction
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.get('/customers/:id/dues', async (req, res) => {
+  try {
+    const customer = await Customer.findOne({ id: req.params.id }).lean();
+    if (!customer) return res.status(404).json({ error: 'গ্রাহক খুঁজে পাওয়া যায়নি' });
+
+    const [dueTransactions, dueOrders] = await Promise.all([
+      DueTransaction.find({ customer_id: customer.id }).sort({ createdAt: -1, date: -1 }).lean(),
+      Order.find({ customer_id: customer.id, due_amount: { $gt: 0 } }).sort({ created_at: -1 }).lean()
+    ]);
+
+    res.json({
+      customer,
+      due_balance: customer.due_balance || 0,
+      transactions: dueTransactions || [],
+      unpaid_orders: dueOrders || []
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // =================== EXECUTIVE BI ANALYTICS ===================
 router.get('/analytics', async (req, res) => {
   try {
@@ -1502,6 +1728,9 @@ router.get('/analytics', async (req, res) => {
       avgCsat: 4.8
     };
 
+    const totalDue = customers.reduce((acc, c) => acc + (c.due_balance || 0), 0);
+    const dueCustomersCount = customers.filter(c => (c.due_balance || 0) > 0).length;
+
     res.json({
       kpis: {
         totalRevenue: Number(totalRevenue.toFixed(2)),
@@ -1511,6 +1740,8 @@ router.get('/analytics', async (req, res) => {
         totalExpenses: Number(totalExpenses.toFixed(2)),
         netProfit,
         netMarginPct,
+        totalDue: Number(totalDue.toFixed(2)),
+        dueCustomersCount,
         totalOrders: orders.length,
         totalUnitsSold,
         avgBasketSize: orders.length > 0 ? Number((totalRevenue / orders.length).toFixed(2)) : 0,

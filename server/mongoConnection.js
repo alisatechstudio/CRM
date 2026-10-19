@@ -306,9 +306,10 @@ async function wipeAllCollections() {
   const Campaign = require('./models/Campaign');
   const SupportTicket = require('./models/SupportTicket');
   const Expense = require('./models/Expense');
+  const DueTransaction = require('./models/DueTransaction');
   const SystemMeta = require('./models/SystemMeta');
 
-  const [stores, departments, products, customers, coupons, orders, loyalty, campaigns, tickets, expenses] = await Promise.all([
+  const [stores, departments, products, customers, coupons, orders, loyalty, campaigns, tickets, expenses, dues] = await Promise.all([
     Store.deleteMany({}),
     Department.deleteMany({}),
     Product.deleteMany({}),
@@ -318,7 +319,8 @@ async function wipeAllCollections() {
     LoyaltyTransaction.deleteMany({}),
     Campaign.deleteMany({}),
     SupportTicket.deleteMany({}),
-    Expense.deleteMany({})
+    Expense.deleteMany({}),
+    DueTransaction.deleteMany({})
   ]);
 
   // Set flag so auto-seeding will not repopulate on subsequent connections
@@ -338,7 +340,8 @@ async function wipeAllCollections() {
     loyaltyTransactions: loyalty.deletedCount,
     campaigns: campaigns.deletedCount,
     supportTickets: tickets.deletedCount,
-    expenses: expenses.deletedCount
+    expenses: expenses.deletedCount,
+    dueTransactions: dues.deletedCount
   };
 }
 

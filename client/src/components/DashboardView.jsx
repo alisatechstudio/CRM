@@ -19,7 +19,8 @@ import {
   Package,
   X,
   CreditCard,
-  FileText
+  FileText,
+  BookOpen
 } from 'lucide-react';
 import { api } from '../api';
 
@@ -433,6 +434,22 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
           </div>
           <div className="kpi-icon-wrap" style={{ color: '#ea580c', background: 'rgba(234, 88, 12, 0.12)' }}>
             <AlertTriangle size={22} />
+          </div>
+        </div>
+
+        {/* KPI 9: Total Due Outstanding */}
+        <div className="kpi-card" style={{ '--card-accent': '#ef4444', '--card-bg-accent': 'rgba(239, 68, 68, 0.12)' }}>
+          <div>
+            <div className="kpi-title">মোট বকেয়া বাকি</div>
+            <div className="kpi-value" style={{ color: (kpis.totalDue || 0) > 0 ? '#ef4444' : 'inherit' }}>
+              ৳{(kpis.totalDue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <div className="kpi-trend" style={{ color: (kpis.dueCustomersCount || 0) > 0 ? '#ef4444' : 'var(--text-dim)' }}>
+              <BookOpen size={13} style={{ color: '#ef4444' }} /> {kpis.dueCustomersCount || 0} জন গ্রাহকের বাকি
+            </div>
+          </div>
+          <div className="kpi-icon-wrap" style={{ color: '#ef4444', background: 'rgba(239, 68, 68, 0.12)' }}>
+            <BookOpen size={22} />
           </div>
         </div>
       </div>

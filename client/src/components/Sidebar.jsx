@@ -10,10 +10,11 @@ import {
   Store, 
   Sun, 
   Moon, 
-  Sparkles,
-  X,
-  Download,
-  Phone
+  Sparkles, 
+  X, 
+  Download, 
+  Phone,
+  BookOpen
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -32,6 +33,7 @@ export default function Sidebar({
     { id: 'dashboard', label: 'ড্যাশবোর্ড', icon: LayoutDashboard },
     { id: 'pos', label: 'পিওএস কাউন্টার', icon: ShoppingCart },
     { id: 'customers', label: 'কাস্টমার তালিকা', icon: Users },
+    { id: 'dues', label: 'বাকি খাতা', icon: BookOpen },
     { id: 'inventory', label: 'ইনভেন্টরি স্টক', icon: Package },
     { id: 'loyalty', label: 'লয়্যালটি ও পয়েন্ট', icon: Award },
     { id: 'campaigns', label: 'মার্কেটিং', icon: Send },

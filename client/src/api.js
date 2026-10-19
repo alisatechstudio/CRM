@@ -50,6 +50,11 @@ export const api = {
   updateCustomer: (id, data) => request(`/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
   adjustPoints: (id, data) => request(`/customers/${id}/points`, { method: 'POST', body: JSON.stringify(data) }),
 
+  // Dues & Credit Management (বাকি খাতা)
+  getDues: (params = {}) => request(`/dues${toQueryString(params)}`),
+  collectDue: (data) => request('/dues/collect', { method: 'POST', body: JSON.stringify(data) }),
+  getCustomerDues: (id) => request(`/customers/${id}/dues`),
+
   // Products & Inventory
   getProducts: (params = {}) => {
     return request(`/products${toQueryString(params)}`);

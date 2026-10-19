@@ -49,6 +49,10 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
   const [manualDiscountValue, setManualDiscountValue] = useState('');
   const [manualDiscountReason, setManualDiscountReason] = useState('নিয়মিত কাস্টমার বিশেষ ছাড়');
 
+  // Due & partial payment state
+  const [paymentMode, setPaymentMode] = useState('full'); // 'full' | 'partial' | 'due'
+  const [paidAmountInput, setPaidAmountInput] = useState('');
+
   useEffect(() => {
     loadData();
   }, [selectedDept, searchTerm]);
@@ -127,6 +131,8 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
     setSelectedCustomer(null);
     setManualDiscountValue('');
     setShowManualDiscount(false);
+    setPaymentMode('full');
+    setPaidAmountInput('');
     setMobilePane('catalog');
   };
 
@@ -182,6 +188,16 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
   const tax = 0;
   const finalTotal = Number(taxableAmount.toFixed(2));
 
+  // Due & payment calculation
+  const currentPaidAmount = paymentMode === 'due'
+    ? 0
+    : paymentMode === 'partial'
+      ? (paidAmountInput === '' ? 0 : Math.max(0, parseFloat(paidAmountInput) || 0))
+      : finalTotal;
+
+  const calculatedDue = Math.max(0, Number((finalTotal - currentPaidAmount).toFixed(2)));
+  const calculatedChange = Math.max(0, Number((currentPaidAmount - finalTotal).toFixed(2)));
+
   // Potential points to earn
   let tierMultiplier = 1.0;
   if (selectedCustomer?.tier === 'Silver') tierMultiplier = 1.25;
@@ -193,6 +209,11 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
   // Checkout process
   const handleCheckout = async () => {
     if (cart.length === 0) return;
+
+    if (calculatedDue > 0 && !selectedCustomer) {
+      alert('বাকি বিক্রির জন্য গ্রাহক/মেম্বার নির্বাচন করা আবশ্যক!');
+      return;
+    }
 
     try {
       setProcessing(true);
@@ -214,7 +235,8 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
         manual_discount_amount: manualDiscount,
         manual_discount_reason: manualDiscount > 0 ? manualDiscountReason : '',
         points_to_redeem: pointsDiscount,
-        payment_method: paymentMethod
+        payment_method: paymentMode === 'due' ? 'বাকি (Due)' : paymentMethod,
+        paid_amount: currentPaidAmount
       };
 
       const result = await api.checkout(payload);
@@ -406,8 +428,22 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
                     {selectedCustomer.tier}
                   </span>
                 </div>
-                <div style={{ fontSize: '0.75rem', color: 'var(--primary)', fontFamily: 'var(--font-mono)', marginTop: '0.15rem' }}>
-                  {selectedCustomer.points_balance?.toLocaleString()} পয়েন্ট ({tierMultiplier}x রেট)
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.15rem' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>
+                    {selectedCustomer.points_balance?.toLocaleString()} পয়েন্ট ({tierMultiplier}x রেট)
+                  </span>
+                  {(selectedCustomer.due_balance > 0) && (
+                    <span style={{ 
+                      fontSize: '0.7rem', 
+                      background: 'rgba(239, 68, 68, 0.15)', 
+                      color: 'var(--danger)', 
+                      padding: '0.1rem 0.4rem', 
+                      borderRadius: 'var(--radius-sm)', 
+                      fontWeight: 700 
+                    }}>
+                      পূর্বের বাকি: ৳{selectedCustomer.due_balance.toFixed(2)}
+                    </span>
+                  )}
                 </div>
               </div>
               <button 
@@ -491,7 +527,14 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
                       >
                         <div>
                           <div style={{ fontWeight: 600 }}>{cust.first_name} {cust.last_name}</div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>{cust.card_number} • {cust.phone}</div>
+                          <div style={{ fontSize: '0.7rem', color: 'var(--text-dim)' }}>
+                            {cust.card_number} • {cust.phone}
+                            {cust.due_balance > 0 && (
+                              <span style={{ color: 'var(--danger)', fontWeight: 700, marginLeft: '0.35rem' }}>
+                                (বাকি ৳{cust.due_balance.toFixed(0)})
+                              </span>
+                            )}
+                          </div>
                         </div>
                         <span className={`tier-badge tier-${cust.tier}`} style={{ fontSize: '0.65rem' }}>
                           {cust.tier}
@@ -784,6 +827,151 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
             </div>
           )}
 
+          {/* Payment & Due Options */}
+          <div style={{
+            background: 'var(--bg-app)',
+            borderRadius: 'var(--radius-sm)',
+            border: calculatedDue > 0 ? '1px solid rgba(239, 68, 68, 0.4)' : '1px solid var(--border-subtle)',
+            padding: '0.65rem',
+            marginBottom: '0.75rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.45rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-main)' }}>পরিশোধের ধরন</span>
+              <div style={{ display: 'flex', gap: '0.25rem' }}>
+                <button
+                  type="button"
+                  className={`btn btn-sm ${paymentMode === 'full' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ fontSize: '0.7rem', padding: '0.2rem 0.45rem' }}
+                  onClick={() => {
+                    setPaymentMode('full');
+                    setPaidAmountInput('');
+                  }}
+                >
+                  পূর্ণ পরিশোধ
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-sm ${paymentMode === 'partial' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ fontSize: '0.7rem', padding: '0.2rem 0.45rem' }}
+                  onClick={() => {
+                    setPaymentMode('partial');
+                    if (!paidAmountInput) setPaidAmountInput(String(Math.floor(finalTotal / 2)));
+                  }}
+                >
+                  আংশিক জমা
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-sm ${paymentMode === 'due' ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ 
+                    fontSize: '0.7rem', 
+                    padding: '0.2rem 0.45rem',
+                    color: paymentMode === 'due' ? '#fff' : 'var(--danger)',
+                    borderColor: 'rgba(239, 68, 68, 0.4)'
+                  }}
+                  onClick={() => {
+                    setPaymentMode('due');
+                    setPaidAmountInput('0');
+                  }}
+                >
+                  সম্পূর্ণ বাকি
+                </button>
+              </div>
+            </div>
+
+            {/* Custom Paid Amount input for partial payment */}
+            {paymentMode === 'partial' && (
+              <div style={{ marginTop: '0.45rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                  <label style={{ fontSize: '0.75rem', color: 'var(--text-dim)', minWidth: '70px' }}>জমা টাকা (৳):</label>
+                  <input
+                    type="number"
+                    min="0"
+                    max={finalTotal}
+                    step="1"
+                    className="form-control"
+                    style={{ flex: 1, fontSize: '0.85rem', fontWeight: 700, padding: '0.3rem 0.5rem' }}
+                    placeholder="গ্রাহক কত টাকা দিল..."
+                    value={paidAmountInput}
+                    onChange={(e) => setPaidAmountInput(e.target.value)}
+                  />
+                </div>
+                {/* Quick preset chips */}
+                <div style={{ display: 'flex', gap: '0.25rem', flexWrap: 'wrap' }}>
+                  {[100, 200, 500, 1000].filter(v => v < finalTotal).map((amt) => (
+                    <button
+                      key={amt}
+                      type="button"
+                      className="btn btn-secondary btn-sm"
+                      style={{ fontSize: '0.68rem', padding: '0.15rem 0.4rem' }}
+                      onClick={() => setPaidAmountInput(String(amt))}
+                    >
+                      ৳{amt}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    style={{ fontSize: '0.68rem', padding: '0.15rem 0.4rem' }}
+                    onClick={() => setPaidAmountInput(String(Math.floor(finalTotal / 2)))}
+                  >
+                    অর্ধেক (৳{Math.floor(finalTotal / 2)})
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Calculated Due / Change Alerts */}
+            {calculatedDue > 0 && (
+              <div style={{ 
+                marginTop: '0.5rem', 
+                background: 'rgba(239, 68, 68, 0.12)', 
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                padding: '0.4rem 0.6rem', 
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.78rem',
+                color: 'var(--danger)',
+                fontWeight: 700,
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}>
+                <span>বাকি থাকবে (Due):</span>
+                <span style={{ fontSize: '0.95rem', fontFamily: 'var(--font-mono)' }}>৳{calculatedDue.toFixed(2)}</span>
+              </div>
+            )}
+
+            {calculatedDue > 0 && !selectedCustomer && (
+              <div style={{ 
+                fontSize: '0.72rem', 
+                color: 'var(--danger)', 
+                marginTop: '0.35rem', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '0.25rem' 
+              }}>
+                <AlertCircle size={12} /> বাকি বিক্রির জন্য উপরে গ্রাহক/মেম্বার সিলেক্ট করুন
+              </div>
+            )}
+
+            {calculatedChange > 0 && (
+              <div style={{ 
+                marginTop: '0.45rem', 
+                background: 'rgba(16, 185, 129, 0.12)', 
+                padding: '0.35rem 0.6rem', 
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '0.78rem',
+                color: 'var(--success)',
+                fontWeight: 700,
+                display: 'flex',
+                justifyContent: 'space-between'
+              }}>
+                <span>ফেরত (Change):</span>
+                <span style={{ fontFamily: 'var(--font-mono)' }}>৳{calculatedChange.toFixed(2)}</span>
+              </div>
+            )}
+          </div>
+
           {/* Payment Method Selector */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.35rem', marginBottom: '0.75rem' }}>
             {['কার্ড (Card)', 'নগদ ক্যাশ', 'বিকাশ / নগদ', 'স্প্লিট বিল'].map((m) => (
@@ -801,12 +989,18 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
 
           {/* Pay Button */}
           <button 
-            className="btn btn-success" 
+            className={`btn ${calculatedDue > 0 ? (paymentMode === 'due' ? 'btn-primary' : 'btn-primary') : 'btn-success'}`}
             style={{ width: '100%', padding: '0.75rem', fontSize: '0.95rem' }}
-            disabled={cart.length === 0 || processing}
+            disabled={cart.length === 0 || processing || (calculatedDue > 0 && !selectedCustomer)}
             onClick={handleCheckout}
           >
-            {processing ? 'প্রক্রিয়াকরণ...' : `পরিশোধ: ৳${finalTotal.toFixed(2)}`}
+            {processing 
+              ? 'প্রক্রিয়াকরণ...' 
+              : paymentMode === 'due' 
+                ? `সম্পূর্ণ বাকি বিক্রি: ৳${finalTotal.toFixed(2)}`
+                : calculatedDue > 0
+                  ? `জমা: ৳${currentPaidAmount.toFixed(2)} (বাকি: ৳${calculatedDue.toFixed(2)})`
+                  : `পরিশোধ: ৳${finalTotal.toFixed(2)}`}
           </button>
         </div>
       </div>

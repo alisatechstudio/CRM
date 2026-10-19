@@ -11,6 +11,7 @@ import InventoryView from './components/InventoryView';
 import LoyaltyView from './components/LoyaltyView';
 import CampaignsView from './components/CampaignsView';
 import TicketsView from './components/TicketsView';
+import DueManagementView from './components/DueManagementView';
 import NewCustomerModal from './components/NewCustomerModal';
 import PinLockScreen from './components/PinLockScreen';
 import MobileBottomNav from './components/MobileBottomNav';
@@ -147,6 +148,13 @@ export default function App() {
             <CustomersView 
               onSelectCustomer={(id) => setSelectedCustomerId(id)}
               onOpenNewCustomer={() => setShowNewCustomerModal(true)}
+            />
+          )}
+
+          {currentTab === 'dues' && (
+            <DueManagementView 
+              onSelectCustomer={(id) => setSelectedCustomerId(id)}
+              onOpenReceipt={(orderId) => setSelectedReceiptId(orderId)}
             />
           )}
 
