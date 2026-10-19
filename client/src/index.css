@@ -1162,7 +1162,9 @@ p, span, label {
 }
 
 /* Modal Windows */
-.modal-overlay {
+.modal-overlay,
+.modal-backdrop,
+.pin-modal-overlay {
   position: fixed;
   inset: 0;
   background-color: var(--bg-modal-backdrop);
@@ -1170,12 +1172,16 @@ p, span, label {
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 100;
+  z-index: 1100;
   padding: 1.5rem;
   animation: fadeIn 0.2s ease-out;
+  box-sizing: border-box;
+  overflow-x: hidden;
 }
 
-.modal-card {
+.modal-card,
+.modal-content,
+.pin-modal-content {
   background: var(--bg-sidebar);
   border: 1px solid var(--border-medium);
   border-radius: var(--radius-lg);
@@ -1186,21 +1192,39 @@ p, span, label {
   flex-direction: column;
   box-shadow: var(--shadow-lg);
   overflow: hidden;
+  box-sizing: border-box;
   animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.modal-header {
+.modal-header,
+.pin-modal-header {
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
+  box-sizing: border-box;
+  flex-shrink: 0;
 }
 
-.modal-body {
+.modal-header h2,
+.modal-header h3,
+.pin-modal-header h2,
+.pin-modal-header h3 {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.modal-body,
+.pin-modal-body {
   padding: 1.5rem;
   overflow-y: auto;
+  overflow-x: hidden;
   flex: 1;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .modal-footer {
@@ -1210,6 +1234,43 @@ p, span, label {
   align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+/* Modal Helper Components */
+.rfm-modal-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  background: var(--bg-surface);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-subtle);
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.modal-subnav-tabs {
+  display: flex;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.5rem;
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.modal-subnav-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.modal-subnav-tabs .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* Printable Thermal Receipt Simulation */
@@ -1220,9 +1281,13 @@ p, span, label {
   padding: 2rem 1.5rem;
   border-radius: 4px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  width: 100%;
   max-width: 360px;
   margin: 0 auto;
   line-height: 1.4;
+  box-sizing: border-box;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .thermal-receipt-center {
@@ -1872,24 +1937,42 @@ p, span, label {
     border-radius: var(--radius-md);
   }
 
-  /* Mobile App Bottom-Sheet Modals */
-  .modal-overlay {
-    align-items: flex-end;
-    padding: 0;
+  /* Mobile App Bottom-Sheet Modals - Strictly fit any mobile screen width */
+  .modal-overlay,
+  .modal-backdrop,
+  .pin-modal-overlay {
+    align-items: flex-end !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
   }
 
-  .modal-card {
-    width: 100%;
-    max-width: 100%;
-    max-height: 88vh;
-    border-radius: 22px 22px 0 0;
-    border-bottom: none;
-    animation: sheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-    position: relative;
-    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6);
+  .modal-card,
+  .modal-content,
+  .pin-modal-content,
+  .pwa-install-modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92vh !important;
+    max-height: 92dvh !important;
+    border-radius: 22px 22px 0 0 !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    margin: 0 !important;
+    animation: sheetSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) !important;
+    position: relative !important;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6) !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
   }
 
-  .modal-card::before {
+  .modal-card::before,
+  .modal-content::before {
     content: '';
     position: absolute;
     top: 8px;
@@ -1907,17 +1990,63 @@ p, span, label {
     to { transform: translateY(0); }
   }
 
-  .modal-header {
-    padding: 1.25rem 1.15rem 0.75rem;
+  .modal-header,
+  .pin-modal-header {
+    padding: 1.25rem 1.15rem 0.75rem !important;
+    gap: 0.5rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
   }
 
-  .modal-body {
-    padding: 1rem 1.15rem;
-    -webkit-overflow-scrolling: touch;
+  .modal-header h2,
+  .modal-header h3,
+  .pin-modal-header h2,
+  .pin-modal-header h3 {
+    font-size: 1.1rem !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    line-height: 1.35 !important;
+  }
+
+  .modal-body,
+  .pin-modal-body {
+    padding: 1rem 1.15rem !important;
+    -webkit-overflow-scrolling: touch !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .modal-body *,
+  .pin-modal-body * {
+    min-width: 0;
+    box-sizing: border-box;
+  }
+
+  .modal-body input,
+  .modal-body select,
+  .modal-body textarea,
+  .pin-modal-body input,
+  .pin-modal-body select,
+  .pin-modal-body textarea {
+    max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   .modal-footer {
-    padding: 0.85rem 1.15rem max(0.85rem, env(safe-area-inset-bottom, 12px));
+    padding: 0.85rem 1.15rem max(0.85rem, env(safe-area-inset-bottom, 12px)) !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+
+  .modal-footer .btn {
+    flex: 1 1 auto;
+    min-width: 100px;
+    justify-content: center;
   }
 
   /* Mobile Floating Cart Summary Button (POS) */
@@ -2082,6 +2211,108 @@ p, span, label {
   .inv-card-actions {
     grid-template-columns: 1.2fr 0.8fr 1fr 36px;
     gap: 0.35rem;
+  }
+}
+
+/* ========================================================
+   MODAL MOBILE ADAPTATION (Seamless on any mobile width)
+======================================================== */
+@media (max-width: 640px) {
+  /* Force all multi-column form grids inside modal bodies to 1 column */
+  .modal-body div[style*="gridTemplateColumns"],
+  .modal-body form[style*="gridTemplateColumns"],
+  .modal-body .modal-form-grid-2,
+  .modal-body .modal-form-grid-3,
+  .modal-quick-adjust-form {
+    grid-template-columns: 1fr !important;
+    gap: 0.85rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* RFM intelligence ribbon: 2x2 grid on mobile */
+  .rfm-modal-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.65rem !important;
+    padding: 0.75rem !important;
+  }
+
+  /* Thermal receipt printable simulation */
+  .thermal-receipt {
+    max-width: 100% !important;
+    padding: 1.25rem 0.85rem !important;
+    font-size: 0.88rem !important;
+    border-radius: 8px !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Stock adjustment buttons grid */
+  .stock-adjust-btn-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* PWA features grid */
+  .pwa-features-grid {
+    grid-template-columns: repeat(auto-fit, minmax(95px, 1fr)) !important;
+    gap: 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-header,
+  .pin-modal-header {
+    padding: 1rem 0.85rem 0.65rem !important;
+  }
+
+  .modal-header h2,
+  .modal-header h3,
+  .pin-modal-header h2,
+  .pin-modal-header h3 {
+    font-size: 1.05rem !important;
+  }
+
+  .modal-body,
+  .pin-modal-body {
+    padding: 0.85rem !important;
+  }
+
+  .modal-footer {
+    padding: 0.75rem 0.85rem max(0.75rem, env(safe-area-inset-bottom, 12px)) !important;
+  }
+
+  .modal-footer .btn {
+    width: 100% !important;
+    flex: 1 1 100% !important;
+  }
+}
+
+@media (max-width: 360px) {
+  /* Ultra-compact screens (e.g. Galaxy Fold outer screen, iPhone SE 1st gen) */
+  .modal-card,
+  .modal-content,
+  .pin-modal-content,
+  .pwa-install-modal {
+    max-height: 94vh !important;
+    max-height: 94dvh !important;
+  }
+
+  .rfm-modal-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .thermal-receipt {
+    padding: 1rem 0.5rem !important;
+    font-size: 0.82rem !important;
+  }
+
+  .modal-header h2,
+  .modal-header h3 {
+    font-size: 0.95rem !important;
+  }
+
+  .modal-body,
+  .pin-modal-body {
+    padding: 0.65rem !important;
   }
 }
 
@@ -2341,25 +2572,15 @@ p, span, label {
 
 /* Change PIN Modal */
 .pin-modal-overlay {
-  position: fixed;
-  inset: 0;
   z-index: 100000;
   background: rgba(0, 0, 0, 0.75);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
 }
 
 .pin-modal-content {
-  width: 100%;
-  max-width: 360px;
   background: #111827;
-  border: 1px solid var(--border-subtle);
+  max-width: 380px;
   border-radius: 20px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
 }
 
 .pin-modal-header {

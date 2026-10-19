@@ -1002,7 +1002,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
                   <div>
                     <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>
                       খরচের খাত (ক্যাটাগরি) <span style={{ color: '#f43f5e' }}>*</span>
@@ -1035,7 +1035,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
+                <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.85rem' }}>
                   <div>
                     <label className="form-label" style={{ fontWeight: 700, fontSize: '0.85rem' }}>
                       খরচের তারিখ

@@ -35,7 +35,7 @@ export default function ReceiptModal({ orderId, onClose }) {
     <div className="modal-overlay" onClick={onClose}>
       <div 
         className="modal-card" 
-        style={{ maxWidth: '440px', width: '95vw', background: 'var(--bg-app)' }}
+        style={{ maxWidth: '440px', background: 'var(--bg-app)' }}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">

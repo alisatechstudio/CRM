@@ -278,7 +278,7 @@ export default function LoyaltyView() {
 
             <form onSubmit={handleCreateCoupon}>
               <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <label className="input-label">ভাউচার কোড *</label>
                     <input 
@@ -316,7 +316,7 @@ export default function LoyaltyView() {
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                <div className="modal-form-grid-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <label className="input-label">মান *</label>
                     <input 
@@ -356,7 +356,7 @@ export default function LoyaltyView() {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <label className="input-label">মেয়াদ শেষ *</label>
                     <input 

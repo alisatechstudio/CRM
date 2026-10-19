@@ -1656,7 +1656,7 @@ export default function InventoryView() {
 
                 <div className="input-group">
                   <label className="input-label" style={{ marginBottom: '0.45rem' }}>সমন্বয়ের ধরণ নির্বাচন করুন *</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.65rem' }}>
+                  <div className="stock-adjust-btn-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.65rem' }}>
                     <button
                       type="button"
                       className={`btn btn-sm ${adjustType === 'add' ? 'btn-success' : 'btn-secondary'}`}

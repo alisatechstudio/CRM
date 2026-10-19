@@ -48,13 +48,13 @@ export default function NewCustomerModal({ onClose, onCreated }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-card" style={{ maxWidth: '580px' }} onClick={(e) => e.stopPropagation()}>
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <div className="brand-icon" style={{ width: '28px', height: '28px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', minWidth: 0 }}>
+            <div className="brand-icon" style={{ width: '28px', height: '28px', flexShrink: 0 }}>
               <UserPlus size={16} />
             </div>
-            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস মেম্বার নিবন্ধন ফরম</h2>
+            <h2 style={{ fontSize: '1.15rem', margin: 0, wordBreak: 'break-word' }}>মিজান মেম্বার নিবন্ধন ফরম</h2>
           </div>
-          <button className="btn btn-secondary btn-icon" onClick={onClose}>
+          <button className="btn btn-secondary btn-icon" onClick={onClose} style={{ flexShrink: 0 }}>
             <X size={16} />
           </button>
         </div>
@@ -71,11 +71,11 @@ export default function NewCustomerModal({ onClose, onCreated }) {
               alignItems: 'center',
               gap: '0.5rem'
             }}>
-              <Award size={16} style={{ color: 'var(--primary)' }} />
+              <Award size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
               <span>নতুন সদস্যরা স্বয়ংক্রিয়ভাবে একটি <strong>ব্রোঞ্জ লয়্যালটি কার্ড</strong> এবং <strong>৫০ ওয়েলকাম বোনাস পয়েন্ট</strong> পাবেন।</span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="input-group">
                 <label className="input-label">নামের প্রথম অংশ *</label>
                 <input 
@@ -101,7 +101,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="input-group">
                 <label className="input-label">ইমেইল ঠিকানা *</label>
                 <input 
@@ -127,7 +127,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="input-group">
                 <label className="input-label">পছন্দের স্টেশনারি বিভাগ</label>
                 <select 

@@ -91,24 +91,24 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
     <div className="modal-overlay" onClick={onClose}>
       <div 
         className="modal-card" 
-        style={{ maxWidth: '820px', width: '95vw' }}
+        style={{ maxWidth: '820px' }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Modal Header */}
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-            <span className={`tier-badge tier-${customer.tier}`}>{customer.tier}</span>
-            <div>
-              <h2 style={{ fontSize: '1.25rem', margin: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: 0 }}>
+            <span className={`tier-badge tier-${customer.tier}`} style={{ flexShrink: 0 }}>{customer.tier}</span>
+            <div style={{ minWidth: 0 }}>
+              <h2 style={{ fontSize: '1.25rem', margin: 0, wordBreak: 'break-word' }}>
                 {customer.first_name} {customer.last_name}
               </h2>
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                 {customer.card_number} • সদস্যভুক্তি: {customer.join_date}
               </div>
             </div>
           </div>
 
-          <button className="btn btn-secondary btn-icon" onClick={onClose}>
+          <button className="btn btn-secondary btn-icon" onClick={onClose} style={{ flexShrink: 0 }}>
             <X size={18} />
           </button>
         </div>
@@ -116,15 +116,7 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
         {/* Modal Body */}
         <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           {/* RFM Intelligence Ribbon */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(4, 1fr)', 
-            gap: '1rem',
-            background: 'var(--bg-surface)',
-            padding: '1rem',
-            borderRadius: 'var(--radius-md)',
-            border: '1px solid var(--border-subtle)'
-          }}>
+          <div className="rfm-modal-grid">
             <div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontWeight: 600 }}>
                 রিসেন্সি (দিন)
@@ -175,7 +167,7 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
           </div>
 
           {/* Sub Navigation Tabs */}
-          <div style={{ display: 'flex', gap: '0.5rem', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '0.5rem' }}>
+          <div className="modal-subnav-tabs">
             <button 
               className={`btn btn-sm ${activeTab === 'purchases' ? 'btn-primary' : 'btn-secondary'}`}
               onClick={() => setActiveTab('purchases')}
@@ -218,16 +210,18 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
                     border: '1px solid var(--border-subtle)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'space-between'
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '0.5rem'
                   }}>
-                    <div>
-                      <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>
+                    <div style={{ minWidth: 0, flex: '1 1 200px' }}>
+                      <div style={{ fontWeight: 700, fontSize: '0.9rem', wordBreak: 'break-word' }}>
                         {ord.order_number} • বিল ৳{ord.total.toFixed(2)}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
                         {ord.created_at} • {ord.store_name} • মাধ্যম: {ord.payment_method}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem' }}>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', wordBreak: 'break-word' }}>
                         {ord.items?.map(it => `${it.product_name} (${it.quantity}x)`).join(', ')}
                       </div>
                     </div>
@@ -235,6 +229,7 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
                     <button 
                       className="btn btn-secondary btn-sm"
                       onClick={() => onOpenReceipt(ord.id)}
+                      style={{ flexShrink: 0 }}
                     >
                       রসিদ দেখুন
                     </button>
@@ -248,7 +243,7 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
           {activeTab === 'loyalty' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               {/* Quick Adjust Widget */}
-              <form onSubmit={handleAdjustPoints} style={{ 
+              <form onSubmit={handleAdjustPoints} className="modal-quick-adjust-form" style={{ 
                 display: 'grid', 
                 gridTemplateColumns: '1fr 2fr auto', 
                 gap: '0.5rem',

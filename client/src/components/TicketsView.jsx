@@ -400,7 +400,7 @@ export default function TicketsView({ onSelectCustomer }) {
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <label className="input-label">বিভাগ *</label>
                     <select 
@@ -430,7 +430,7 @@ export default function TicketsView({ onSelectCustomer }) {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <label className="input-label">অগ্রাধিকার স্তর</label>
                     <select 

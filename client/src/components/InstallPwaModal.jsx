@@ -65,11 +65,11 @@ export default function InstallPwaModal({ onClose }) {
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose} style={{ zIndex: 1200 }}>
+    <div className="modal-overlay modal-backdrop" onClick={onClose} style={{ zIndex: 1200 }}>
       <div 
-        className="modal-content pwa-install-modal" 
+        className="modal-card modal-content pwa-install-modal" 
         onClick={(e) => e.stopPropagation()}
-        style={{ maxWidth: '580px', width: '92%', borderRadius: '22px' }}
+        style={{ maxWidth: '580px' }}
       >
         {/* Modal Header */}
         <div className="modal-header" style={{ paddingBottom: '14px', borderBottom: '1px solid var(--border-color)' }}>
@@ -197,9 +197,10 @@ export default function InstallPwaModal({ onClose }) {
 
           {/* Value Props / Features Grid */}
           <div 
+            className="pwa-features-grid"
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(105px, 1fr))',
               gap: '10px',
               marginBottom: '22px'
             }}
