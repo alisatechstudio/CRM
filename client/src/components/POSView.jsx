@@ -9,7 +9,8 @@ import {
   UserPlus, 
   X, 
   Tag, 
-  ShoppingBag
+  ShoppingBag,
+  AlertCircle
 } from 'lucide-react';
 import { api } from '../api';
 import { DEFAULT_DEPARTMENTS } from '../constants/departments';

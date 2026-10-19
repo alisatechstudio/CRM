@@ -108,6 +108,62 @@ router.get('/departments', async (req, res) => {
   }
 });
 
+router.post('/departments', async (req, res) => {
+  try {
+    const { name, code, description, icon } = req.body;
+    if (!name || !name.trim()) {
+      return res.status(400).json({ error: 'বিভাগের নাম প্রদান করা আবশ্যক' });
+    }
+
+    const trimmedName = name.trim();
+    const existing = await Department.findOne({ 
+      name: { $regex: new RegExp(`^${trimmedName}$`, 'i') } 
+    });
+    if (existing) {
+      return res.status(400).json({ error: 'এই নামের একটি বিভাগ ইতিমধ্যে ক্যাটালগে রয়েছে' });
+    }
+
+    let generatedCode = code ? code.trim().toUpperCase() : '';
+    if (!generatedCode) {
+      // Pick first 4 letters or fallback
+      const latinOnly = trimmedName.replace(/[^A-Za-z0-9]/g, '');
+      generatedCode = (latinOnly.length >= 3 ? latinOnly.substring(0, 4).toUpperCase() : 'DEPT' + Math.floor(10 + Math.random() * 90));
+    }
+
+    const id = 'dept_' + Date.now();
+    const newDept = await Department.create({
+      id,
+      name: trimmedName,
+      code: generatedCode,
+      icon: icon || 'Folder',
+      description: description ? description.trim() : ''
+    });
+
+    res.status(201).json(newDept);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/departments/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const prodCount = await Product.countDocuments({ department_id: id });
+    if (prodCount > 0) {
+      return res.status(400).json({ 
+        error: `এই বিভাগের অধীনে ${prodCount}টি পণ্য বিদ্যমান। বিভাগ মুছতে প্রথমে পণ্যগুলো অন্য বিভাগে স্থানান্তর করুন।` 
+      });
+    }
+    const deleted = await Department.findOneAndDelete({ id });
+    if (!deleted) {
+      return res.status(404).json({ error: 'বিভাগটি খুঁজে পাওয়া যায়নি' });
+    }
+    res.json({ success: true, message: 'বিভাগ সফলভাবে মুছে ফেলা হয়েছে।' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // =================== CUSTOMERS ===================
 router.get('/customers', async (req, res) => {
   try {

@@ -28,6 +28,8 @@ export const api = {
   // Stores & Departments
   getStores: () => request('/stores'),
   getDepartments: () => request('/departments'),
+  createDepartment: (data) => request('/departments', { method: 'POST', body: JSON.stringify(data) }),
+  deleteDepartment: (id) => request(`/departments/${id}`, { method: 'DELETE' }),
 
   // Customers
   getCustomers: (params = {}) => {

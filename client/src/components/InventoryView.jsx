@@ -11,7 +11,8 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   ShieldAlert,
-  Calendar
+  Calendar,
+  FolderPlus
 } from 'lucide-react';
 import { api } from '../api';
 import { 
@@ -40,11 +41,23 @@ export default function InventoryView() {
   const [isCustomEditCategory, setIsCustomEditCategory] = useState(false);
   const [_customEditCategory, setCustomEditCategory] = useState('');
 
+  // Add Department Modal state
+  const [showAddDeptModal, setShowAddDeptModal] = useState(false);
+  const [newDeptForm, setNewDeptForm] = useState({
+    name: '',
+    code: '',
+    description: '',
+    initialCategories: ''
+  });
+  const [savingDept, setSavingDept] = useState(false);
+  const [customDeptCategories, setCustomDeptCategories] = useState({});
+
   // Helper to dynamically get categories for any department
   const getCategoriesForDept = (deptId, extraCategory = '') => {
     const deptObj = activeDepartments.find(d => d.id === deptId);
     const byId = DEPARTMENT_CATEGORIES_BY_ID[deptId] || [];
     const byName = deptObj ? (DEPARTMENT_CATEGORIES_BY_NAME[deptObj.name] || []) : [];
+    const fromCustom = customDeptCategories[deptId] || [];
     
     // Also extract existing categories from products that belong to this department
     const fromProducts = products
@@ -54,6 +67,7 @@ export default function InventoryView() {
     const all = [
       ...byId,
       ...byName,
+      ...fromCustom,
       ...fromProducts,
       ...(extraCategory ? [extraCategory.trim()] : [])
     ];
@@ -192,6 +206,69 @@ export default function InventoryView() {
     }));
     setIsCustomAddCategory(false);
     setCustomAddCategory('');
+  };
+
+  // CREATE: New Department
+  const handleCreateDepartment = async (e) => {
+    e.preventDefault();
+    if (!newDeptForm.name || !newDeptForm.name.trim()) {
+      alert('অনুগ্রহ করে বিভাগের নাম লিখুন');
+      return;
+    }
+
+    try {
+      setSavingDept(true);
+      const res = await api.createDepartment({
+        name: newDeptForm.name.trim(),
+        code: newDeptForm.code ? newDeptForm.code.trim() : undefined,
+        description: newDeptForm.description ? newDeptForm.description.trim() : ''
+      });
+
+      // Parse initial categories
+      const enteredCats = newDeptForm.initialCategories
+        ? newDeptForm.initialCategories.split(',').map(c => c.trim()).filter(Boolean)
+        : [];
+      const catsToAdd = enteredCats.length > 0 ? enteredCats : ['সাধারণ সামগ্রী', 'অন্যান্য'];
+
+      setCustomDeptCategories(prev => ({
+        ...prev,
+        [res.id]: catsToAdd
+      }));
+
+      // Update departments state
+      setDepartments(prev => {
+        const exists = prev.some(d => d.id === res.id);
+        return exists ? prev : [...prev, res];
+      });
+
+      // If Add Product modal is open, immediately select this new department
+      if (showAddModal) {
+        setNewProd(prev => ({
+          ...prev,
+          department_id: res.id,
+          category: catsToAdd[0] || 'সাধারণ স্টেশনারি'
+        }));
+        setIsCustomAddCategory(false);
+      }
+
+      // If Edit Product modal is open, immediately select this new department
+      if (showEditModal) {
+        setEditForm(prev => ({
+          ...prev,
+          department_id: res.id,
+          category: catsToAdd[0] || 'সাধারণ স্টেশনারি'
+        }));
+        setIsCustomEditCategory(false);
+      }
+
+      setShowAddDeptModal(false);
+      setNewDeptForm({ name: '', code: '', description: '', initialCategories: '' });
+      alert(`'${res.name}' বিভাগটি সফলভাবে তৈরি হয়েছে!`);
+    } catch (err) {
+      alert('বিভাগ তৈরি ব্যর্থ: ' + err.message);
+    } finally {
+      setSavingDept(false);
+    }
   };
 
   // CREATE: New Product
@@ -362,9 +439,20 @@ export default function InventoryView() {
             </p>
           </div>
 
-          <button className="btn btn-primary" onClick={handleOpenAddModal}>
-            <Plus size={16} /> নতুন স্টেশনারি পণ্য যুক্ত করুন
-          </button>
+          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+            <button 
+              className="btn btn-secondary" 
+              onClick={() => {
+                setNewDeptForm({ name: '', code: '', description: '', initialCategories: '' });
+                setShowAddDeptModal(true);
+              }}
+            >
+              <FolderPlus size={16} /> নতুন বিভাগ যুক্ত করুন
+            </button>
+            <button className="btn btn-primary" onClick={handleOpenAddModal}>
+              <Plus size={16} /> নতুন স্টেশনারি পণ্য যুক্ত করুন
+            </button>
+          </div>
         </div>
 
         {/* Filter controls */}
@@ -711,7 +799,19 @@ export default function InventoryView() {
                 {/* Department & Category Side by Side */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label">বিভাগ (Department) *</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label className="input-label">বিভাগ (Department) *</label>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setNewDeptForm({ name: '', code: '', description: '', initialCategories: '' });
+                          setShowAddDeptModal(true);
+                        }}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                      >
+                        + নতুন বিভাগ
+                      </button>
+                    </div>
                     <select 
                       className="form-control"
                       required
@@ -972,7 +1072,19 @@ export default function InventoryView() {
                 {/* Department & Category Side by Side */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr', gap: '1rem' }}>
                   <div className="input-group">
-                    <label className="input-label">বিভাগ (Department) *</label>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label className="input-label">বিভাগ (Department) *</label>
+                      <button 
+                        type="button" 
+                        onClick={() => {
+                          setNewDeptForm({ name: '', code: '', description: '', initialCategories: '' });
+                          setShowAddDeptModal(true);
+                        }}
+                        style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                      >
+                        + নতুন বিভাগ
+                      </button>
+                    </div>
                     <select 
                       className="form-control"
                       required
@@ -1365,6 +1477,100 @@ export default function InventoryView() {
                 {saving ? 'মুছে ফেলা হচ্ছে...' : 'হ্যাঁ, পণ্যটি মুছে ফেলুন'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* =================== MODAL 5: ADD NEW DEPARTMENT =================== */}
+      {showAddDeptModal && (
+        <div className="modal-overlay" onClick={() => setShowAddDeptModal(false)}>
+          <div className="modal-card" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                <div className="brand-icon" style={{ width: '32px', height: '32px', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)', borderRadius: 'var(--radius-md)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <FolderPlus size={18} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.2rem', margin: 0 }}>নতুন বিভাগ সংযোজন (Add Department)</h2>
+                  <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>ইনভেন্টরি ক্যাটালগ ও পিওএস-এর জন্য নতুন পণ্য বিভাগ তৈরি করুন</p>
+                </div>
+              </div>
+              <button className="btn btn-secondary btn-icon" onClick={() => setShowAddDeptModal(false)}>
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateDepartment}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="input-group">
+                  <label className="input-label">বিভাগের নাম (Department Name) *</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    required 
+                    placeholder="যেমন: কম্পিউটার ও আইটি সামগ্রী, উপহার ও খেলনা..."
+                    value={newDeptForm.name}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setNewDeptForm(prev => {
+                        const englishChars = val.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+                        const suggestedCode = englishChars.length >= 3 ? englishChars.substring(0, 4) : prev.code;
+                        return { ...prev, name: val, code: prev.code ? prev.code : suggestedCode };
+                      });
+                    }}
+                  />
+                </div>
+
+                <div className="input-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label className="input-label">বিভাগ কোড (Department Code)</label>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>যেমন: ITAC, GIFT, BOOK (ঐচ্ছিক)</span>
+                  </div>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    maxLength={6}
+                    placeholder="যেমন: ITAC"
+                    value={newDeptForm.code}
+                    onChange={(e) => setNewDeptForm({ ...newDeptForm, code: e.target.value.toUpperCase() })}
+                  />
+                </div>
+
+                <div className="input-group">
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <label className="input-label">প্রাথমিক ক্যাটাগরি তালিকা</label>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-dim)' }}>কমা (,) দিয়ে আলাদা করুন</span>
+                  </div>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="যেমন: মাউস, কিবোর্ড, পেনড্রাইভ, ডাটা ক্যাবল"
+                    value={newDeptForm.initialCategories}
+                    onChange={(e) => setNewDeptForm({ ...newDeptForm, initialCategories: e.target.value })}
+                  />
+                </div>
+
+                <div className="input-group">
+                  <label className="input-label">বিবরণ (Description)</label>
+                  <textarea 
+                    className="form-control" 
+                    rows={2}
+                    placeholder="বিভাগের সংক্ষিপ্ত পরিচিতি..."
+                    value={newDeptForm.description}
+                    onChange={(e) => setNewDeptForm({ ...newDeptForm, description: e.target.value })}
+                  />
+                </div>
+              </div>
+
+              <div className="modal-footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '1.25rem' }}>
+                <button type="button" className="btn btn-secondary" onClick={() => setShowAddDeptModal(false)}>
+                  বাতিল
+                </button>
+                <button type="submit" className="btn btn-primary" disabled={savingDept}>
+                  <Plus size={15} /> {savingDept ? 'সংরক্ষণ হচ্ছে...' : 'বিভাগ তৈরি করুন'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
