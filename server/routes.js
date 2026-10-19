@@ -10,6 +10,7 @@ const LoyaltyTransaction = require('./models/LoyaltyTransaction');
 const Coupon = require('./models/Coupon');
 const Campaign = require('./models/Campaign');
 const SupportTicket = require('./models/SupportTicket');
+const Expense = require('./models/Expense');
 const SystemMeta = require('./models/SystemMeta');
 
 // Helper to retrieve active PIN
@@ -1312,6 +1313,104 @@ router.patch('/tickets/:id', async (req, res) => {
   }
 });
 
+// =================== EXPENSES (দোকান ব্যয় ও পরিচালন খরচ) ===================
+router.get('/expenses', async (req, res) => {
+  try {
+    const { period, from_date, to_date, category } = req.query;
+    const today = new Date().toISOString().split('T')[0];
+
+    const filter = {};
+    if (category && category !== 'all') {
+      filter.category = category;
+    }
+
+    if (period === 'today') {
+      filter.date = today;
+    } else if (period === 'yesterday') {
+      const yd = new Date();
+      yd.setDate(yd.getDate() - 1);
+      filter.date = yd.toISOString().split('T')[0];
+    } else if (period === 'last_7_days') {
+      const d7 = new Date();
+      d7.setDate(d7.getDate() - 7);
+      filter.date = { $gte: d7.toISOString().split('T')[0] };
+    } else if (period === 'last_30_days') {
+      const d30 = new Date();
+      d30.setDate(d30.getDate() - 30);
+      filter.date = { $gte: d30.toISOString().split('T')[0] };
+    } else if (period === 'this_month') {
+      filter.date = new RegExp('^' + today.substring(0, 7));
+    } else if (from_date || to_date) {
+      filter.date = {};
+      if (from_date) filter.date.$gte = from_date;
+      if (to_date) filter.date.$lte = to_date;
+    }
+
+    const expenses = await Expense.find(filter).sort({ date: -1, createdAt: -1 }).lean();
+    let totalAmount = 0;
+    const catMap = {};
+    for (const exp of expenses) {
+      const amt = Number(exp.amount || 0);
+      totalAmount += amt;
+      const cat = exp.category || 'অন্যান্য বিবিধ খরচ';
+      if (!catMap[cat]) catMap[cat] = { category: cat, totalAmount: 0, count: 0 };
+      catMap[cat].totalAmount += amt;
+      catMap[cat].count += 1;
+    }
+    const categoryBreakdown = Object.values(catMap).sort((a, b) => b.totalAmount - a.totalAmount);
+
+    res.json({
+      expenses,
+      totalAmount: Number(totalAmount.toFixed(2)),
+      count: expenses.length,
+      categoryBreakdown
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/expenses', async (req, res) => {
+  try {
+    const { title, category, amount, date, payment_method, notes, store_id } = req.body;
+    if (!title || !title.trim()) {
+      return res.status(400).json({ error: 'খরচের শিরোনাম প্রদান করুন' });
+    }
+    const numAmount = Number(amount);
+    if (isNaN(numAmount) || numAmount <= 0) {
+      return res.status(400).json({ error: 'সঠিক খরচের পরিমাণ প্রদান করুন (৳)' });
+    }
+    const expenseDate = date || new Date().toISOString().split('T')[0];
+    const newExpense = await Expense.create({
+      id: `exp_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+      title: title.trim(),
+      category: category || 'অন্যান্য বিবিধ খরচ',
+      amount: numAmount,
+      date: expenseDate,
+      payment_method: payment_method || 'নগদ (Cash)',
+      notes: notes ? notes.trim() : '',
+      store_id: store_id || 'store_1',
+      created_by: 'মিজানুর রহমান'
+    });
+    res.status(201).json(newExpense);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/expenses/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const result = await Expense.deleteOne({ id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'খরচের হিসাব পাওয়া যায়নি' });
+    }
+    res.json({ success: true, message: 'খরচের হিসাব সফলভাবে মুছে ফেলা হয়েছে' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // =================== EXECUTIVE BI ANALYTICS ===================
 router.get('/analytics', async (req, res) => {
   try {
@@ -1319,33 +1418,65 @@ router.get('/analytics', async (req, res) => {
     const today = new Date().toISOString().split('T')[0];
 
     const orderFilter = {};
+    const expenseFilter = {};
+
     if (period === 'today') {
       orderFilter.created_at = new RegExp('^' + today);
+      expenseFilter.date = today;
+    } else if (period === 'yesterday') {
+      const yd = new Date();
+      yd.setDate(yd.getDate() - 1);
+      const ydStr = yd.toISOString().split('T')[0];
+      orderFilter.created_at = new RegExp('^' + ydStr);
+      expenseFilter.date = ydStr;
     } else if (period === 'last_7_days') {
       const d7 = new Date();
       d7.setDate(d7.getDate() - 7);
-      orderFilter.created_at = { $gte: d7.toISOString().split('T')[0] };
+      const d7Str = d7.toISOString().split('T')[0];
+      orderFilter.created_at = { $gte: d7Str };
+      expenseFilter.date = { $gte: d7Str };
     } else if (period === 'last_30_days') {
       const d30 = new Date();
       d30.setDate(d30.getDate() - 30);
-      orderFilter.created_at = { $gte: d30.toISOString().split('T')[0] };
+      const d30Str = d30.toISOString().split('T')[0];
+      orderFilter.created_at = { $gte: d30Str };
+      expenseFilter.date = { $gte: d30Str };
     } else if (period === 'this_month') {
-      orderFilter.created_at = new RegExp('^' + today.substring(0, 7));
+      const monthPrefix = today.substring(0, 7);
+      orderFilter.created_at = new RegExp('^' + monthPrefix);
+      expenseFilter.date = new RegExp('^' + monthPrefix);
     } else if (from_date || to_date) {
       orderFilter.created_at = {};
-      if (from_date) orderFilter.created_at.$gte = from_date;
-      if (to_date) orderFilter.created_at.$lte = to_date + ' 23:59:59';
+      expenseFilter.date = {};
+      if (from_date) {
+        orderFilter.created_at.$gte = from_date;
+        expenseFilter.date.$gte = from_date;
+      }
+      if (to_date) {
+        orderFilter.created_at.$lte = to_date + ' 23:59:59';
+        expenseFilter.date.$lte = to_date;
+      }
     }
 
-    const [customers, orders, topSpenders, tickets] = await Promise.all([
+    const [customers, orders, topSpenders, tickets, products, expenses] = await Promise.all([
       Customer.find().lean(),
       Order.find(orderFilter).sort({ created_at: -1 }).lean(),
       Customer.find().sort({ total_spent: -1 }).limit(5).lean(),
-      SupportTicket.find().lean()
+      SupportTicket.find().lean(),
+      Product.find().lean(),
+      Expense.find(expenseFilter).sort({ date: -1, createdAt: -1 }).lean()
     ]);
+
+    // Product cost mapping for COGS
+    const productCostMap = {};
+    for (const p of products) {
+      productCostMap[p.id] = (p.cost !== undefined && p.cost !== null) ? Number(p.cost) : 0;
+    }
 
     let totalRevenue = 0;
     let totalDiscountsGiven = 0;
+    let totalCogs = 0;
+    let totalUnitsSold = 0;
     const deptSalesMap = {};
 
     for (const o of orders) {
@@ -1354,18 +1485,59 @@ router.get('/analytics', async (req, res) => {
 
       if (o.items && Array.isArray(o.items)) {
         for (const it of o.items) {
+          const qty = Number(it.quantity || 1);
+          totalUnitsSold += qty;
+
+          // Calculate Cost of Goods Sold (COGS)
+          let unitCost = 0;
+          if (it.product_id && productCostMap[it.product_id] !== undefined && productCostMap[it.product_id] > 0) {
+            unitCost = productCostMap[it.product_id];
+          } else {
+            // Default reasonable margin (70% COGS / 30% margin) if cost is 0
+            unitCost = (it.unit_price || 0) * 0.70;
+          }
+          totalCogs += (unitCost * qty);
+
           const dept = it.department_name || 'সাধারণ স্টেশনারি';
           if (!deptSalesMap[dept]) {
             deptSalesMap[dept] = { department_name: dept, orders_count: 0, units_sold: 0, revenue: 0 };
           }
           deptSalesMap[dept].orders_count += 1;
-          deptSalesMap[dept].units_sold += (it.quantity || 1);
+          deptSalesMap[dept].units_sold += qty;
           deptSalesMap[dept].revenue += (it.total_price || 0);
         }
       }
     }
 
     const deptSales = Object.values(deptSalesMap).sort((a, b) => b.revenue - a.revenue);
+
+    // Expenses aggregation
+    let totalExpenses = 0;
+    const expenseCategoryMap = {};
+    for (const exp of expenses) {
+      const amt = Number(exp.amount || 0);
+      totalExpenses += amt;
+      const cat = exp.category || 'অন্যান্য বিবিধ খরচ';
+      if (!expenseCategoryMap[cat]) {
+        expenseCategoryMap[cat] = { category: cat, totalAmount: 0, count: 0 };
+      }
+      expenseCategoryMap[cat].totalAmount += amt;
+      expenseCategoryMap[cat].count += 1;
+    }
+
+    const expenseBreakdown = Object.values(expenseCategoryMap)
+      .sort((a, b) => b.totalAmount - a.totalAmount)
+      .map(cat => ({
+        ...cat,
+        totalAmount: Number(cat.totalAmount.toFixed(2)),
+        percentage: totalExpenses > 0 ? Number(((cat.totalAmount / totalExpenses) * 100).toFixed(1)) : 0
+      }));
+
+    // Financial profit calculations
+    const grossProfit = Number(Math.max(0, totalRevenue - totalCogs).toFixed(2));
+    const grossMarginPct = totalRevenue > 0 ? Number(((grossProfit / totalRevenue) * 100).toFixed(1)) : 0;
+    const netProfit = Number((grossProfit - totalExpenses).toFixed(2));
+    const netMarginPct = totalRevenue > 0 ? Number(((netProfit / totalRevenue) * 100).toFixed(1)) : 0;
 
     let vip_count = 0, platinum_count = 0, gold_count = 0, silver_count = 0, bronze_count = 0;
     let churn_high_count = 0, total_liability_points = 0;
@@ -1396,6 +1568,7 @@ router.get('/analytics', async (req, res) => {
     const churnDistribution = Object.keys(churnCounts).map(k => ({ churn_risk: k, count: churnCounts[k] }));
 
     const recentOrders = orders.slice(0, 8);
+    const recentExpenses = expenses.slice(0, 8);
 
     const ticketSummary = {
       total: tickets.length,
@@ -1408,7 +1581,14 @@ router.get('/analytics', async (req, res) => {
     res.json({
       kpis: {
         totalRevenue: Number(totalRevenue.toFixed(2)),
+        totalCogs: Number(totalCogs.toFixed(2)),
+        grossProfit,
+        grossMarginPct,
+        totalExpenses: Number(totalExpenses.toFixed(2)),
+        netProfit,
+        netMarginPct,
         totalOrders: orders.length,
+        totalUnitsSold,
         avgBasketSize: orders.length > 0 ? Number((totalRevenue / orders.length).toFixed(2)) : 0,
         totalCustomers: customers.length,
         totalPointsLiability: total_liability_points,
@@ -1416,6 +1596,8 @@ router.get('/analytics', async (req, res) => {
         totalDiscountsGiven: Number(totalDiscountsGiven.toFixed(2))
       },
       deptSales,
+      expenseBreakdown,
+      recentExpenses,
       tierDistribution,
       churnDistribution,
       topSpenders,

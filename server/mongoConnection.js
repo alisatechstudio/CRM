@@ -120,7 +120,25 @@ async function seedMongoIfEmpty(force = false) {
           ]);
         }
 
-        console.log('MongoDB store data and departments verified.');
+        const Expense = require('./models/Expense');
+        const expCount = await Expense.countDocuments();
+        if (expCount === 0) {
+          const today = new Date().toISOString().split('T')[0];
+          const d5 = new Date(); d5.setDate(d5.getDate() - 5);
+          const d10 = new Date(); d10.setDate(d10.getDate() - 10);
+          const d15 = new Date(); d15.setDate(d15.getDate() - 15);
+          await Expense.insertMany([
+            { id: 'exp_01', title: 'দোকান ভাড়া (চলতি মাস)', category: 'দোকান ভাড়া', amount: 12000, date: d15.toISOString().split('T')[0], payment_method: 'ব্যাংক ট্রান্সফার', notes: 'পুরান বাজার দোকান ঘরের মাসিক চুক্তি অনুযায়ী ভাড়া পরিশোধ' },
+            { id: 'exp_02', title: 'স্টাফ বেতন ও সহকারী পারিশ্রমিক', category: 'স্টাফ বেতন ও বোনাস', amount: 15000, date: d10.toISOString().split('T')[0], payment_method: 'নগদ (Cash)', notes: 'দোকান সহকারী সেলসম্যান বেতন' },
+            { id: 'exp_03', title: 'পল্লী বিদ্যুৎ অফিস বিল', category: 'বিদ্যুৎ ও ইউটিলিটি বিল', amount: 3450, date: d5.toISOString().split('T')[0], payment_method: 'বিকাশ (bKash)', notes: 'মিটার নং: ৯৪২৩৮' },
+            { id: 'exp_04', title: 'সুন্দরবন কুরিয়ার পণ্য পরিবহন খরচ', category: 'পণ্য পরিবহন ও কুরিয়ার', amount: 1850, date: d5.toISOString().split('T')[0], payment_method: 'নগদ (Cash)', notes: 'ঢাকা চকবাজার থেকে কসমেটিকস ও স্টেশনারি পার্সেল পরিবহন' },
+            { id: 'exp_05', title: 'দোকানের ব্র্যান্ডেড শপিং ব্যাগ ও পলি', category: 'প্যাকেজিং ও শপিং ব্যাগ', amount: 1200, date: today, payment_method: 'নগদ (Cash)', notes: '১০০০ পিস প্রিন্টেড হ্যান্ডেল ব্যাগ' },
+            { id: 'exp_06', title: 'ক্রেতা ও অতিথি আপ্যায়ন (চা-নাস্তা)', category: 'চা-নাস্তা ও আপ্যায়ন', amount: 750, date: today, payment_method: 'নগদ (Cash)', notes: 'দৈনিক আপ্যায়ন খরচ' },
+            { id: 'exp_07', title: 'দোকানের এলইডি লাইট ও মেরামত', category: 'দোকান মেরামত ও রক্ষণাবেক্ষণ', amount: 950, date: d10.toISOString().split('T')[0], payment_method: 'নগদ (Cash)', notes: 'কাউন্টার লাইট পরিবর্তন' }
+          ]);
+        }
+
+        console.log('MongoDB store data, departments and expenses verified.');
         return;
       }
     }
@@ -237,6 +255,22 @@ async function seedMongoIfEmpty(force = false) {
       ]
     });
 
+    // Expenses Seed
+    const Expense = require('./models/Expense');
+    const today = new Date().toISOString().split('T')[0];
+    const d5 = new Date(); d5.setDate(d5.getDate() - 5);
+    const d10 = new Date(); d10.setDate(d10.getDate() - 10);
+    const d15 = new Date(); d15.setDate(d15.getDate() - 15);
+    await Expense.insertMany([
+      { id: 'exp_01', title: 'দোকান ভাড়া (চলতি মাস)', category: 'দোকান ভাড়া', amount: 12000, date: d15.toISOString().split('T')[0], payment_method: 'ব্যাংক ট্রান্সফার', notes: 'পুরান বাজার দোকান ঘরের মাসিক চুক্তি অনুযায়ী ভাড়া পরিশোধ' },
+      { id: 'exp_02', title: 'স্টাফ বেতন ও সহকারী পারিশ্রমিক', category: 'স্টাফ বেতন ও বোনাস', amount: 15000, date: d10.toISOString().split('T')[0], payment_method: 'নগদ (Cash)', notes: 'দোকান সহকারী সেলসম্যান বেতন' },
+      { id: 'exp_03', title: 'পল্লী বিদ্যুৎ অফিস বিল', category: 'বিদ্যুৎ ও ইউটিলিটি বিল', amount: 3450, date: d5.toISOString().split('T')[0], payment_method: 'বিকাশ (bKash)', notes: 'মিটার নং: ৯৪২৩৮' },
+      { id: 'exp_04', title: 'সুন্দরবন কুরিয়ার পণ্য পরিবহন খরচ', category: 'পণ্য পরিবহন ও কুরিয়ার', amount: 1850, date: d5.toISOString().split('T')[0], payment_method: 'নগদ (Cash)', notes: 'ঢাকা চকবাজার থেকে কসমেটিকস ও স্টেশনারি পার্সেল পরিবহন' },
+      { id: 'exp_05', title: 'দোকানের ব্র্যান্ডেড শপিং ব্যাগ ও পলি', category: 'প্যাকেজিং ও শপিং ব্যাগ', amount: 1200, date: today, payment_method: 'নগদ (Cash)', notes: '১০০০ পিস প্রিন্টেড হ্যান্ডেল ব্যাগ' },
+      { id: 'exp_06', title: 'ক্রেতা ও অতিথি আপ্যায়ন (চা-নাস্তা)', category: 'চা-নাস্তা ও আপ্যায়ন', amount: 750, date: today, payment_method: 'নগদ (Cash)', notes: 'দৈনিক আপ্যায়ন খরচ' },
+      { id: 'exp_07', title: 'দোকানের এলইডি লাইট ও মেরামত', category: 'দোকান মেরামত ও রক্ষণাবেক্ষণ', amount: 950, date: d10.toISOString().split('T')[0], payment_method: 'নগদ (Cash)', notes: 'কাউন্টার লাইট পরিবর্তন' }
+    ]);
+
     console.log('MongoDB seeding completed successfully!');
   } catch (err) {
     console.error('Error seeding MongoDB:', err);
@@ -253,9 +287,10 @@ async function wipeAllCollections() {
   const LoyaltyTransaction = require('./models/LoyaltyTransaction');
   const Campaign = require('./models/Campaign');
   const SupportTicket = require('./models/SupportTicket');
+  const Expense = require('./models/Expense');
   const SystemMeta = require('./models/SystemMeta');
 
-  const [stores, departments, products, customers, coupons, orders, loyalty, campaigns, tickets] = await Promise.all([
+  const [stores, departments, products, customers, coupons, orders, loyalty, campaigns, tickets, expenses] = await Promise.all([
     Store.deleteMany({}),
     Department.deleteMany({}),
     Product.deleteMany({}),
@@ -264,7 +299,8 @@ async function wipeAllCollections() {
     Order.deleteMany({}),
     LoyaltyTransaction.deleteMany({}),
     Campaign.deleteMany({}),
-    SupportTicket.deleteMany({})
+    SupportTicket.deleteMany({}),
+    Expense.deleteMany({})
   ]);
 
   // Set flag so auto-seeding will not repopulate on subsequent connections
@@ -283,7 +319,8 @@ async function wipeAllCollections() {
     orders: orders.deletedCount,
     loyaltyTransactions: loyalty.deletedCount,
     campaigns: campaigns.deletedCount,
-    supportTickets: tickets.deletedCount
+    supportTickets: tickets.deletedCount,
+    expenses: expenses.deletedCount
   };
 }
 

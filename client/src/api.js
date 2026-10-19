@@ -86,6 +86,13 @@ export const api = {
   createTicket: (data) => request('/tickets', { method: 'POST', body: JSON.stringify(data) }),
   updateTicket: (id, data) => request(`/tickets/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),
 
+  // Expenses & Operating Costs
+  getExpenses: (params = {}) => {
+    return request(`/expenses${toQueryString(params)}`);
+  },
+  createExpense: (data) => request('/expenses', { method: 'POST', body: JSON.stringify(data) }),
+  deleteExpense: (id) => request(`/expenses/${id}`, { method: 'DELETE' }),
+
   // Maintenance
   resetData: () => request('/reset-data', { method: 'POST' }),
   cleanData: () => request('/clean-data', { method: 'POST' }),
