@@ -479,10 +479,10 @@ export default function InventoryView() {
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <Package size={22} style={{ color: 'var(--primary)' }} />
-              <h2 style={{ fontSize: '1.35rem', margin: 0 }}>মিজান স্টেশনারি ইনভেন্টরি ও পণ্য ক্যাটালগ (CRUD)</h2>
+              <h2 style={{ fontSize: '1.35rem', margin: 0 }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস ইনভেন্টরি ও পণ্য ক্যাটালগ (CRUD)</h2>
             </div>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '0.25rem' }}>
-              সকল স্টেশনারি ও অফিস সরঞ্জামের নতুন এসকেইউ সংযোজন, তথ্য সম্পাদনা, ড্যামেজ সমন্বয় ও সম্পূর্ণ ইনভেন্টরি নিয়ন্ত্রণ।
+              সকল কম্পিউটার এক্সেসরিজ, কসমেটিকস ও স্টেশনারি পণ্যের নতুন এসকেইউ সংযোজন, তথ্য সম্পাদনা, ড্যামেজ সমন্বয় ও সম্পূর্ণ ইনভেন্টরি নিয়ন্ত্রণ।
             </p>
           </div>
 
@@ -1561,7 +1561,7 @@ export default function InventoryView() {
 
             <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <p style={{ fontSize: '0.9rem', margin: 0 }}>
-                আপনি কি নিশ্চিতভাবে এই পণ্যটি মিজান স্টেশনারির ক্যাটালগ থেকে মুছে ফেলতে চান?
+                আপনি কি নিশ্চিতভাবে এই পণ্যটি মিজান কম্পিউটার অ্যান্ড কসমেটিকসের ক্যাটালগ থেকে মুছে ফেলতে চান?
               </p>
 
               <div style={{ 

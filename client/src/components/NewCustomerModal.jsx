@@ -52,7 +52,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
             <div className="brand-icon" style={{ width: '28px', height: '28px' }}>
               <UserPlus size={16} />
             </div>
-            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>মিজান স্টেশনারি মেম্বার নিবন্ধন ফরম</h2>
+            <h2 style={{ fontSize: '1.2rem', margin: 0 }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস মেম্বার নিবন্ধন ফরম</h2>
           </div>
           <button className="btn btn-secondary btn-icon" onClick={onClose}>
             <X size={16} />
@@ -72,7 +72,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
               gap: '0.5rem'
             }}>
               <Award size={16} style={{ color: 'var(--primary)' }} />
-              <span>নতুন সদস্যরা স্বয়ংক্রিয়ভাবে একটি <strong>মিজান ব্রোঞ্জ লয়্যালটি কার্ড</strong> এবং <strong>৫০ ওয়েলকাম বোনাস পয়েন্ট</strong> পাবেন।</span>
+              <span>নতুন সদস্যরা স্বয়ংক্রিয়ভাবে একটি <strong>ব্রোঞ্জ লয়্যালটি কার্ড</strong> এবং <strong>৫০ ওয়েলকাম বোনাস পয়েন্ট</strong> পাবেন।</span>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

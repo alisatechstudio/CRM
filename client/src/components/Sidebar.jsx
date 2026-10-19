@@ -40,8 +40,8 @@ export default function Sidebar({
           <Sparkles size={20} />
         </div>
         <div>
-          <div className="brand-title">মিজান স্টেশনারি</div>
-          <div className="brand-sub">Mijan Stationary • শিক্ষা ও অফিস সাপ্লাই</div>
+          <div className="brand-title">মিজান কম্পিউটার অ্যান্ড কসমেটিকস</div>
+          <div className="brand-sub">Mijan Computer & Cosmetics • চন্ডিপুর পুরান বাজার</div>
         </div>
       </div>
 
@@ -91,7 +91,7 @@ export default function Sidebar({
           marginBottom: '0.5rem'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-            <Store size={14} /> {activeStore?.name || 'মিজান স্টেশনারি'}
+            <Store size={14} /> {activeStore?.name || 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস'}
           </div>
           <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
             {activeStore?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর'}

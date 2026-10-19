@@ -102,12 +102,12 @@ async function seedMongoIfEmpty(force = false) {
       }
     }
 
-    console.log('Seeding initial Mijan Stationary data into MongoDB...');
+    console.log('Seeding initial Mijan Computer & Cosmetics data into MongoDB...');
 
     // Single Store: চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর
     await Store.create({
       id: 'store_1',
-      name: 'মিজান স্টেশনারি',
+      name: 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস',
       code: 'MJN-NR01',
       location: 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর',
       phone: '+৮৮০ ১৭৯৮-১২৩৪৫৬',
@@ -180,7 +180,7 @@ async function seedMongoIfEmpty(force = false) {
 
     // Coupons
     await Coupon.insertMany([
-      { id: 'cp_01', code: 'MIJANVIP20', title: 'মিজান স্টেশনারি ভিআইপি ২০% স্পেশাল ছাড়', discount_type: 'percentage', discount_value: 20.0, min_spend: 2000.0, max_discount: 1500.0, target_tier: 'VIP', expiry_date: '2026-12-31', usage_limit: 200, used_count: 42, is_active: 1 },
+      { id: 'cp_01', code: 'MIJANVIP20', title: 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস ভিআইপি ২০% স্পেশাল ছাড়', discount_type: 'percentage', discount_value: 20.0, min_spend: 2000.0, max_discount: 1500.0, target_tier: 'VIP', expiry_date: '2026-12-31', usage_limit: 200, used_count: 42, is_active: 1 },
       { id: 'cp_02', code: 'STUDENT10', title: 'সকল শিক্ষার্থীদের জন্য ১০% স্টুডেন্ট ছাড়', discount_type: 'percentage', discount_value: 10.0, min_spend: 500.0, max_discount: 300.0, target_tier: 'All', expiry_date: '2026-11-15', usage_limit: 500, used_count: 184, is_active: 1 },
       { id: 'cp_03', code: 'BULK500', title: '৫,০০০ টাকার অফিস স্টেশনারিতে ৫০০ টাকা ক্যাশব্যাক', discount_type: 'fixed', discount_value: 500.0, min_spend: 5000.0, max_discount: 500.0, target_tier: 'All', expiry_date: '2026-11-30', usage_limit: 300, used_count: 89, is_active: 1 },
       { id: 'cp_04', code: 'EXAMSPECIAL', title: 'পরীক্ষার মৌসুম স্পেশাল ১৫% ছাড় ভাউচার', discount_type: 'percentage', discount_value: 15.0, min_spend: 1000.0, max_discount: 400.0, target_tier: 'Gold+', expiry_date: '2026-12-15', usage_limit: 100, used_count: 28, is_active: 1 },

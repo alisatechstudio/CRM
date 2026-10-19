@@ -66,11 +66,11 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       }}>
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            <Sparkles size={14} /> মিজান স্টেশনারি • সেলস ও সিআরএম ইন্টেলিজেন্স
+            <Sparkles size={14} /> মিজান কম্পিউটার অ্যান্ড কসমেটিকস • সেলস ও সিআরএম ইন্টেলিজেন্স
           </div>
-          <h1 style={{ fontSize: '1.6rem', margin: '0.25rem 0' }}>মিজান স্টেশনারি (Mijan Stationary) সামগ্রিক পারফরম্যান্স</h1>
+          <h1 style={{ fontSize: '1.6rem', margin: '0.25rem 0' }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস (Mijan Computer & Cosmetics) সামগ্রিক পারফরম্যান্স</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
-            শিক্ষা ও অফিস সামগ্রী, খাতা-কলম, ড্রয়িং সামগ্রী ও সায়েন্টিফিক ক্যালকুলেটরের লাইভ সেলস ও কাস্টমার ট্র্যাকিং।
+            কম্পিউটার এক্সেসরিজ, কসমেটিকস, স্টেশনারি ও প্রসাধনী সামগ্রীর লাইভ সেলস ও কাস্টমার ট্র্যাকিং।
           </p>
         </div>
 

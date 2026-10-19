@@ -123,9 +123,9 @@ export default function LoyaltyView() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--tier-vip)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase' }}>
-              <Award size={16} /> মিজান স্টেশনারি লয়্যালটি ফ্রেমওয়ার্ক
+              <Award size={16} /> মিজান কম্পিউটার অ্যান্ড কসমেটিকস লয়্যালটি ফ্রেমওয়ার্ক
             </div>
-            <h2 style={{ fontSize: '1.5rem', margin: '0.35rem 0' }}>মিজান স্টেশনারি লয়্যালটি রিওয়ার্ডস ও পয়েন্টস পলিসি</h2>
+            <h2 style={{ fontSize: '1.5rem', margin: '0.35rem 0' }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস লয়্যালটি রিওয়ার্ডস ও পয়েন্টস পলিসি</h2>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
               গ্রাহকের সর্বমোট কেনাকাটার ভিত্তিতে স্বয়ংক্রিয় টিয়ার অগ্রগতি, পয়েন্ট মাল্টিপ্লায়ার ও ক্যাশব্যাক রিডেম্পশন পলিসি।
             </p>

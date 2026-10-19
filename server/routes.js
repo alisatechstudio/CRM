@@ -35,7 +35,7 @@ router.post('/auth/verify-pin', async (req, res) => {
       return res.json({ 
         success: true, 
         message: 'পিন যাচাই সফল হয়েছে',
-        storeName: 'মিজান স্টেশনারি',
+        storeName: 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস',
         authenticatedAt: new Date().toISOString()
       });
     } else {
@@ -76,6 +76,10 @@ router.post('/auth/change-pin', async (req, res) => {
 // =================== STORES & DEPARTMENTS ===================
 router.get('/stores', async (req, res) => {
   try {
+    await Store.updateMany(
+      { name: 'মিজান স্টেশনারি' },
+      { $set: { name: 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস' } }
+    );
     const stores = await Store.find().sort({ id: 1 }).lean();
     res.json(stores);
   } catch (err) {
@@ -854,7 +858,7 @@ router.get('/orders', async (req, res) => {
       customer_first_name: custMap[o.customer_id]?.first_name || '',
       customer_last_name: custMap[o.customer_id]?.last_name || '',
       customer_card: custMap[o.customer_id]?.card_number || null,
-      store_name: 'মিজান স্টেশনারি'
+      store_name: 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস'
     }));
 
     res.json(enriched);
@@ -883,7 +887,7 @@ router.get('/orders/:id', async (req, res) => {
       phone: customer?.phone || '',
       card_number: customer?.card_number || null,
       tier: customer?.tier || 'Bronze',
-      store_name: store?.name || 'মিজান স্টেশনারি',
+      store_name: store?.name || 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস',
       store_location: store?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর',
       store_phone: store?.phone || '+৮৮০ ১৭৯৮-১২৩৪৫৬'
     });
@@ -986,7 +990,7 @@ const DEFAULT_CAMPAIGNS = [
     channel: 'SMS',
     target_segment: 'সকল নিবন্ধিত সদস্য (All Members)',
     subject: 'ভর্তি পরীক্ষা ও এইচএসসি প্রস্তুতিতে খাতা-কলমে বিশেষ ছাড়!',
-    content: 'প্রিয় {first_name}, মিজান স্টেশনারির বিশেষ প্রস্তুতি অফারে সব ধরনের খাতা ও কলমে ১০% ছাড় পেতে কুপন কোড ব্যবহার করুন: {coupon_code}।',
+    content: 'প্রিয় {first_name}, মিজান কম্পিউটার অ্যান্ড কসমেটিকসের বিশেষ অফারে ১০% ছাড় পেতে কুপন কোড ব্যবহার করুন: {coupon_code}।',
     coupon_code: 'STUDENT10',
     status: 'Sent',
     audience_count: 10,
@@ -1034,7 +1038,7 @@ const DEFAULT_CAMPAIGNS = [
     channel: 'Omnichannel',
     target_segment: 'ঝুঁকিপূর্ণ গ্রাহক (Churn Risk)',
     subject: 'আপনাকে মিস করছি! বিশেষ ২০% উপহার ভাউচার আপনার অপেক্ষায়',
-    content: 'প্রিয় {first_name}, মিজান স্টেশনারিতে পুনরায় স্বাগতম জানাতে আপনার অ্যাকাউন্টে যোগ করা হয়েছে ২০% ছাড় ভাউচার: {coupon_code}!',
+    content: 'প্রিয় {first_name}, মিজান কম্পিউটার অ্যান্ড কসমেটিকসে পুনরায় স্বাগতম জানাতে আপনার অ্যাকাউন্টে যোগ করা হয়েছে ২০% ছাড় ভাউচার: {coupon_code}!',
     coupon_code: 'MIJANVIP20',
     status: 'Draft',
     audience_count: 0,
@@ -1097,7 +1101,7 @@ router.get('/campaigns/segments', async (req, res) => {
       {
         id: 'All',
         name: 'সকল নিবন্ধিত সদস্য (All Members)',
-        desc: 'মিজান স্টেশনারির সর্বমোট সক্রিয় লয়্যালটি মেম্বার তালিকা',
+        desc: 'মিজান কম্পিউটার অ্যান্ড কসমেটিকসের সর্বমোট সক্রিয় লয়্যালটি মেম্বার তালিকা',
         count: totalCount,
         criteria: 'All Registered Customers'
       }
@@ -1439,7 +1443,7 @@ router.post('/reset-data', async (req, res) => {
   try {
     const { resetMongoDatabase } = require('./mongoConnection');
     await resetMongoDatabase();
-    res.json({ success: true, message: 'মিজান স্টেশনারি ডাটাবেজ সফলভাবে রিসেট ও সিড করা হয়েছে।' });
+    res.json({ success: true, message: 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস ডাটাবেজ সফলভাবে রিসেট ও সিড করা হয়েছে।' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

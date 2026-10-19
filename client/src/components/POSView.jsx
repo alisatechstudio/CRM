@@ -176,8 +176,8 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
   const pointsDiscount = Math.min(pointsToRedeem, maxRedeemablePoints);
 
   const taxableAmount = Math.max(0, subtotal - couponDiscount - manualDiscount - pointsDiscount);
-  const tax = Number((taxableAmount * 0.08).toFixed(2));
-  const finalTotal = Number((taxableAmount + tax).toFixed(2));
+  const tax = 0;
+  const finalTotal = Number(taxableAmount.toFixed(2));
 
   // Potential points to earn
   let tierMultiplier = 1.0;
@@ -728,10 +728,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
                 <span style={{ fontFamily: 'var(--font-mono)' }}>-৳{pointsDiscount.toFixed(2)}</span>
               </div>
             )}
-            <div style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--text-muted)' }}>
-              <span>সরকারি ভ্যাট/ট্যাক্স (৮%)</span>
-              <span style={{ fontFamily: 'var(--font-mono)' }}>৳{tax.toFixed(2)}</span>
-            </div>
+
           </div>
 
           {/* Net Total */}

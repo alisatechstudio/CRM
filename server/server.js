@@ -39,7 +39,7 @@ app.use((req, res, next) => {
   if (req.path.startsWith('/api')) return next();
   res.sendFile(path.join(clientDist, 'index.html'), (err) => {
     if (err) {
-      res.status(200).send('মিজান স্টেশনারি (Mijan Stationary) CRM API is active on port ' + PORT);
+      res.status(200).send('মিজান কম্পিউটার অ্যান্ড কসমেটিকস (Mijan Computer & Cosmetics) CRM API is active on port ' + PORT);
     }
   });
 });
@@ -48,7 +48,7 @@ app.use((req, res, next) => {
 // In traditional Node environments, listen on PORT.
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`মিজান স্টেশনারি CRM Server running at http://localhost:${PORT} with MongoDB`);
+    console.log(`মিজান কম্পিউটার অ্যান্ড কসমেটিকস CRM Server running at http://localhost:${PORT} with MongoDB`);
   });
 }
 

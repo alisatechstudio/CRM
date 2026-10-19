@@ -30,7 +30,7 @@ export default function CampaignsView() {
     channel: 'SMS',
     target_segment: '',
     subject: '',
-    content: 'প্রিয় {first_name}, মিজান স্টেশনারির বিশেষ অফারে উপভোগ করুন আকর্ষণীয় ছাড়! কুপন কোড: {coupon_code}',
+    content: 'প্রিয় {first_name}, মিজান কম্পিউটার অ্যান্ড কসমেটিকসের বিশেষ অফারে উপভোগ করুন আকর্ষণীয় ছাড়! কুপন কোড: {coupon_code}',
     coupon_code: ''
   });
   const [saving, setSaving] = useState(false);
@@ -75,7 +75,7 @@ export default function CampaignsView() {
       channel: 'SMS',
       target_segment: defaultSegment,
       subject: '',
-      content: 'প্রিয় {first_name}, মিজান স্টেশনারির বিশেষ অফারে উপভোগ করুন আকর্ষণীয় ছাড়! কুপন কোড: {coupon_code}',
+      content: 'প্রিয় {first_name}, মিজান কম্পিউটার অ্যান্ড কসমেটিকসের বিশেষ অফারে উপভোগ করুন আকর্ষণীয় ছাড়! কুপন কোড: {coupon_code}',
       coupon_code: defaultCoupon
     });
     setShowCreate(true);

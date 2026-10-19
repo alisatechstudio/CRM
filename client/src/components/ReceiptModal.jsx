@@ -51,11 +51,11 @@ export default function ReceiptModal({ orderId, onClose }) {
           {/* Printable Thermal Receipt Box */}
           <div className="thermal-receipt" id="printable-receipt">
             <div className="thermal-receipt-center">
-              <div style={{ fontWeight: 900, fontSize: '1.3rem', letterSpacing: '0.02em' }}>
-                মিজান স্টেশনারি
+              <div style={{ fontWeight: 900, fontSize: '1.25rem', letterSpacing: '0.02em' }}>
+                মিজান কম্পিউটার অ্যান্ড কসমেটিকস
               </div>
-              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#374151', letterSpacing: '0.08em' }}>
-                MIJAN STATIONARY & GENERAL STORE
+              <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#374151', letterSpacing: '0.06em' }}>
+                MIJAN COMPUTER & COSMETICS
               </div>
               <div style={{ fontSize: '0.82rem', marginTop: '0.25rem', fontWeight: 600, color: '#1f2937' }}>
                 {order.store_location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর'}
@@ -124,10 +124,7 @@ export default function ReceiptModal({ orderId, onClose }) {
                   <span>-৳{order.points_discount?.toFixed(2)}</span>
                 </div>
               )}
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span>সরকারি ভ্যাট (৮%):</span>
-                <span>৳{order.tax?.toFixed(2)}</span>
-              </div>
+
               <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 900, fontSize: '1rem', marginTop: '0.35rem', borderTop: '1px solid #111', paddingTop: '0.35rem' }}>
                 <span>সর্বমোট পরিশোধিত:</span>
                 <span>৳{order.total?.toFixed(2)}</span>
@@ -141,7 +138,7 @@ export default function ReceiptModal({ orderId, onClose }) {
             <div className="thermal-divider" />
 
             <div className="thermal-receipt-center" style={{ fontSize: '0.75rem', color: '#374151' }}>
-              <div style={{ fontWeight: 700 }}>মিজান স্টেশনারিতে কেনাকাটার জন্য আন্তরিক ধন্যবাদ!</div>
+              <div style={{ fontWeight: 700 }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকসে কেনাকাটার জন্য আন্তরিক ধন্যবাদ!</div>
               <div>রসিদসহ ১৫ দিনের মধ্যে অক্ষত পণ্য পরিবর্তনযোগ্য।</div>
               <div style={{ marginTop: '0.5rem', fontFamily: 'monospace', fontSize: '0.7rem', letterSpacing: '0.2em' }}>
                 * |||||| | ||||| |||| || ||| *

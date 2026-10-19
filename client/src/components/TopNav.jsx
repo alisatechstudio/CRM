@@ -26,7 +26,7 @@ export default function TopNav({
         </h2>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
           <MapPin size={13} style={{ color: 'var(--primary)' }} />
-          <span>{activeStore?.name || 'মিজান স্টেশনারি'} • {activeStore?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর'}</span>
+          <span>{activeStore?.name || 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস'} • {activeStore?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর'}</span>
         </div>
       </div>
 

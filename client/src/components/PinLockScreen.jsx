@@ -142,7 +142,7 @@ export default function PinLockScreen({ onUnlock }) {
               <Lock size={32} className="text-indigo-400" />
             )}
           </div>
-          <h1 className="pin-brand-title">মিজান স্টেশনারি</h1>
+          <h1 className="pin-brand-title">মিজান কম্পিউটার অ্যান্ড কসমেটিকস</h1>
           <p className="pin-brand-subtitle">চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর</p>
           <div className="pin-system-badge">
             <ShieldCheck size={14} />
