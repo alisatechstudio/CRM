@@ -18,11 +18,21 @@ export async function request(endpoint, options = {}) {
   return data;
 }
 
+function toQueryString(params = {}) {
+  const clean = {};
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null && value !== '' && value !== 'undefined' && value !== 'null') {
+      clean[key] = value;
+    }
+  }
+  const qs = new URLSearchParams(clean).toString();
+  return qs ? `?${qs}` : '';
+}
+
 export const api = {
   // Analytics
   getAnalytics: (params = {}) => {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/analytics${qs ? `?${qs}` : ''}`);
+    return request(`/analytics${toQueryString(params)}`);
   },
 
   // Stores & Departments
@@ -33,8 +43,7 @@ export const api = {
 
   // Customers
   getCustomers: (params = {}) => {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/customers${qs ? `?${qs}` : ''}`);
+    return request(`/customers${toQueryString(params)}`);
   },
   getCustomerById: (id) => request(`/customers/${id}`),
   createCustomer: (data) => request('/customers', { method: 'POST', body: JSON.stringify(data) }),
@@ -43,8 +52,7 @@ export const api = {
 
   // Products & Inventory
   getProducts: (params = {}) => {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/products${qs ? `?${qs}` : ''}`);
+    return request(`/products${toQueryString(params)}`);
   },
   getProductById: (id) => request(`/products/${id}`),
   createProduct: (data) => request('/products', { method: 'POST', body: JSON.stringify(data) }),
@@ -55,8 +63,7 @@ export const api = {
   // POS & Orders
   checkout: (data) => request('/pos/checkout', { method: 'POST', body: JSON.stringify(data) }),
   getOrders: (params = {}) => {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/orders${qs ? `?${qs}` : ''}`);
+    return request(`/orders${toQueryString(params)}`);
   },
   getOrderById: (id) => request(`/orders/${id}`),
 
@@ -74,8 +81,7 @@ export const api = {
 
   // Support Tickets
   getTickets: (params = {}) => {
-    const qs = new URLSearchParams(params).toString();
-    return request(`/tickets${qs ? `?${qs}` : ''}`);
+    return request(`/tickets${toQueryString(params)}`);
   },
   createTicket: (data) => request('/tickets', { method: 'POST', body: JSON.stringify(data) }),
   updateTicket: (id, data) => request(`/tickets/${id}`, { method: 'PATCH', body: JSON.stringify(data) }),

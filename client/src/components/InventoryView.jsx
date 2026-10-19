@@ -12,7 +12,8 @@ import {
   ArrowDownRight,
   ShieldAlert,
   Calendar,
-  FolderPlus
+  FolderPlus,
+  CheckCircle2
 } from 'lucide-react';
 import { api } from '../api';
 import { 
@@ -31,6 +32,9 @@ export default function InventoryView() {
   const [expiryFilter, setExpiryFilter] = useState('all');
   const [expiryFrom, setExpiryFrom] = useState('');
   const [expiryTo, setExpiryTo] = useState('');
+  const [sortBy, setSortBy] = useState('newest');
+  const [highlightedId, setHighlightedId] = useState(null);
+  const [successBanner, setSuccessBanner] = useState('');
 
   // Fallback guaranteed active departments list
   const activeDepartments = (departments && departments.length > 0) ? departments : DEFAULT_DEPARTMENTS;
@@ -122,17 +126,26 @@ export default function InventoryView() {
 
   const [saving, setSaving] = useState(false);
 
-  const loadData = async () => {
+  const loadData = async (overrides = {}) => {
     try {
       setLoading(true);
+      const targetDept = overrides.department_id !== undefined ? overrides.department_id : selectedDept;
+      const targetSearch = overrides.search !== undefined ? overrides.search : search;
+      const targetLow = overrides.low_stock !== undefined ? overrides.low_stock : lowStockOnly;
+      const targetExp = overrides.expiry_filter !== undefined ? overrides.expiry_filter : expiryFilter;
+      const targetFrom = overrides.expiry_from !== undefined ? overrides.expiry_from : (targetExp === 'custom' ? expiryFrom : '');
+      const targetTo = overrides.expiry_to !== undefined ? overrides.expiry_to : (targetExp === 'custom' ? expiryTo : '');
+      const targetSort = overrides.sort !== undefined ? overrides.sort : sortBy;
+
       const [prodsRes, deptsRes] = await Promise.allSettled([
         api.getProducts({ 
-          department_id: selectedDept, 
-          search, 
-          low_stock: lowStockOnly,
-          expiry_filter: expiryFilter,
-          expiry_from: expiryFilter === 'custom' ? expiryFrom : undefined,
-          expiry_to: expiryFilter === 'custom' ? expiryTo : undefined
+          department_id: targetDept, 
+          search: targetSearch, 
+          low_stock: targetLow,
+          expiry_filter: targetExp,
+          expiry_from: targetFrom || undefined,
+          expiry_to: targetTo || undefined,
+          sort: targetSort
         }),
         api.getDepartments()
       ]);
@@ -157,7 +170,7 @@ export default function InventoryView() {
 
   useEffect(() => {
     loadData();
-  }, [selectedDept, search, lowStockOnly, expiryFilter, expiryFrom, expiryTo]);
+  }, [selectedDept, search, lowStockOnly, expiryFilter, expiryFrom, expiryTo, sortBy]);
 
   // Quick inline stock increment
   const handleQuickStockAdjust = async (id, change) => {
@@ -281,12 +294,39 @@ export default function InventoryView() {
     const finalCategory = (newProd.category && newProd.category.trim()) || 'সাধারণ স্টেশনারি';
     try {
       setSaving(true);
-      await api.createProduct({
+      const created = await api.createProduct({
         ...newProd,
         category: finalCategory
       });
+
+      // Clear filters so the newly created product is guaranteed to be visible in the table!
+      setSelectedDept('all');
+      setSearch('');
+      setLowStockOnly(false);
+      setExpiryFilter('all');
+      setExpiryFrom('');
+      setExpiryTo('');
+      setSortBy('newest');
+
       setShowAddModal(false);
-      loadData();
+
+      // Immediately reload data with clean filters so the user sees it on top
+      await loadData({
+        department_id: 'all',
+        search: '',
+        low_stock: false,
+        expiry_filter: 'all',
+        sort: 'newest'
+      });
+
+      // Highlight the row so the user can easily identify it
+      if (created && created.id) {
+        setHighlightedId(created.id);
+        setTimeout(() => setHighlightedId(null), 6000);
+      }
+
+      setSuccessBanner(`✓ নতুন পণ্য '${created.name || newProd.name}' সফলভাবে ক্যাটালগে যুক্ত হয়েছে এবং তালিকার শীর্ষে প্রদর্শিত হচ্ছে!`);
+      setTimeout(() => setSuccessBanner(''), 7000);
     } catch (err) {
       alert('পণ্য যুক্ত করতে ব্যর্থ: ' + err.message);
     } finally {
@@ -341,13 +381,20 @@ export default function InventoryView() {
     const finalCategory = (editForm.category && editForm.category.trim()) || 'সাধারণ স্টেশনারি';
     try {
       setSaving(true);
-      await api.updateProduct(editingProduct.id, {
+      const updated = await api.updateProduct(editingProduct.id, {
         ...editForm,
         category: finalCategory
       });
       setShowEditModal(false);
       setEditingProduct(null);
-      loadData();
+      await loadData();
+
+      const updatedId = updated?.id || editingProduct.id;
+      setHighlightedId(updatedId);
+      setTimeout(() => setHighlightedId(null), 5000);
+
+      setSuccessBanner(`✓ পণ্য '${updated?.name || editForm.name}' সফলভাবে আপডেট করা হয়েছে!`);
+      setTimeout(() => setSuccessBanner(''), 6000);
     } catch (err) {
       alert('পণ্য আপডেট ব্যর্থ: ' + err.message);
     } finally {
@@ -455,8 +502,38 @@ export default function InventoryView() {
           </div>
         </div>
 
+        {/* Success Banner */}
+        {successBanner && (
+          <div style={{
+            background: 'rgba(16, 185, 129, 0.12)',
+            border: '1px solid rgba(16, 185, 129, 0.35)',
+            color: 'var(--success)',
+            padding: '0.75rem 1rem',
+            borderRadius: 'var(--radius-md)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '0.75rem',
+            marginTop: '1rem',
+            fontWeight: 600,
+            fontSize: '0.88rem',
+            animation: 'fadeIn 0.3s ease'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+              <CheckCircle2 size={18} style={{ flexShrink: 0 }} />
+              <span>{successBanner}</span>
+            </div>
+            <button 
+              onClick={() => setSuccessBanner('')}
+              style={{ background: 'transparent', border: 'none', color: 'var(--success)', cursor: 'pointer', padding: '0.2rem' }}
+            >
+              <X size={15} />
+            </button>
+          </div>
+        )}
+
         {/* Filter controls */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.3fr 1fr 1.2fr 1fr', gap: '1rem', marginTop: '1.25rem' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr 1fr 1fr', gap: '0.85rem', marginTop: '1.25rem' }}>
           <div className="input-group">
             <label className="input-label">এসকেইউ বা বারকোড খুঁজুন</label>
             <div style={{ position: 'relative' }}>
@@ -479,11 +556,30 @@ export default function InventoryView() {
               value={selectedDept}
               onChange={(e) => setSelectedDept(e.target.value)}
             >
-              <option value="all">সকল বিভাগ</option>
+              <option value="all">সকল বিভাগ ({products.length} পণ্য)</option>
               {activeDepartments.map(d => (
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
             </select>
+          </div>
+
+          <div className="input-group">
+            <label className="input-label">ক্রমানুসার (Sorting)</label>
+            <div style={{ position: 'relative' }}>
+              <select 
+                className="form-control"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+              >
+                <option value="newest">🕒 সর্বশেষ সংযোজিত (শীর্ষে)</option>
+                <option value="name">🔤 নামানুসারে (A - Z)</option>
+                <option value="price_desc">💰 বিক্রয়মূল্য: বেশি থেকে কম</option>
+                <option value="price_asc">🏷️ বিক্রয়মূল্য: কম থেকে বেশি</option>
+                <option value="stock_asc">📦 স্টক: কম থেকে বেশি</option>
+                <option value="stock_desc">📦 স্টক: বেশি থেকে কম</option>
+                <option value="oldest">📅 পুরাতন সংযোজিত</option>
+              </select>
+            </div>
           </div>
 
           <div className="input-group">
@@ -509,11 +605,11 @@ export default function InventoryView() {
             <button 
               type="button"
               className={`btn ${lowStockOnly ? 'btn-danger' : 'btn-secondary'}`}
-              style={{ justifyContent: 'flex-start' }}
+              style={{ justifyContent: 'flex-start', height: '38px' }}
               onClick={() => setLowStockOnly(!lowStockOnly)}
             >
               <AlertTriangle size={15} />
-              <span>{lowStockOnly ? 'শুধুমাত্র কম স্টক' : 'সকল স্টক প্রদর্শিত'}</span>
+              <span>{lowStockOnly ? 'কম স্টক ফিল্টার্ড' : 'সকল স্টক প্রদর্শিত'}</span>
             </button>
           </div>
         </div>
@@ -605,11 +701,33 @@ export default function InventoryView() {
                 products.map((p) => {
                   const isLow = p.stock_qty <= p.min_threshold;
                   const marginPct = p.price > 0 ? (((p.price - p.cost) / p.price) * 100).toFixed(0) : 0;
+                  const isHighlighted = p.id === highlightedId;
 
                   return (
-                    <tr key={p.id}>
+                    <tr 
+                      key={p.id}
+                      style={isHighlighted ? {
+                        background: 'rgba(16, 185, 129, 0.12)',
+                        borderLeft: '4px solid #10b981',
+                        transition: 'background 0.5s ease'
+                      } : {}}
+                    >
                       <td>
-                        <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{p.name}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                          <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{p.name}</div>
+                          {isHighlighted && (
+                            <span style={{ 
+                              background: '#10b981', 
+                              color: '#fff', 
+                              fontSize: '0.62rem', 
+                              padding: '0.1rem 0.4rem', 
+                              borderRadius: '999px', 
+                              fontWeight: 800 
+                            }}>
+                              ✨ সদ্য যুক্ত / আপডেট
+                            </span>
+                          )}
+                        </div>
                         <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
                           বারকোড: {p.barcode}
                         </div>

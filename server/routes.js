@@ -350,15 +350,15 @@ router.post('/customers/:id/points', async (req, res) => {
 // =================== PRODUCTS & INVENTORY ===================
 router.get('/products', async (req, res) => {
   try {
-    const { department_id, search, low_stock, expiry_filter, expiry_from, expiry_to } = req.query;
+    const { department_id, search, low_stock, expiry_filter, expiry_from, expiry_to, sort } = req.query;
     const filter = {};
 
-    if (department_id && department_id !== 'all') {
+    if (department_id && department_id !== 'all' && department_id !== 'undefined' && department_id !== 'null') {
       filter.department_id = department_id;
     }
 
-    if (search) {
-      const reg = new RegExp(search, 'i');
+    if (search && search !== 'undefined' && search !== 'null' && search.trim() !== '') {
+      const reg = new RegExp(search.trim(), 'i');
       filter.$or = [
         { name: reg },
         { barcode: reg },
@@ -377,38 +377,55 @@ router.get('/products', async (req, res) => {
       return date.toISOString().split('T')[0];
     };
 
-    if (expiry_filter === 'has_expiry') {
-      filter.has_expiry = 1;
-      filter.expiry_date = { $ne: null };
-    } else if (expiry_filter === 'no_expiry') {
-      filter.$or = [{ has_expiry: 0 }, { has_expiry: null }, { expiry_date: null }];
-    } else if (expiry_filter === 'expired') {
-      filter.has_expiry = 1;
-      filter.expiry_date = { $lt: today, $ne: null };
-    } else if (expiry_filter === 'expiring_30') {
-      filter.has_expiry = 1;
-      filter.expiry_date = { $gte: today, $lte: addDays(today, 30) };
-    } else if (expiry_filter === 'expiring_60') {
-      filter.has_expiry = 1;
-      filter.expiry_date = { $gte: today, $lte: addDays(today, 60) };
-    } else if (expiry_filter === 'expiring_90') {
-      filter.has_expiry = 1;
-      filter.expiry_date = { $gte: today, $lte: addDays(today, 90) };
+    if (expiry_filter && expiry_filter !== 'all' && expiry_filter !== 'undefined' && expiry_filter !== 'null') {
+      if (expiry_filter === 'has_expiry') {
+        filter.has_expiry = 1;
+        filter.expiry_date = { $ne: null };
+      } else if (expiry_filter === 'no_expiry') {
+        filter.$or = [{ has_expiry: 0 }, { has_expiry: null }, { expiry_date: null }];
+      } else if (expiry_filter === 'expired') {
+        filter.has_expiry = 1;
+        filter.expiry_date = { $lt: today, $ne: null };
+      } else if (expiry_filter === 'expiring_30') {
+        filter.has_expiry = 1;
+        filter.expiry_date = { $gte: today, $lte: addDays(today, 30) };
+      } else if (expiry_filter === 'expiring_60') {
+        filter.has_expiry = 1;
+        filter.expiry_date = { $gte: today, $lte: addDays(today, 60) };
+      } else if (expiry_filter === 'expiring_90') {
+        filter.has_expiry = 1;
+        filter.expiry_date = { $gte: today, $lte: addDays(today, 90) };
+      }
     }
 
-    if (expiry_from || expiry_to) {
+    const cleanExpFrom = (expiry_from && expiry_from !== 'undefined' && expiry_from !== 'null' && expiry_from.trim() !== '') ? expiry_from.trim() : null;
+    const cleanExpTo = (expiry_to && expiry_to !== 'undefined' && expiry_to !== 'null' && expiry_to.trim() !== '') ? expiry_to.trim() : null;
+
+    if (cleanExpFrom || cleanExpTo) {
       filter.has_expiry = 1;
       filter.expiry_date = filter.expiry_date || {};
-      if (expiry_from) filter.expiry_date.$gte = expiry_from;
-      if (expiry_to) filter.expiry_date.$lte = expiry_to;
+      if (cleanExpFrom) filter.expiry_date.$gte = cleanExpFrom;
+      if (cleanExpTo) filter.expiry_date.$lte = cleanExpTo;
     }
 
+    // Dynamic sorting (default to newest first so freshly created products appear on top)
+    let sortObj = { createdAt: -1, _id: -1 };
+    if (sort === 'name') sortObj = { name: 1 };
+    else if (sort === 'price_desc') sortObj = { price: -1 };
+    else if (sort === 'price_asc') sortObj = { price: 1 };
+    else if (sort === 'stock_desc') sortObj = { stock_qty: -1 };
+    else if (sort === 'stock_asc') sortObj = { stock_qty: 1 };
+    else if (sort === 'oldest') sortObj = { createdAt: 1, _id: 1 };
+
     const [products, depts] = await Promise.all([
-      Product.find(filter).sort({ name: 1 }).lean(),
+      Product.find(filter).sort(sortObj).lean(),
       Department.find().lean()
     ]);
 
     const deptMap = {};
+    for (const d of DEFAULT_DEPARTMENTS) {
+      deptMap[d.id] = { name: d.name, code: d.code };
+    }
     for (const d of depts) {
       deptMap[d.id] = { name: d.name, code: d.code };
     }
@@ -431,10 +448,11 @@ router.get('/products/:id', async (req, res) => {
     if (!product) return res.status(404).json({ error: 'পণ্যটি খুঁজে পাওয়া যায়নি' });
 
     const dept = await Department.findOne({ id: product.department_id }).lean();
+    const fallbackDept = DEFAULT_DEPARTMENTS.find(d => d.id === product.department_id);
     res.json({
       ...product,
-      department_name: dept?.name || '',
-      department_code: dept?.code || ''
+      department_name: dept?.name || fallbackDept?.name || 'সাধারণ স্টেশনারি',
+      department_code: dept?.code || fallbackDept?.code || 'GEN'
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -444,13 +462,19 @@ router.get('/products/:id', async (req, res) => {
 router.post('/products', async (req, res) => {
   try {
     const { name, barcode, department_id, category, price, cost, stock_qty, min_threshold, unit, expiry_date, has_expiry } = req.body;
-    if (!name || !barcode || !department_id || price === undefined) {
+    if (!name || !name.trim() || !barcode || !barcode.trim() || !department_id || price === undefined || price === null || price === '') {
       return res.status(400).json({ error: 'পণ্যের নাম, বারকোড, বিভাগ এবং বিক্রয়মূল্য প্রদান করা আবশ্যক' });
     }
 
-    const existing = await Product.findOne({ barcode: barcode.trim() });
+    const numPrice = parseFloat(price);
+    if (isNaN(numPrice) || numPrice < 0) {
+      return res.status(400).json({ error: 'সঠিক বিক্রয়মূল্য প্রদান করুন' });
+    }
+
+    const trimmedBarcode = barcode.trim();
+    const existing = await Product.findOne({ barcode: trimmedBarcode });
     if (existing) {
-      return res.status(400).json({ error: 'এই বারকোডটি ইতিমধ্যে ক্যাটালগে রয়েছে' });
+      return res.status(400).json({ error: `এই বারকোডটি (${trimmedBarcode}) ইতিমধ্যে ক্যাটালগে রয়েছে ('${existing.name}')` });
     }
 
     const isExpApplicable = (has_expiry === true || has_expiry === 1 || has_expiry === '1' || has_expiry === 'true') && expiry_date ? 1 : 0;
@@ -459,24 +483,25 @@ router.post('/products', async (req, res) => {
     const id = 'prod_' + Date.now();
     const created = await Product.create({
       id,
-      barcode: barcode.trim(),
+      barcode: trimmedBarcode,
       name: name.trim(),
       department_id,
-      category: category || 'সাধারণ স্টেশনারি',
-      price: parseFloat(price),
+      category: (category && category.trim()) ? category.trim() : 'সাধারণ স্টেশনারি',
+      price: numPrice,
       cost: parseFloat(cost || 0),
       stock_qty: parseInt(stock_qty || 0, 10),
       min_threshold: parseInt(min_threshold || 10, 10),
-      unit: unit || 'পিস',
+      unit: (unit && unit.trim()) ? unit.trim() : 'পিস',
       expiry_date: finalExpiry,
       has_expiry: isExpApplicable
     });
 
     const dept = await Department.findOne({ id: department_id }).lean();
+    const fallbackDept = DEFAULT_DEPARTMENTS.find(d => d.id === department_id);
     res.status(201).json({
       ...created.toObject(),
-      department_name: dept?.name || '',
-      department_code: dept?.code || ''
+      department_name: dept?.name || fallbackDept?.name || 'সাধারণ স্টেশনারি',
+      department_code: dept?.code || fallbackDept?.code || 'GEN'
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
