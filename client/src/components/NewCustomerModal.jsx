@@ -103,12 +103,11 @@ export default function NewCustomerModal({ onClose, onCreated }) {
 
             <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
               <div className="input-group">
-                <label className="input-label">ইমেইল *</label>
+                <label className="input-label">ইমেইল (ঐচ্ছিক)</label>
                 <input 
                   type="email" 
                   className="form-control" 
-                  required 
-                  placeholder="ariful.islam@gmail.com"
+                  placeholder="গ্রাহকের ইমেইল (ঐচ্ছিক)"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 />

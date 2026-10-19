@@ -235,8 +235,8 @@ router.get('/customers/:id', async (req, res) => {
 router.post('/customers', async (req, res) => {
   try {
     const { first_name, last_name, email, phone, birthday, preferred_department, notes, tags } = req.body;
-    if (!first_name || !last_name || !email || !phone) {
-      return res.status(400).json({ error: 'First name, last name, email, and phone are required' });
+    if (!first_name || !last_name || !phone) {
+      return res.status(400).json({ error: 'First name, last name, and phone are required' });
     }
 
     const id = 'cust_' + Date.now();
@@ -249,7 +249,7 @@ router.post('/customers', async (req, res) => {
       card_number,
       first_name: first_name.trim(),
       last_name: last_name.trim(),
-      email: email.trim(),
+      email: email ? email.trim() : '',
       phone: phone.trim(),
       tier: 'Bronze',
       points_balance: 50,
@@ -283,20 +283,19 @@ router.post('/customers', async (req, res) => {
 router.put('/customers/:id', async (req, res) => {
   try {
     const { first_name, last_name, email, phone, birthday, preferred_department, notes, tags } = req.body;
+    const updateFields = {};
+    if (first_name !== undefined) updateFields.first_name = first_name.trim();
+    if (last_name !== undefined) updateFields.last_name = last_name.trim();
+    if (email !== undefined) updateFields.email = email ? email.trim() : '';
+    if (phone !== undefined) updateFields.phone = phone.trim();
+    if (birthday !== undefined) updateFields.birthday = birthday;
+    if (preferred_department !== undefined) updateFields.preferred_department = preferred_department;
+    if (notes !== undefined) updateFields.notes = notes;
+    if (tags !== undefined) updateFields.tags = tags;
+
     const updated = await Customer.findOneAndUpdate(
       { id: req.params.id },
-      {
-        $set: {
-          first_name,
-          last_name,
-          email,
-          phone,
-          birthday,
-          preferred_department,
-          notes,
-          tags
-        }
-      },
+      { $set: updateFields },
       { new: true }
     ).lean();
 

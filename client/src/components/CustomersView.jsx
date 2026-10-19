@@ -178,7 +178,7 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
                         {c.card_number}
                       </div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)' }}>
-                        {c.phone} • {c.email}
+                        {c.phone}{c.email ? ` • ${c.email}` : ''}
                       </div>
                     </td>
 

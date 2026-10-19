@@ -5,7 +5,7 @@ const customerSchema = new mongoose.Schema({
   card_number: { type: String, required: true, unique: true },
   first_name: { type: String, required: true },
   last_name: { type: String, required: true },
-  email: { type: String, required: true },
+  email: { type: String, default: '' },
   phone: { type: String, required: true },
   tier: { type: String, default: 'Bronze' },
   points_balance: { type: Number, default: 0 },

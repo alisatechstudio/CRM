@@ -103,7 +103,7 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
                 {customer.first_name} {customer.last_name}
               </h2>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {customer.card_number} • যোগদান: {customer.join_date}
+                {customer.card_number} • {customer.phone}{customer.email ? ` • ${customer.email}` : ''} • যোগদান: {customer.join_date}
               </div>
             </div>
           </div>
