@@ -173,6 +173,10 @@ export default function Sidebar({
               {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
               <span>{theme === 'dark' ? 'লাইট মোড' : 'ডার্ক মোড'}</span>
             </button>
+
+            <div className="sidebar-credit">
+              Developed by: <span>Alisa Tech Studio</span>
+            </div>
           </div>
         </div>
       </aside>

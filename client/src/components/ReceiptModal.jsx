@@ -143,6 +143,9 @@ export default function ReceiptModal({ orderId, onClose }) {
               <div style={{ marginTop: '0.5rem', fontFamily: 'monospace', fontSize: '0.7rem', letterSpacing: '0.2em' }}>
                 * |||||| | ||||| |||| || ||| *
               </div>
+              <div style={{ marginTop: '0.35rem', fontSize: '0.65rem', color: '#6b7280' }}>
+                Developed by: Alisa Tech Studio
+              </div>
             </div>
           </div>
         </div>

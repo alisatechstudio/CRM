@@ -164,6 +164,18 @@ export default function App() {
               onSelectCustomer={(id) => setSelectedCustomerId(id)}
             />
           )}
+
+          {/* Small Footer */}
+          <footer className="app-small-footer">
+            <div className="footer-left">
+              <span>© {new Date().getFullYear()} মিজান কম্পিউটার অ্যান্ড কসমেটিকস</span>
+              <span className="footer-dot">•</span>
+              <span>CRM & POS সিস্টেম</span>
+            </div>
+            <div className="footer-right">
+              Developed by: <span className="dev-credit">Alisa Tech Studio</span>
+            </div>
+          </footer>
         </main>
       </div>
 
