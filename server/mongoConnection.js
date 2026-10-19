@@ -152,7 +152,11 @@ async function seedMongoIfEmpty(force = false) {
           { upsert: true }
         );
 
-        console.log('MongoDB store data, departments and expenses verified.');
+        // Clean up any previously auto-seeded hardcoded default campaigns
+        const Campaign = require('./models/Campaign');
+        await Campaign.deleteMany({ id: { $in: ['cmp_01', 'cmp_02', 'cmp_03', 'cmp_04'] } });
+
+        console.log('MongoDB store data, departments, expenses verified and hardcoded campaigns purged.');
         return;
       }
     }

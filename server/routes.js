@@ -985,74 +985,7 @@ router.post('/coupons/validate', async (req, res) => {
   }
 });
 
-// =================== CAMPAIGNS ===================
-const DEFAULT_CAMPAIGNS = [
-  {
-    id: 'cmp_01',
-    name: 'এইচএসসি ও ভর্তি প্রস্তুতি স্পেশাল অফার',
-    channel: 'SMS',
-    target_segment: 'সকল নিবন্ধিত সদস্য (All Members)',
-    subject: 'ভর্তি পরীক্ষা ও এইচএসসি প্রস্তুতিতে খাতা-কলমে বিশেষ ছাড়!',
-    content: 'প্রিয় {first_name}, মিজান কম্পিউটার অ্যান্ড কসমেটিকসের বিশেষ অফারে ১০% ছাড় পেতে কুপন কোড ব্যবহার করুন: {coupon_code}।',
-    coupon_code: 'STUDENT10',
-    status: 'Sent',
-    audience_count: 10,
-    open_rate: 88.5,
-    click_rate: 34.2,
-    conversion_rate: 18.5,
-    revenue_generated: 16800.00,
-    sent_at: '2026-10-10 11:30:00'
-  },
-  {
-    id: 'cmp_02',
-    name: 'কর্পোরেট ও অফিস পেপার রিম পাইকারি ক্যাশব্যাক',
-    channel: 'Email',
-    target_segment: 'ভিআইপি সদস্য (VIP Shoppers)',
-    subject: 'বক্স ফাইল ও এ৪ রিম পেপার ক্রয়ে ৫০০ টাকা ক্যাশব্যাক অফার',
-    content: 'শ্রদ্ধেয় {first_name}, আপনার অফিসের জন্য ৫,০০০ টাকার স্টেশনারি সামগ্রী অর্ডারে পাচ্ছেন নিশ্চিত ৫০০ টাকা ক্যাশব্যাক! ভাউচার: {coupon_code}।',
-    coupon_code: 'BULK500',
-    status: 'Sent',
-    audience_count: 2,
-    open_rate: 75.0,
-    click_rate: 45.0,
-    conversion_rate: 50.0,
-    revenue_generated: 48500.00,
-    sent_at: '2026-10-14 16:15:00'
-  },
-  {
-    id: 'cmp_03',
-    name: 'আর্ট, ড্রয়িং তুলি ও কালার ক্লিয়ারেন্স সেল',
-    channel: 'SMS',
-    target_segment: 'গোল্ড ও প্ল্যাটিনাম সদস্য',
-    subject: 'চারুকলা ও ড্রয়িং শিক্ষার্থীদের জন্য বিশেষ ছাড়',
-    content: 'প্রিয় {first_name}, ক্যামলিন এক্রিলিক ও আর্টিস্ট তুলি সেটে পাচ্ছেন ১৫% আকর্ষণীয় মূল্যছাড়। আজই স্টোরে আসুন!',
-    coupon_code: 'EXAMSPECIAL',
-    status: 'Draft',
-    audience_count: 0,
-    open_rate: 0,
-    click_rate: 0,
-    conversion_rate: 0,
-    revenue_generated: 0,
-    sent_at: null
-  },
-  {
-    id: 'cmp_04',
-    name: 'নিষ্ক্রিয় গ্রাহক রিকল ও রি-এনগেজমেন্ট ব্লাস্ট',
-    channel: 'Omnichannel',
-    target_segment: 'ঝুঁকিপূর্ণ গ্রাহক (Churn Risk)',
-    subject: 'আপনাকে মিস করছি! বিশেষ ২০% উপহার ভাউচার আপনার অপেক্ষায়',
-    content: 'প্রিয় {first_name}, মিজান কম্পিউটার অ্যান্ড কসমেটিকসে পুনরায় স্বাগতম জানাতে আপনার অ্যাকাউন্টে যোগ করা হয়েছে ২০% ছাড় ভাউচার: {coupon_code}!',
-    coupon_code: 'MIJANVIP20',
-    status: 'Draft',
-    audience_count: 0,
-    open_rate: 0,
-    click_rate: 0,
-    conversion_rate: 0,
-    revenue_generated: 0,
-    sent_at: null
-  }
-];
-
+// =================== CAMPAIGNS (DATABASE DRIVEN) ===================
 // Dynamic Database Driven Customer Segments
 router.get('/campaigns/segments', async (req, res) => {
   try {
@@ -1118,16 +1051,8 @@ router.get('/campaigns/segments', async (req, res) => {
 
 router.get('/campaigns', async (req, res) => {
   try {
-    let campaigns = await Campaign.find().sort({ sent_at: -1, createdAt: -1, id: -1 }).lean();
-    if (!campaigns || campaigns.length === 0) {
-      try {
-        await Campaign.insertMany(DEFAULT_CAMPAIGNS);
-        campaigns = await Campaign.find().sort({ sent_at: -1, createdAt: -1, id: -1 }).lean();
-      } catch (insertErr) {
-        campaigns = DEFAULT_CAMPAIGNS;
-      }
-    }
-    res.json(campaigns);
+    const campaigns = await Campaign.find().sort({ sent_at: -1, createdAt: -1, id: -1 }).lean();
+    res.json(campaigns || []);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
