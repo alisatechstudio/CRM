@@ -9,20 +9,18 @@ import {
   UserPlus, 
   X, 
   Tag, 
-  CreditCard, 
-  DollarSign, 
-  Award, 
-  CheckCircle,
-  AlertCircle,
   ShoppingBag
 } from 'lucide-react';
 import { api } from '../api';
+import { DEFAULT_DEPARTMENTS } from '../constants/departments';
 
 export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer }) {
   const [products, setProducts] = useState([]);
-  const [departments, setDepartments] = useState([]);
+  const [departments, setDepartments] = useState(DEFAULT_DEPARTMENTS);
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  const activeDepartments = (departments && departments.length > 0) ? departments : DEFAULT_DEPARTMENTS;
 
   // Filter states
   const [selectedDept, setSelectedDept] = useState('all');
@@ -55,14 +53,23 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
   const loadData = async () => {
     try {
       setLoading(true);
-      const [prods, depts, custs] = await Promise.all([
+      const [prodsRes, deptsRes, custsRes] = await Promise.allSettled([
         api.getProducts({ department_id: selectedDept, search: searchTerm }),
         api.getDepartments(),
         api.getCustomers()
       ]);
-      setProducts(prods);
-      setDepartments(depts);
-      setCustomers(custs);
+
+      if (prodsRes.status === 'fulfilled' && Array.isArray(prodsRes.value)) {
+        setProducts(prodsRes.value);
+      }
+      if (deptsRes.status === 'fulfilled' && Array.isArray(deptsRes.value) && deptsRes.value.length > 0) {
+        setDepartments(deptsRes.value);
+      } else {
+        setDepartments(DEFAULT_DEPARTMENTS);
+      }
+      if (custsRes.status === 'fulfilled' && Array.isArray(custsRes.value)) {
+        setCustomers(custsRes.value);
+      }
     } catch (err) {
       console.error('POS load error', err);
     } finally {
@@ -254,7 +261,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
           >
             সকল বিভাগ
           </button>
-          {departments.map((dept) => (
+          {activeDepartments.map((dept) => (
             <button
               key={dept.id}
               className={`pos-dept-tab ${selectedDept === dept.id ? 'active' : ''}`}

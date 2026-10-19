@@ -13,12 +13,15 @@ import {
   ArrowUpRight
 } from 'lucide-react';
 import { api } from '../api';
+import { DEFAULT_DEPARTMENTS } from '../constants/departments';
 
 export default function TicketsView({ onSelectCustomer }) {
   const [tickets, setTickets] = useState([]);
   const [customers, setCustomers] = useState([]);
-  const [departments, setDepartments] = useState([]);
+  const [departments, setDepartments] = useState(DEFAULT_DEPARTMENTS);
   const [loading, setLoading] = useState(true);
+
+  const activeDepartments = (departments && departments.length > 0) ? departments : DEFAULT_DEPARTMENTS;
 
   // Filters
   const [statusFilter, setStatusFilter] = useState('All');
@@ -30,7 +33,7 @@ export default function TicketsView({ onSelectCustomer }) {
   const [newTicket, setNewTicket] = useState({
     customer_id: '',
     subject: '',
-    department: 'পোশাক ও লাইফস্টাইল',
+    department: 'খাতা, ডায়েরি ও কাগজ সামগ্রী',
     type: 'Return/Exchange',
     priority: 'Medium',
     details: '',
@@ -47,16 +50,25 @@ export default function TicketsView({ onSelectCustomer }) {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [tkts, custs, depts] = await Promise.all([
+      const [tktsRes, custsRes, deptsRes] = await Promise.allSettled([
         api.getTickets({ status: statusFilter, priority: priorityFilter, department: departmentFilter }),
         api.getCustomers(),
         api.getDepartments()
       ]);
-      setTickets(tkts);
-      setCustomers(custs);
-      setDepartments(depts);
-      if (custs.length > 0 && !newTicket.customer_id) {
-        setNewTicket(prev => ({ ...prev, customer_id: custs[0].id }));
+
+      if (tktsRes.status === 'fulfilled' && Array.isArray(tktsRes.value)) {
+        setTickets(tktsRes.value);
+      }
+      if (custsRes.status === 'fulfilled' && Array.isArray(custsRes.value)) {
+        setCustomers(custsRes.value);
+        if (custsRes.value.length > 0 && !newTicket.customer_id) {
+          setNewTicket(prev => ({ ...prev, customer_id: custsRes.value[0].id }));
+        }
+      }
+      if (deptsRes.status === 'fulfilled' && Array.isArray(deptsRes.value) && deptsRes.value.length > 0) {
+        setDepartments(deptsRes.value);
+      } else {
+        setDepartments(DEFAULT_DEPARTMENTS);
       }
     } catch (err) {
       console.error(err);
@@ -182,7 +194,7 @@ export default function TicketsView({ onSelectCustomer }) {
               onChange={(e) => setDepartmentFilter(e.target.value)}
             >
               <option value="All">সকল বিভাগ</option>
-              {departments.map(d => (
+              {activeDepartments.map(d => (
                 <option key={d.id} value={d.name}>{d.name}</option>
               ))}
             </select>
@@ -382,7 +394,7 @@ export default function TicketsView({ onSelectCustomer }) {
                     type="text" 
                     className="form-control" 
                     required 
-                    placeholder="যেমন: পাঞ্জাবির সাইজ পরিবর্তন সংক্রান্ত আবেদন"
+                    placeholder="যেমন: খাতার পাতা ছেঁড়া বা ভুল আইটেম পরিবর্তন সংক্রান্ত"
                     value={newTicket.subject}
                     onChange={(e) => setNewTicket({ ...newTicket, subject: e.target.value })}
                   />
@@ -396,7 +408,7 @@ export default function TicketsView({ onSelectCustomer }) {
                       value={newTicket.department}
                       onChange={(e) => setNewTicket({ ...newTicket, department: e.target.value })}
                     >
-                      {departments.map(d => (
+                      {activeDepartments.map(d => (
                         <option key={d.id} value={d.name}>{d.name}</option>
                       ))}
                     </select>

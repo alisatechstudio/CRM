@@ -14,78 +14,15 @@ import {
   Calendar
 } from 'lucide-react';
 import { api } from '../api';
-
-// Predefined stationery categories organized by department ID and Name
-const DEPARTMENT_CATEGORIES_BY_ID = {
-  dept_paper: [
-    'ফটোকপি পেপার',
-    'লেকচার খাতা',
-    'স্পাইরাল খাতা',
-    'ডায়েরি',
-    'ড্রয়িং খাতা',
-    'স্টিকি নোট',
-    'নোটবুক ও প্যাড',
-    'রঙিন ও ক্রাফট পেপার',
-    'গ্রাফ পেপার',
-    'অন্যান্য কাগজ সামগ্রী'
-  ],
-  dept_pens: [
-    'বলপেন',
-    'জেল পেন',
-    'প্রিমিয়াম পেন',
-    'মার্কার',
-    'হাইলাইটার',
-    'পেন্সিল',
-    'সাইন পেন',
-    'ফাউন্টেন পেন ও কালি',
-    'অন্যান্য কলম সামগ্রী'
-  ],
-  dept_art: [
-    'জলরং',
-    'এক্রিলিক পেইন্ট',
-    'ড্রয়িং তুলি',
-    'আঠা ও গ্লু',
-    'মডেলিং ক্লে',
-    'ক্যানভাস বোর্ড',
-    'পোস্টার কালার',
-    'কালার পেন্সিল ও প্যাস্টেল',
-    'অন্যান্য আর্ট সামগ্রী'
-  ],
-  dept_office: [
-    'ফাইল ফোল্ডার',
-    'স্ট্যাপলার ও পিন',
-    'পাঞ্চ মেশিন',
-    'ক্লিপবোর্ড',
-    'অফিস ক্যালকুলেটর',
-    'কাঁচি ও পেপার কাটার',
-    'টেপ ও ডিসপেনসার',
-    'ডেস্ক অর্গানাইজার',
-    'পিন ও ক্লিপ',
-    'অন্যান্য অফিস সামগ্রী'
-  ],
-  dept_tools: [
-    'সায়েন্টিফিক ক্যালকুলেটর',
-    'জ্যামিতি বক্স',
-    'স্কুল ব্যাকপ্যাক',
-    'স্কেল ও রুলার',
-    'মেকানিক্যাল পেন ও লিড',
-    'পেন্সিল বক্স ও পাউচ',
-    'শার্পনার ও ইরেজার',
-    'অন্যান্য যন্ত্রপাতি ও ব্যাগ'
-  ]
-};
-
-const DEPARTMENT_CATEGORIES_BY_NAME = {
-  'খাতা, ডায়েরি ও কাগজ সামগ্রী': DEPARTMENT_CATEGORIES_BY_ID.dept_paper,
-  'কলম, পেন্সিল ও মার্কার': DEPARTMENT_CATEGORIES_BY_ID.dept_pens,
-  'আর্ট, ক্রাফট ও ড্রয়িং': DEPARTMENT_CATEGORIES_BY_ID.dept_art,
-  'অফিস সাপ্লাই ও ফাইল ফোল্ডার': DEPARTMENT_CATEGORIES_BY_ID.dept_office,
-  'ক্যালকুলেটর, জ্যামিতি ও ব্যাগ': DEPARTMENT_CATEGORIES_BY_ID.dept_tools
-};
+import { 
+  DEFAULT_DEPARTMENTS, 
+  DEPARTMENT_CATEGORIES_BY_ID, 
+  DEPARTMENT_CATEGORIES_BY_NAME 
+} from '../constants/departments';
 
 export default function InventoryView() {
   const [products, setProducts] = useState([]);
-  const [departments, setDepartments] = useState([]);
+  const [departments, setDepartments] = useState(DEFAULT_DEPARTMENTS);
   const [loading, setLoading] = useState(true);
   const [selectedDept, setSelectedDept] = useState('all');
   const [search, setSearch] = useState('');
@@ -93,6 +30,9 @@ export default function InventoryView() {
   const [expiryFilter, setExpiryFilter] = useState('all');
   const [expiryFrom, setExpiryFrom] = useState('');
   const [expiryTo, setExpiryTo] = useState('');
+
+  // Fallback guaranteed active departments list
+  const activeDepartments = (departments && departments.length > 0) ? departments : DEFAULT_DEPARTMENTS;
 
   // Custom Category toggle & text states
   const [isCustomAddCategory, setIsCustomAddCategory] = useState(false);
@@ -102,7 +42,7 @@ export default function InventoryView() {
 
   // Helper to dynamically get categories for any department
   const getCategoriesForDept = (deptId, extraCategory = '') => {
-    const deptObj = departments.find(d => d.id === deptId);
+    const deptObj = activeDepartments.find(d => d.id === deptId);
     const byId = DEPARTMENT_CATEGORIES_BY_ID[deptId] || [];
     const byName = deptObj ? (DEPARTMENT_CATEGORIES_BY_NAME[deptObj.name] || []) : [];
     
@@ -171,7 +111,7 @@ export default function InventoryView() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [prods, depts] = await Promise.all([
+      const [prodsRes, deptsRes] = await Promise.allSettled([
         api.getProducts({ 
           department_id: selectedDept, 
           search, 
@@ -182,20 +122,20 @@ export default function InventoryView() {
         }),
         api.getDepartments()
       ]);
-      setProducts(prods);
-      setDepartments(depts);
-      if (depts.length > 0 && !newProd.department_id) {
-        const firstDept = depts[0].id;
-        const initialCats = DEPARTMENT_CATEGORIES_BY_ID[firstDept] || ['সাধারণ স্টেশনারি'];
-        setNewProd(prev => ({
-          ...prev,
-          department_id: firstDept,
-          category: prev.category || initialCats[0]
-        }));
+
+      if (prodsRes.status === 'fulfilled' && Array.isArray(prodsRes.value)) {
+        setProducts(prodsRes.value);
+      } else if (prodsRes.status === 'rejected') {
+        console.error('Products load error:', prodsRes.reason);
+      }
+
+      if (deptsRes.status === 'fulfilled' && Array.isArray(deptsRes.value) && deptsRes.value.length > 0) {
+        setDepartments(deptsRes.value);
+      } else {
+        setDepartments(DEFAULT_DEPARTMENTS);
       }
     } catch (err) {
-      console.error(err);
-      alert('ডাটা লোড ত্রুটি: ' + err.message);
+      console.error('Error in loadData:', err);
     } finally {
       setLoading(false);
     }
@@ -219,7 +159,7 @@ export default function InventoryView() {
   const handleOpenAddModal = () => {
     const defaultDept = (selectedDept !== 'all' && selectedDept) 
       ? selectedDept 
-      : (departments[0]?.id || 'dept_paper');
+      : (activeDepartments[0]?.id || 'dept_paper');
     const deptCats = getCategoriesForDept(defaultDept);
     const initialCategory = deptCats[0] || 'সাধারণ স্টেশনারি';
 
@@ -452,7 +392,7 @@ export default function InventoryView() {
               onChange={(e) => setSelectedDept(e.target.value)}
             >
               <option value="all">সকল বিভাগ</option>
-              {departments.map(d => (
+              {activeDepartments.map(d => (
                 <option key={d.id} value={d.id}>{d.name}</option>
               ))}
             </select>
@@ -775,10 +715,10 @@ export default function InventoryView() {
                     <select 
                       className="form-control"
                       required
-                      value={newProd.department_id}
+                      value={newProd.department_id || activeDepartments[0]?.id || 'dept_paper'}
                       onChange={(e) => handleNewProdDeptChange(e.target.value)}
                     >
-                      {departments.map(d => (
+                      {activeDepartments.map(d => (
                         <option key={d.id} value={d.id}>
                           {d.name} ({d.code})
                         </option>
@@ -1039,7 +979,7 @@ export default function InventoryView() {
                       value={editForm.department_id}
                       onChange={(e) => handleEditFormDeptChange(e.target.value)}
                     >
-                      {departments.map(d => (
+                      {activeDepartments.map(d => (
                         <option key={d.id} value={d.id}>
                           {d.name} ({d.code})
                         </option>

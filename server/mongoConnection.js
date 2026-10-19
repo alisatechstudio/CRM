@@ -86,6 +86,17 @@ async function seedMongoIfEmpty(force = false) {
 
       const storeCount = await Store.countDocuments();
       if (storeCount > 0) {
+        const deptCount = await Department.countDocuments();
+        if (deptCount === 0) {
+          console.log('Departments collection is empty. Seeding stationery departments...');
+          await Department.insertMany([
+            { id: 'dept_paper', name: 'খাতা, ডায়েরি ও কাগজ সামগ্রী', code: 'PAPR', icon: 'BookOpen', description: 'লেকচার খাতা, স্পাইরাল নোটবুক, এ৪ রিম পেপার ও এক্সিকিউটিভ ডায়েরি' },
+            { id: 'dept_pens', name: 'কলম, পেন্সিল ও মার্কার', code: 'PENS', icon: 'Edit3', description: 'বলপেন, জেল পেন, রোলিং বল, ড্রয়িং পেন্সিল ও হাইলাইটার' },
+            { id: 'dept_art', name: 'আর্ট, ক্রাফট ও ড্রয়িং', code: 'ARTS', icon: 'Palette', description: 'জলরং, এক্রিলিক, ক্যানভাস, তুলি, গ্লু গান ও পোস্টার পেপার' },
+            { id: 'dept_office', name: 'অফিস সাপ্লাই ও ফাইল ফোল্ডার', code: 'OFFC', icon: 'Folder', description: 'বক্স ফাইল, পাঞ্চিং মেশিন, স্ট্যাপলার, ক্লিপবোর্ড ও ডেস্ক অর্গানাইজার' },
+            { id: 'dept_tools', name: 'ক্যালকুলেটর, জ্যামিতি ও ব্যাগ', code: 'TOOL', icon: 'Briefcase', description: 'সায়েন্টিফিক ক্যালকুলেটর, জ্যামিতি বক্স, মেটাল স্কেল ও স্কুল ব্যাকপ্যাক' }
+          ]);
+        }
         console.log('MongoDB already has store data. Skipping seed.');
         return;
       }
