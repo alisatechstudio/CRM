@@ -67,8 +67,10 @@ export const api = {
 
   // Marketing Campaigns
   getCampaigns: () => request('/campaigns'),
+  getCampaignSegments: () => request('/campaigns/segments'),
   createCampaign: (data) => request('/campaigns', { method: 'POST', body: JSON.stringify(data) }),
   sendCampaign: (id) => request(`/campaigns/${id}/send`, { method: 'POST' }),
+  deleteCampaign: (id) => request(`/campaigns/${id}`, { method: 'DELETE' }),
 
   // Support Tickets
   getTickets: (params = {}) => {

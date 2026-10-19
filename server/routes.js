@@ -933,9 +933,147 @@ router.post('/coupons/validate', async (req, res) => {
 });
 
 // =================== CAMPAIGNS ===================
+const DEFAULT_CAMPAIGNS = [
+  {
+    id: 'cmp_01',
+    name: 'এইচএসসি ও ভর্তি প্রস্তুতি স্পেশাল অফার',
+    channel: 'SMS',
+    target_segment: 'সকল নিবন্ধিত সদস্য (All Members)',
+    subject: 'ভর্তি পরীক্ষা ও এইচএসসি প্রস্তুতিতে খাতা-কলমে বিশেষ ছাড়!',
+    content: 'প্রিয় {first_name}, মিজান স্টেশনারির বিশেষ প্রস্তুতি অফারে সব ধরনের খাতা ও কলমে ১০% ছাড় পেতে কুপন কোড ব্যবহার করুন: {coupon_code}।',
+    coupon_code: 'STUDENT10',
+    status: 'Sent',
+    audience_count: 10,
+    open_rate: 88.5,
+    click_rate: 34.2,
+    conversion_rate: 18.5,
+    revenue_generated: 16800.00,
+    sent_at: '2026-10-10 11:30:00'
+  },
+  {
+    id: 'cmp_02',
+    name: 'কর্পোরেট ও অফিস পেপার রিম পাইকারি ক্যাশব্যাক',
+    channel: 'Email',
+    target_segment: 'ভিআইপি সদস্য (VIP Shoppers)',
+    subject: 'বক্স ফাইল ও এ৪ রিম পেপার ক্রয়ে ৫০০ টাকা ক্যাশব্যাক অফার',
+    content: 'শ্রদ্ধেয় {first_name}, আপনার অফিসের জন্য ৫,০০০ টাকার স্টেশনারি সামগ্রী অর্ডারে পাচ্ছেন নিশ্চিত ৫০০ টাকা ক্যাশব্যাক! ভাউচার: {coupon_code}।',
+    coupon_code: 'BULK500',
+    status: 'Sent',
+    audience_count: 2,
+    open_rate: 75.0,
+    click_rate: 45.0,
+    conversion_rate: 50.0,
+    revenue_generated: 48500.00,
+    sent_at: '2026-10-14 16:15:00'
+  },
+  {
+    id: 'cmp_03',
+    name: 'আর্ট, ড্রয়িং তুলি ও কালার ক্লিয়ারেন্স সেল',
+    channel: 'SMS',
+    target_segment: 'গোল্ড ও প্ল্যাটিনাম সদস্য',
+    subject: 'চারুকলা ও ড্রয়িং শিক্ষার্থীদের জন্য বিশেষ ছাড়',
+    content: 'প্রিয় {first_name}, ক্যামলিন এক্রিলিক ও আর্টিস্ট তুলি সেটে পাচ্ছেন ১৫% আকর্ষণীয় মূল্যছাড়। আজই স্টোরে আসুন!',
+    coupon_code: 'EXAMSPECIAL',
+    status: 'Draft',
+    audience_count: 0,
+    open_rate: 0,
+    click_rate: 0,
+    conversion_rate: 0,
+    revenue_generated: 0,
+    sent_at: null
+  },
+  {
+    id: 'cmp_04',
+    name: 'নিষ্ক্রিয় গ্রাহক রিকল ও রি-এনগেজমেন্ট ব্লাস্ট',
+    channel: 'Omnichannel',
+    target_segment: 'ঝুঁকিপূর্ণ গ্রাহক (Churn Risk)',
+    subject: 'আপনাকে মিস করছি! বিশেষ ২০% উপহার ভাউচার আপনার অপেক্ষায়',
+    content: 'প্রিয় {first_name}, মিজান স্টেশনারিতে পুনরায় স্বাগতম জানাতে আপনার অ্যাকাউন্টে যোগ করা হয়েছে ২০% ছাড় ভাউচার: {coupon_code}!',
+    coupon_code: 'MIJANVIP20',
+    status: 'Draft',
+    audience_count: 0,
+    open_rate: 0,
+    click_rate: 0,
+    conversion_rate: 0,
+    revenue_generated: 0,
+    sent_at: null
+  }
+];
+
+// Dynamic Database Driven Customer Segments
+router.get('/campaigns/segments', async (req, res) => {
+  try {
+    const [vipCount, goldPlatCount, churnCount, highLtvCount, newMemCount, totalCount] = await Promise.all([
+      Customer.countDocuments({ tier: 'VIP' }),
+      Customer.countDocuments({ tier: { $in: ['Platinum', 'Gold', 'VIP'] } }),
+      Customer.countDocuments({ churn_risk: 'High' }),
+      Customer.countDocuments({ $or: [{ lifetime_points: { $gte: 3000 } }, { total_spent: { $gte: 25000 } }] }),
+      Customer.countDocuments({ tags: 'নতুন মেম্বার' }),
+      Customer.countDocuments({})
+    ]);
+
+    const segments = [
+      {
+        id: 'VIP',
+        name: 'ভিআইপি সদস্য (VIP Shoppers)',
+        desc: '৪০,০০০+ টাকা কেনাকাটা করা শীর্ষ করপোরেট ও রেগুলার ক্রেতা',
+        count: vipCount,
+        criteria: 'Tier: VIP'
+      },
+      {
+        id: 'GoldPlus',
+        name: 'গোল্ড ও প্ল্যাটিনাম সদস্য',
+        desc: 'নিয়মিত খাতা-কলম ও অফিস সরঞ্জাম রিকুইজিশন ক্রেতাবৃন্দ',
+        count: goldPlatCount,
+        criteria: 'Tier: Gold, Platinum, VIP'
+      },
+      {
+        id: 'ChurnRisk',
+        name: 'ঝুঁকিপূর্ণ গ্রাহক (Churn Risk)',
+        desc: '৬০ দিনের বেশি সময় স্টোরে আসেননি এমন নিষ্ক্রিয় গ্রাহকদল',
+        count: churnCount,
+        criteria: 'Churn Risk: High'
+      },
+      {
+        id: 'HighLTV',
+        name: 'উচ্চ এলটিভি গ্রাহক (High LTV)',
+        desc: '৩,০০০+ লয়্যালটি পয়েন্ট অর্জিত বিশ্বস্ত দীর্ঘমেয়াদী গ্রাহক',
+        count: highLtvCount,
+        criteria: 'Lifetime Points >= 3000'
+      },
+      {
+        id: 'NewMembers',
+        name: 'নতুন নিবন্ধিত মেম্বার (New)',
+        desc: 'সাম্প্রতিক সময়ে নিবন্ধিত নতুন স্টেশনারি ক্রেতাবৃন্দ',
+        count: newMemCount,
+        criteria: 'Tag: নতুন মেম্বার'
+      },
+      {
+        id: 'All',
+        name: 'সকল নিবন্ধিত সদস্য (All Members)',
+        desc: 'মিজান স্টেশনারির সর্বমোট সক্রিয় লয়্যালটি মেম্বার তালিকা',
+        count: totalCount,
+        criteria: 'All Registered Customers'
+      }
+    ];
+
+    res.json(segments);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.get('/campaigns', async (req, res) => {
   try {
-    const campaigns = await Campaign.find().sort({ sent_at: -1, id: -1 }).lean();
+    let campaigns = await Campaign.find().sort({ sent_at: -1, createdAt: -1, id: -1 }).lean();
+    if (!campaigns || campaigns.length === 0) {
+      try {
+        await Campaign.insertMany(DEFAULT_CAMPAIGNS);
+        campaigns = await Campaign.find().sort({ sent_at: -1, createdAt: -1, id: -1 }).lean();
+      } catch (insertErr) {
+        campaigns = DEFAULT_CAMPAIGNS;
+      }
+    }
     res.json(campaigns);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -946,18 +1084,18 @@ router.post('/campaigns', async (req, res) => {
   try {
     const { name, channel, target_segment, subject, content, coupon_code } = req.body;
     if (!name || !channel || !target_segment || !subject || !content) {
-      return res.status(400).json({ error: 'Name, channel, target segment, subject, and content are required' });
+      return res.status(400).json({ error: 'ক্যাম্পেইনের নাম, মাধ্যম, টার্গেট সেগমেন্ট, বিষয় ও মূল বার্তা প্রদান আবশ্যক' });
     }
 
     const id = 'cmp_' + Date.now();
     const created = await Campaign.create({
       id,
-      name,
-      channel,
-      target_segment,
-      subject,
-      content,
-      coupon_code: coupon_code ? coupon_code.toUpperCase() : null,
+      name: name.trim(),
+      channel: channel || 'SMS',
+      target_segment: target_segment.trim(),
+      subject: subject.trim(),
+      content: content.trim(),
+      coupon_code: coupon_code ? coupon_code.trim().toUpperCase() : null,
       status: 'Draft',
       audience_count: 0
     });
@@ -971,19 +1109,37 @@ router.post('/campaigns', async (req, res) => {
 router.post('/campaigns/:id/send', async (req, res) => {
   try {
     const campaign = await Campaign.findOne({ id: req.params.id });
-    if (!campaign) return res.status(404).json({ error: 'Campaign not found' });
+    if (!campaign) return res.status(404).json({ error: 'ক্যাম্পেইন পাওয়া যায়নি' });
 
     let filter = {};
-    if (campaign.target_segment === 'VIP Only') filter = { tier: 'VIP' };
-    else if (campaign.target_segment === 'Gold+') filter = { tier: { $in: ['Gold', 'Platinum', 'VIP'] } };
-    else if (campaign.target_segment === 'Churn Risk') filter = { churn_risk: 'High' };
+    const seg = campaign.target_segment;
+    if (seg.includes('VIP') || seg === 'VIP') {
+      filter = { tier: 'VIP' };
+    } else if (seg.includes('গোল্ড') || seg.includes('প্ল্যাটিনাম') || seg === 'GoldPlus') {
+      filter = { tier: { $in: ['Platinum', 'Gold', 'VIP'] } };
+    } else if (seg.includes('ঝুঁকিপূর্ণ') || seg.includes('Churn') || seg === 'ChurnRisk') {
+      filter = { churn_risk: 'High' };
+    } else if (seg.includes('এলটিভি') || seg.includes('LTV') || seg === 'HighLTV') {
+      filter = { $or: [{ lifetime_points: { $gte: 3000 } }, { total_spent: { $gte: 25000 } }] };
+    } else if (seg.includes('নতুন') || seg.includes('New') || seg === 'NewMembers') {
+      filter = { tags: 'নতুন মেম্বার' };
+    } else {
+      filter = {};
+    }
 
-    const count = await Customer.countDocuments(filter);
-    const audienceCount = Math.max(count, 12);
-    const openRate = Number((55 + Math.random() * 30).toFixed(1));
-    const clickRate = Number((20 + Math.random() * 25).toFixed(1));
-    const conversionRate = Number((8 + Math.random() * 14).toFixed(1));
-    const revenue = Number((audienceCount * (conversionRate / 100) * 1250).toFixed(2));
+    const targetCustomers = await Customer.find(filter).lean();
+    const audienceCount = targetCustomers.length;
+
+    // Real database driven basket value
+    const avgBasket = targetCustomers.length > 0
+      ? targetCustomers.reduce((acc, c) => acc + (c.total_spent / Math.max(1, c.visit_count)), 0) / targetCustomers.length
+      : 850;
+
+    const openRate = Number((65 + Math.random() * 25).toFixed(1));
+    const clickRate = Number((25 + Math.random() * 20).toFixed(1));
+    const conversionRate = Number((12 + Math.random() * 15).toFixed(1));
+    const convertingCustomers = Math.max(1, Math.round(audienceCount * (conversionRate / 100)));
+    const revenue = Number((convertingCustomers * avgBasket).toFixed(2));
     const sentAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
     campaign.status = 'Sent';
@@ -996,6 +1152,16 @@ router.post('/campaigns/:id/send', async (req, res) => {
     await campaign.save();
 
     res.json(campaign);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/campaigns/:id', async (req, res) => {
+  try {
+    const deleted = await Campaign.findOneAndDelete({ id: req.params.id });
+    if (!deleted) return res.status(404).json({ error: 'ক্যাম্পেইন পাওয়া যায়নি' });
+    res.json({ success: true, message: 'ক্যাম্পেইন সফলভাবে মুছে ফেলা হয়েছে।' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
