@@ -272,12 +272,12 @@ export default function LoyaltyView() {
         <div className="modal-overlay" onClick={() => setShowAddCoupon(false)}>
           <div className="modal-card" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h2 style={{ fontSize: '1.2rem', margin: 0 }}>নতুন প্রোমো ভাউচার তৈরি করুন</h2>
-              <button className="btn btn-secondary btn-icon" onClick={() => setShowAddCoupon(false)}>✕</button>
+              <h2 style={{ fontSize: '1.15rem', margin: 0, wordBreak: 'break-word', flex: 1, minWidth: 0 }}>নতুন প্রোমো ভাউচার তৈরি করুন</h2>
+              <button className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }} onClick={() => setShowAddCoupon(false)}>✕</button>
             </div>
 
-            <form onSubmit={handleCreateCoupon}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleCreateCoupon} className="modal-form" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <label className="input-label">ভাউচার কোড *</label>

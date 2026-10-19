@@ -944,7 +944,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         <div className="modal-overlay" onClick={() => !isSubmittingExpense && setShowAddExpenseModal(false)}>
           <div className="modal-card" style={{ maxWidth: '520px' }} onClick={e => e.stopPropagation()}>
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem', flex: 1, minWidth: 0 }}>
                 <div style={{ 
                   width: '36px', 
                   height: '36px', 
@@ -953,27 +953,28 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                   color: '#f43f5e',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'center'
+                  justifyContent: 'center',
+                  flexShrink: 0
                 }}>
                   <Receipt size={18} />
                 </div>
-                <div>
-                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800 }}>নতুন দোকান খরচ যুক্ত করুন</h3>
-                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস পরিচালন ব্যয় এন্ট্রি</div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, wordBreak: 'break-word' }}>নতুন দোকান খরচ যুক্ত করুন</h3>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', wordBreak: 'break-word' }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস পরিচালন ব্যয় এন্ট্রি</div>
                 </div>
               </div>
               <button 
                 type="button"
                 className="btn-icon" 
-                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', flexShrink: 0 }}
                 onClick={() => !isSubmittingExpense && setShowAddExpenseModal(false)}
               >
                 <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveExpense}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleSaveExpense} className="modal-form" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 {expenseError && (
                   <div style={{ 
                     padding: '0.65rem 0.9rem', 

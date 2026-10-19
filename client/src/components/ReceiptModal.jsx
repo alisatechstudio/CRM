@@ -39,15 +39,16 @@ export default function ReceiptModal({ orderId, onClose }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="modal-header">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)', fontWeight: 700 }}>
-            <CheckCircle size={18} /> অর্ডার সফলভাবে সম্পন্ন
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--success)', fontWeight: 700, flex: 1, minWidth: 0 }}>
+            <CheckCircle size={18} style={{ flexShrink: 0 }} /> 
+            <span style={{ wordBreak: 'break-word', minWidth: 0 }}>অর্ডার সফলভাবে সম্পন্ন</span>
           </div>
-          <button className="btn btn-secondary btn-icon" onClick={onClose}>
+          <button className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }} onClick={onClose}>
             <X size={16} />
           </button>
         </div>
 
-        <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+        <div className="modal-body" style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {/* Printable Thermal Receipt Box */}
           <div className="thermal-receipt" id="printable-receipt">
             <div className="thermal-receipt-center">

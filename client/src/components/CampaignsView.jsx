@@ -410,17 +410,17 @@ export default function CampaignsView() {
         <div className="modal-overlay" onClick={() => setShowCreate(false)}>
           <div className="modal-card" style={{ maxWidth: '600px' }} onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <Target size={18} style={{ color: 'var(--primary)' }} />
-                <h2 style={{ fontSize: '1.2rem', margin: 0 }}>নতুন মার্কেটিং ক্যাম্পেইন তৈরি (Database Driven)</h2>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: 0 }}>
+                <Target size={18} style={{ color: 'var(--primary)', flexShrink: 0 }} />
+                <h2 style={{ fontSize: '1.15rem', margin: 0, wordBreak: 'break-word', minWidth: 0 }}>নতুন মার্কেটিং ক্যাম্পেইন তৈরি (Database Driven)</h2>
               </div>
-              <button className="btn btn-secondary btn-icon" onClick={() => setShowCreate(false)}>
+              <button className="btn btn-secondary btn-icon" style={{ flexShrink: 0 }} onClick={() => setShowCreate(false)}>
                 <X size={16} />
               </button>
             </div>
 
-            <form onSubmit={handleCreate}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleCreate} className="modal-form" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 <div className="input-group">
                   <label className="input-label">ক্যাম্পেইনের নাম *</label>
                   <input 

@@ -313,8 +313,8 @@ export default function TicketsView({ onSelectCustomer }) {
               <button className="btn btn-secondary btn-icon" onClick={() => setResolveTicket(null)}>✕</button>
             </div>
 
-            <form onSubmit={handleResolve}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleResolve} className="modal-form" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 <div>
                   <div style={{ fontWeight: 700, fontSize: '0.9rem' }}>{resolveTicket.ticket_number} - {resolveTicket.subject}</div>
                   <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>গ্রাহক: {resolveTicket.first_name} {resolveTicket.last_name}</div>
@@ -371,8 +371,8 @@ export default function TicketsView({ onSelectCustomer }) {
               <button className="btn btn-secondary btn-icon" onClick={() => setShowCreate(false)}>✕</button>
             </div>
 
-            <form onSubmit={handleCreate}>
-              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+            <form onSubmit={handleCreate} className="modal-form" style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0, overflow: 'hidden' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
                 <div className="input-group">
                   <label className="input-label">গ্রাহক নির্বাচন করুন *</label>
                   <select 

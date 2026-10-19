@@ -114,7 +114,7 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
         </div>
 
         {/* Modal Body */}
-        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+        <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', flex: 1, minHeight: 0, overflowY: 'auto' }}>
           {/* RFM Intelligence Ribbon */}
           <div className="rfm-modal-grid">
             <div>
