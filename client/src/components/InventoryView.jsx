@@ -4,13 +4,9 @@ import {
   Search, 
   Plus, 
   AlertTriangle, 
-  TrendingUp, 
-  Barcode, 
-  CheckCircle2, 
   Edit2,
   Trash2,
   Sliders,
-  RefreshCw,
   X,
   ArrowUpRight,
   ArrowDownRight,
@@ -18,6 +14,74 @@ import {
   Calendar
 } from 'lucide-react';
 import { api } from '../api';
+
+// Predefined stationery categories organized by department ID and Name
+const DEPARTMENT_CATEGORIES_BY_ID = {
+  dept_paper: [
+    'ফটোকপি পেপার',
+    'লেকচার খাতা',
+    'স্পাইরাল খাতা',
+    'ডায়েরি',
+    'ড্রয়িং খাতা',
+    'স্টিকি নোট',
+    'নোটবুক ও প্যাড',
+    'রঙিন ও ক্রাফট পেপার',
+    'গ্রাফ পেপার',
+    'অন্যান্য কাগজ সামগ্রী'
+  ],
+  dept_pens: [
+    'বলপেন',
+    'জেল পেন',
+    'প্রিমিয়াম পেন',
+    'মার্কার',
+    'হাইলাইটার',
+    'পেন্সিল',
+    'সাইন পেন',
+    'ফাউন্টেন পেন ও কালি',
+    'অন্যান্য কলম সামগ্রী'
+  ],
+  dept_art: [
+    'জলরং',
+    'এক্রিলিক পেইন্ট',
+    'ড্রয়িং তুলি',
+    'আঠা ও গ্লু',
+    'মডেলিং ক্লে',
+    'ক্যানভাস বোর্ড',
+    'পোস্টার কালার',
+    'কালার পেন্সিল ও প্যাস্টেল',
+    'অন্যান্য আর্ট সামগ্রী'
+  ],
+  dept_office: [
+    'ফাইল ফোল্ডার',
+    'স্ট্যাপলার ও পিন',
+    'পাঞ্চ মেশিন',
+    'ক্লিপবোর্ড',
+    'অফিস ক্যালকুলেটর',
+    'কাঁচি ও পেপার কাটার',
+    'টেপ ও ডিসপেনসার',
+    'ডেস্ক অর্গানাইজার',
+    'পিন ও ক্লিপ',
+    'অন্যান্য অফিস সামগ্রী'
+  ],
+  dept_tools: [
+    'সায়েন্টিফিক ক্যালকুলেটর',
+    'জ্যামিতি বক্স',
+    'স্কুল ব্যাকপ্যাক',
+    'স্কেল ও রুলার',
+    'মেকানিক্যাল পেন ও লিড',
+    'পেন্সিল বক্স ও পাউচ',
+    'শার্পনার ও ইরেজার',
+    'অন্যান্য যন্ত্রপাতি ও ব্যাগ'
+  ]
+};
+
+const DEPARTMENT_CATEGORIES_BY_NAME = {
+  'খাতা, ডায়েরি ও কাগজ সামগ্রী': DEPARTMENT_CATEGORIES_BY_ID.dept_paper,
+  'কলম, পেন্সিল ও মার্কার': DEPARTMENT_CATEGORIES_BY_ID.dept_pens,
+  'আর্ট, ক্রাফট ও ড্রয়িং': DEPARTMENT_CATEGORIES_BY_ID.dept_art,
+  'অফিস সাপ্লাই ও ফাইল ফোল্ডার': DEPARTMENT_CATEGORIES_BY_ID.dept_office,
+  'ক্যালকুলেটর, জ্যামিতি ও ব্যাগ': DEPARTMENT_CATEGORIES_BY_ID.dept_tools
+};
 
 export default function InventoryView() {
   const [products, setProducts] = useState([]);
@@ -30,13 +94,41 @@ export default function InventoryView() {
   const [expiryFrom, setExpiryFrom] = useState('');
   const [expiryTo, setExpiryTo] = useState('');
 
+  // Custom Category toggle & text states
+  const [isCustomAddCategory, setIsCustomAddCategory] = useState(false);
+  const [_customAddCategory, setCustomAddCategory] = useState('');
+  const [isCustomEditCategory, setIsCustomEditCategory] = useState(false);
+  const [_customEditCategory, setCustomEditCategory] = useState('');
+
+  // Helper to dynamically get categories for any department
+  const getCategoriesForDept = (deptId, extraCategory = '') => {
+    const deptObj = departments.find(d => d.id === deptId);
+    const byId = DEPARTMENT_CATEGORIES_BY_ID[deptId] || [];
+    const byName = deptObj ? (DEPARTMENT_CATEGORIES_BY_NAME[deptObj.name] || []) : [];
+    
+    // Also extract existing categories from products that belong to this department
+    const fromProducts = products
+      .filter(p => p.department_id === deptId && p.category)
+      .map(p => p.category.trim());
+
+    const all = [
+      ...byId,
+      ...byName,
+      ...fromProducts,
+      ...(extraCategory ? [extraCategory.trim()] : [])
+    ];
+
+    const unique = Array.from(new Set(all.filter(Boolean)));
+    return unique.length > 0 ? unique : ['সাধারণ স্টেশনারি', 'অন্যান্য'];
+  };
+
   // Modal states
   const [showAddModal, setShowAddModal] = useState(false);
   const [newProd, setNewProd] = useState({
     name: '',
     barcode: '',
     department_id: '',
-    category: 'অফিস ও স্কুল স্টেশনারি',
+    category: '',
     price: '',
     cost: '',
     stock_qty: 50,
@@ -75,12 +167,10 @@ export default function InventoryView() {
   const [deletingProduct, setDeletingProduct] = useState(null);
 
   const [saving, setSaving] = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
 
   const loadData = async () => {
     try {
       setLoading(true);
-      setErrorMsg('');
       const [prods, depts] = await Promise.all([
         api.getProducts({ 
           department_id: selectedDept, 
@@ -95,11 +185,17 @@ export default function InventoryView() {
       setProducts(prods);
       setDepartments(depts);
       if (depts.length > 0 && !newProd.department_id) {
-        setNewProd(prev => ({ ...prev, department_id: depts[0].id }));
+        const firstDept = depts[0].id;
+        const initialCats = DEPARTMENT_CATEGORIES_BY_ID[firstDept] || ['সাধারণ স্টেশনারি'];
+        setNewProd(prev => ({
+          ...prev,
+          department_id: firstDept,
+          category: prev.category || initialCats[0]
+        }));
       }
     } catch (err) {
       console.error(err);
-      setErrorMsg(err.message);
+      alert('ডাটা লোড ত্রুটি: ' + err.message);
     } finally {
       setLoading(false);
     }
@@ -119,26 +215,60 @@ export default function InventoryView() {
     }
   };
 
+  // Open New Product Modal with properly selected Department & Category
+  const handleOpenAddModal = () => {
+    const defaultDept = (selectedDept !== 'all' && selectedDept) 
+      ? selectedDept 
+      : (departments[0]?.id || 'dept_paper');
+    const deptCats = getCategoriesForDept(defaultDept);
+    const initialCategory = deptCats[0] || 'সাধারণ স্টেশনারি';
+
+    setNewProd({
+      name: '',
+      barcode: '890' + Math.floor(100000 + Math.random() * 900000),
+      department_id: defaultDept,
+      category: initialCategory,
+      price: '',
+      cost: '',
+      stock_qty: 50,
+      min_threshold: 15,
+      unit: 'পিস',
+      has_expiry: false,
+      expiry_date: ''
+    });
+    setIsCustomAddCategory(false);
+    setCustomAddCategory('');
+    setShowAddModal(true);
+  };
+
+  // When Department changes in Add Modal
+  const handleNewProdDeptChange = (deptId) => {
+    const deptCats = getCategoriesForDept(deptId);
+    const firstCat = deptCats[0] || 'সাধারণ স্টেশনারি';
+    setNewProd(prev => ({
+      ...prev,
+      department_id: deptId,
+      category: firstCat
+    }));
+    setIsCustomAddCategory(false);
+    setCustomAddCategory('');
+  };
+
   // CREATE: New Product
   const handleCreateProduct = async (e) => {
     e.preventDefault();
+    if (!newProd.department_id) {
+      alert('অনুগ্রহ করে একটি বিভাগ নির্বাচন করুন');
+      return;
+    }
+    const finalCategory = (newProd.category && newProd.category.trim()) || 'সাধারণ স্টেশনারি';
     try {
       setSaving(true);
-      await api.createProduct(newProd);
-      setShowAddModal(false);
-      setNewProd({
-        name: '',
-        barcode: '',
-        department_id: departments[0]?.id || '',
-        category: 'অফিস ও স্কুল স্টেশনারি',
-        price: '',
-        cost: '',
-        stock_qty: 50,
-        min_threshold: 15,
-        unit: 'পিস',
-        has_expiry: false,
-        expiry_date: ''
+      await api.createProduct({
+        ...newProd,
+        category: finalCategory
       });
+      setShowAddModal(false);
       loadData();
     } catch (err) {
       alert('পণ্য যুক্ত করতে ব্যর্থ: ' + err.message);
@@ -147,14 +277,17 @@ export default function InventoryView() {
     }
   };
 
-  // Open Edit Modal
+  // Open Edit Modal with properly selected Department & Category
   const openEditModal = (product) => {
     setEditingProduct(product);
+    const deptCats = getCategoriesForDept(product.department_id, product.category);
+    const isCustom = Boolean(product.category && !deptCats.includes(product.category));
+
     setEditForm({
       name: product.name,
       barcode: product.barcode,
       department_id: product.department_id,
-      category: product.category,
+      category: product.category || deptCats[0] || 'সাধারণ স্টেশনারি',
       price: product.price,
       cost: product.cost,
       stock_qty: product.stock_qty,
@@ -163,16 +296,38 @@ export default function InventoryView() {
       has_expiry: Boolean(product.has_expiry),
       expiry_date: product.expiry_date || ''
     });
+    setIsCustomEditCategory(isCustom);
+    setCustomEditCategory(isCustom ? product.category : '');
     setShowEditModal(true);
+  };
+
+  // When Department changes in Edit Modal
+  const handleEditFormDeptChange = (deptId) => {
+    const deptCats = getCategoriesForDept(deptId);
+    setEditForm(prev => ({
+      ...prev,
+      department_id: deptId,
+      category: deptCats[0] || 'সাধারণ স্টেশনারি'
+    }));
+    setIsCustomEditCategory(false);
+    setCustomEditCategory('');
   };
 
   // UPDATE: Existing Product
   const handleUpdateProduct = async (e) => {
     e.preventDefault();
     if (!editingProduct) return;
+    if (!editForm.department_id) {
+      alert('অনুগ্রহ করে একটি বিভাগ নির্বাচন করুন');
+      return;
+    }
+    const finalCategory = (editForm.category && editForm.category.trim()) || 'সাধারণ স্টেশনারি';
     try {
       setSaving(true);
-      await api.updateProduct(editingProduct.id, editForm);
+      await api.updateProduct(editingProduct.id, {
+        ...editForm,
+        category: finalCategory
+      });
       setShowEditModal(false);
       setEditingProduct(null);
       loadData();
@@ -267,7 +422,7 @@ export default function InventoryView() {
             </p>
           </div>
 
-          <button className="btn btn-primary" onClick={() => setShowAddModal(true)}>
+          <button className="btn btn-primary" onClick={handleOpenAddModal}>
             <Plus size={16} /> নতুন স্টেশনারি পণ্য যুক্ত করুন
           </button>
         </div>
@@ -613,6 +768,92 @@ export default function InventoryView() {
                   />
                 </div>
 
+                {/* Department & Category Side by Side */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr', gap: '1rem' }}>
+                  <div className="input-group">
+                    <label className="input-label">বিভাগ (Department) *</label>
+                    <select 
+                      className="form-control"
+                      required
+                      value={newProd.department_id}
+                      onChange={(e) => handleNewProdDeptChange(e.target.value)}
+                    >
+                      {departments.map(d => (
+                        <option key={d.id} value={d.id}>
+                          {d.name} ({d.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="input-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label className="input-label">ক্যাটাগরি (Category) *</label>
+                      {!isCustomAddCategory ? (
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setIsCustomAddCategory(true);
+                            setCustomAddCategory('');
+                            setNewProd(prev => ({ ...prev, category: '' }));
+                          }}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                        >
+                          + কাস্টম ক্যাটাগরি
+                        </button>
+                      ) : (
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setIsCustomAddCategory(false);
+                            const cats = getCategoriesForDept(newProd.department_id);
+                            setNewProd(prev => ({ ...prev, category: cats[0] || 'সাধারণ স্টেশনারি' }));
+                          }}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                        >
+                          তালিকা থেকে
+                        </button>
+                      )}
+                    </div>
+
+                    {!isCustomAddCategory ? (
+                      <select 
+                        className="form-control"
+                        required
+                        value={newProd.category}
+                        onChange={(e) => {
+                          if (e.target.value === '__custom__') {
+                            setIsCustomAddCategory(true);
+                            setCustomAddCategory('');
+                            setNewProd(prev => ({ ...prev, category: '' }));
+                          } else {
+                            setNewProd(prev => ({ ...prev, category: e.target.value }));
+                          }
+                        }}
+                      >
+                        {getCategoriesForDept(newProd.department_id).map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                        <option value="__custom__">➕ নতুন কাস্টম ক্যাটাগরি লিখুন...</option>
+                      </select>
+                    ) : (
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        required
+                        placeholder="ক্যাটাগরির নাম লিখুন (যেমন: ড্রয়িং শিট)"
+                        value={newProd.category}
+                        onChange={(e) => {
+                          setCustomAddCategory(e.target.value);
+                          setNewProd(prev => ({ ...prev, category: e.target.value }));
+                        }}
+                        autoFocus
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Barcode & Unit */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -636,20 +877,25 @@ export default function InventoryView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">বিভাগ *</label>
+                    <label className="input-label">একক (Unit) *</label>
                     <select 
                       className="form-control"
-                      value={newProd.department_id}
-                      onChange={(e) => setNewProd({ ...newProd, department_id: e.target.value })}
+                      value={newProd.unit}
+                      onChange={(e) => setNewProd({ ...newProd, unit: e.target.value })}
                     >
-                      {departments.map(d => (
-                        <option key={d.id} value={d.id}>{d.name}</option>
-                      ))}
+                      <option value="পিস">পিস (pcs)</option>
+                      <option value="প্যাকেট">প্যাকেট (pack)</option>
+                      <option value="রিম">রিম (ream)</option>
+                      <option value="বক্স">বক্স (box)</option>
+                      <option value="ডজন">ডজন (dozen)</option>
+                      <option value="সেট">সেট (set)</option>
+                      <option value="রোল">রোল (roll)</option>
                     </select>
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                {/* Price, Cost, Stock, Min Threshold */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.75rem' }}>
                   <div className="input-group">
                     <label className="input-label">বিক্রয় মূল্য (৳) *</label>
                     <input 
@@ -684,36 +930,6 @@ export default function InventoryView() {
                       value={newProd.stock_qty}
                       onChange={(e) => setNewProd({ ...newProd, stock_qty: e.target.value })}
                     />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '1rem' }}>
-                  <div className="input-group">
-                    <label className="input-label">ক্যাটাগরি</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      placeholder="যেমন: ফাইল ও ফোল্ডার"
-                      value={newProd.category}
-                      onChange={(e) => setNewProd({ ...newProd, category: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="input-group">
-                    <label className="input-label">একক (Unit)</label>
-                    <select 
-                      className="form-control"
-                      value={newProd.unit}
-                      onChange={(e) => setNewProd({ ...newProd, unit: e.target.value })}
-                    >
-                      <option value="পিস">পিস (pcs)</option>
-                      <option value="প্যাকেট">প্যাকেট (pack)</option>
-                      <option value="রিম">রিম (ream)</option>
-                      <option value="বক্স">বক্স (box)</option>
-                      <option value="ডজন">ডজন (dozen)</option>
-                      <option value="সেট">সেট (set)</option>
-                      <option value="রোল">রোল (roll)</option>
-                    </select>
                   </div>
 
                   <div className="input-group">
@@ -813,7 +1029,93 @@ export default function InventoryView() {
                   />
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1.2fr', gap: '1rem' }}>
+                {/* Department & Category Side by Side */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1.1fr 1.1fr', gap: '1rem' }}>
+                  <div className="input-group">
+                    <label className="input-label">বিভাগ (Department) *</label>
+                    <select 
+                      className="form-control"
+                      required
+                      value={editForm.department_id}
+                      onChange={(e) => handleEditFormDeptChange(e.target.value)}
+                    >
+                      {departments.map(d => (
+                        <option key={d.id} value={d.id}>
+                          {d.name} ({d.code})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="input-group">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <label className="input-label">ক্যাটাগরি (Category) *</label>
+                      {!isCustomEditCategory ? (
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setIsCustomEditCategory(true);
+                            setCustomEditCategory('');
+                            setEditForm(prev => ({ ...prev, category: '' }));
+                          }}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                        >
+                          + কাস্টম ক্যাটাগরি
+                        </button>
+                      ) : (
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            setIsCustomEditCategory(false);
+                            const cats = getCategoriesForDept(editForm.department_id, editingProduct?.category);
+                            setEditForm(prev => ({ ...prev, category: cats[0] || 'সাধারণ স্টেশনারি' }));
+                          }}
+                          style={{ background: 'transparent', border: 'none', color: 'var(--primary)', fontSize: '0.72rem', cursor: 'pointer', padding: 0 }}
+                        >
+                          তালিকা থেকে
+                        </button>
+                      )}
+                    </div>
+
+                    {!isCustomEditCategory ? (
+                      <select 
+                        className="form-control"
+                        required
+                        value={editForm.category}
+                        onChange={(e) => {
+                          if (e.target.value === '__custom__') {
+                            setIsCustomEditCategory(true);
+                            setCustomEditCategory('');
+                            setEditForm(prev => ({ ...prev, category: '' }));
+                          } else {
+                            setEditForm(prev => ({ ...prev, category: e.target.value }));
+                          }
+                        }}
+                      >
+                        {getCategoriesForDept(editForm.department_id, editingProduct?.category).map(cat => (
+                          <option key={cat} value={cat}>{cat}</option>
+                        ))}
+                        <option value="__custom__">➕ নতুন কাস্টম ক্যাটাগরি লিখুন...</option>
+                      </select>
+                    ) : (
+                      <input 
+                        type="text" 
+                        className="form-control" 
+                        required
+                        placeholder="ক্যাটাগরির নাম লিখুন (যেমন: ড্রয়িং শিট)"
+                        value={editForm.category}
+                        onChange={(e) => {
+                          setCustomEditCategory(e.target.value);
+                          setEditForm(prev => ({ ...prev, category: e.target.value }));
+                        }}
+                        autoFocus
+                      />
+                    )}
+                  </div>
+                </div>
+
+                {/* Barcode & Unit */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: '1rem' }}>
                   <div className="input-group">
                     <label className="input-label">বারকোড / এসকেইউ *</label>
                     <input 
@@ -826,20 +1128,25 @@ export default function InventoryView() {
                   </div>
 
                   <div className="input-group">
-                    <label className="input-label">বিভাগ *</label>
+                    <label className="input-label">একক (Unit) *</label>
                     <select 
                       className="form-control"
-                      value={editForm.department_id}
-                      onChange={(e) => setEditForm({ ...editForm, department_id: e.target.value })}
+                      value={editForm.unit}
+                      onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
                     >
-                      {departments.map(d => (
-                        <option key={d.id} value={d.id}>{d.name}</option>
-                      ))}
+                      <option value="পিস">পিস (pcs)</option>
+                      <option value="প্যাকেট">প্যাকেট (pack)</option>
+                      <option value="রিম">রিম (ream)</option>
+                      <option value="বক্স">বক্স (box)</option>
+                      <option value="ডজন">ডজন (dozen)</option>
+                      <option value="সেট">সেট (set)</option>
+                      <option value="রোল">রোল (roll)</option>
                     </select>
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                {/* Price, Cost, Stock, Min Threshold */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '0.75rem' }}>
                   <div className="input-group">
                     <label className="input-label">বিক্রয় মূল্য (৳) *</label>
                     <input 
@@ -871,35 +1178,6 @@ export default function InventoryView() {
                       value={editForm.stock_qty}
                       onChange={(e) => setEditForm({ ...editForm, stock_qty: e.target.value })}
                     />
-                  </div>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '1rem' }}>
-                  <div className="input-group">
-                    <label className="input-label">ক্যাটাগরি</label>
-                    <input 
-                      type="text" 
-                      className="form-control" 
-                      value={editForm.category}
-                      onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
-                    />
-                  </div>
-
-                  <div className="input-group">
-                    <label className="input-label">একক (Unit)</label>
-                    <select 
-                      className="form-control"
-                      value={editForm.unit}
-                      onChange={(e) => setEditForm({ ...editForm, unit: e.target.value })}
-                    >
-                      <option value="পিস">পিস (pcs)</option>
-                      <option value="প্যাকেট">প্যাকেট (pack)</option>
-                      <option value="রিম">রিম (ream)</option>
-                      <option value="বক্স">বক্স (box)</option>
-                      <option value="ডজন">ডজন (dozen)</option>
-                      <option value="সেট">সেট (set)</option>
-                      <option value="রোল">রোল (roll)</option>
-                    </select>
                   </div>
 
                   <div className="input-group">
