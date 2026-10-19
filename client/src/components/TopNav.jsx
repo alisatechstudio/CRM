@@ -41,7 +41,7 @@ export default function TopNav({
           <div className="top-nav-subtitle">
             <MapPin size={12} style={{ color: 'var(--primary)', flexShrink: 0 }} />
             <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-              {activeStore?.name || 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস'} • {activeStore?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া'}
+              {activeStore?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া'} • 📞 {activeStore?.phone || '+880 1309-965422'}
             </span>
           </div>
         </div>

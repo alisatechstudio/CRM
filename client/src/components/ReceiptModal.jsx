@@ -61,7 +61,7 @@ export default function ReceiptModal({ orderId, onClose }) {
                 {order.store_location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর'}
               </div>
               <div style={{ fontSize: '0.75rem', color: '#4b5563' }}>
-                মোবাইল: {order.store_phone || '+৮৮০ ১৭১১-২১০২০৩'}
+                মোবাইল: {order.store_phone || '+880 1309-965422'}
               </div>
             </div>
 

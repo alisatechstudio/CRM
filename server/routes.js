@@ -892,7 +892,7 @@ router.get('/orders/:id', async (req, res) => {
       tier: customer?.tier || 'Bronze',
       store_name: store?.name || 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস',
       store_location: store?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর',
-      store_phone: store?.phone || '+৮৮০ ১৭৯৮-১২৩৪৫৬'
+      store_phone: store?.phone || '+880 1309-965422'
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

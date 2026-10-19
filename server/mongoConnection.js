@@ -138,6 +138,20 @@ async function seedMongoIfEmpty(force = false) {
           ]);
         }
 
+        // Ensure store details and phone number are up to date
+        await Store.updateOne(
+          { id: 'store_1' },
+          { 
+            $set: { 
+              name: 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস',
+              phone: '+880 1309-965422',
+              location: 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর',
+              manager: 'মিজানুর রহমান'
+            } 
+          },
+          { upsert: true }
+        );
+
         console.log('MongoDB store data, departments and expenses verified.');
         return;
       }
@@ -151,7 +165,7 @@ async function seedMongoIfEmpty(force = false) {
       name: 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস',
       code: 'MJN-NR01',
       location: 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর',
-      phone: '+৮৮০ ১৭৯৮-১২৩৪৫৬',
+      phone: '+880 1309-965422',
       manager: 'মিজানুর রহমান',
       status: 'Active'
     });

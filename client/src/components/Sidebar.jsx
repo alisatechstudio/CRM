@@ -12,7 +12,8 @@ import {
   Moon, 
   Sparkles,
   X,
-  Download
+  Download,
+  Phone
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -134,6 +135,9 @@ export default function Sidebar({
             </div>
             <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginTop: '0.15rem' }}>
               কোড: {activeStore?.code || 'MJN-NR01'} • শাখা: প্রধান আউটলেট
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--primary)', marginTop: '0.25rem', display: 'flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600 }}>
+              <Phone size={11} /> {activeStore?.phone || '+880 1309-965422'}
             </div>
           </div>
 
