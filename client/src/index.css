@@ -7,9 +7,47 @@
 @font-face {
   font-family: 'Kalpurush';
   font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: local('Kalpurush'),
+       local('Kalpurush Regular'),
+       url('/fonts/kalpurush.woff2') format('woff2'),
+       url('/fonts/kalpurush.ttf') format('truetype'),
+       url('https://fonts.maateen.me/kalpurush/Kalpurush-v0.258.woff2') format('woff2'),
+       url('https://cdn.jsdelivr.net/gh/maateen/kalpurush-web-font/fonts/kalpurush.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Kalpurush';
+  font-style: normal;
   font-weight: 400;
   font-display: swap;
   src: local('Kalpurush'),
+       local('Kalpurush Regular'),
+       url('/fonts/kalpurush.woff2') format('woff2'),
+       url('/fonts/kalpurush.ttf') format('truetype'),
+       url('https://fonts.maateen.me/kalpurush/Kalpurush-v0.258.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Kalpurush';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: local('Kalpurush'),
+       local('Kalpurush Regular'),
+       url('/fonts/kalpurush.woff2') format('woff2'),
+       url('/fonts/kalpurush.ttf') format('truetype'),
+       url('https://fonts.maateen.me/kalpurush/Kalpurush-v0.258.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Kalpurush';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: local('Kalpurush'),
+       local('Kalpurush Regular'),
        url('/fonts/kalpurush.woff2') format('woff2'),
        url('/fonts/kalpurush.ttf') format('truetype'),
        url('https://fonts.maateen.me/kalpurush/Kalpurush-v0.258.woff2') format('woff2');
@@ -21,6 +59,19 @@
   font-weight: 700;
   font-display: swap;
   src: local('Kalpurush'),
+       local('Kalpurush Regular'),
+       url('/fonts/kalpurush.woff2') format('woff2'),
+       url('/fonts/kalpurush.ttf') format('truetype'),
+       url('https://fonts.maateen.me/kalpurush/Kalpurush-v0.258.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Kalpurush';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: local('Kalpurush'),
+       local('Kalpurush Regular'),
        url('/fonts/kalpurush.woff2') format('woff2'),
        url('/fonts/kalpurush.ttf') format('truetype'),
        url('https://fonts.maateen.me/kalpurush/Kalpurush-v0.258.woff2') format('woff2');
@@ -28,9 +79,9 @@
 
 :root {
   /* Color Palette - Dark Slate & Indigo Luxe Theme */
-  --font-sans: 'Kalpurush', 'Hind Siliguri', 'Noto Sans Bengali', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-heading: 'Kalpurush', 'Noto Sans Bengali', 'Hind Siliguri', 'Outfit', sans-serif;
-  --font-mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+  --font-sans: 'Kalpurush', 'Hind Siliguri', 'Noto Sans Bengali', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-heading: 'Kalpurush', 'Noto Sans Bengali', 'Hind Siliguri', sans-serif;
+  --font-mono: 'Kalpurush', 'JetBrains Mono', 'SF Mono', Consolas, monospace;
 
   /* Surfaces & Backgrounds */
   --bg-app: #0b0f19;
@@ -148,6 +199,10 @@ html, body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+button, input, select, textarea, optgroup {
+  font-family: inherit;
 }
 
 #root {
@@ -815,7 +870,7 @@ p, span, label {
 .thermal-receipt {
   background: #ffffff;
   color: #111827;
-  font-family: 'Courier New', Courier, monospace;
+  font-family: 'Kalpurush', 'Hind Siliguri', sans-serif;
   padding: 2rem 1.5rem;
   border-radius: 4px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
@@ -831,6 +886,26 @@ p, span, label {
 .thermal-divider {
   border-top: 1px dashed #4b5563;
   margin: 0.75rem 0;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-receipt, #printable-receipt * {
+    visibility: visible;
+  }
+  #printable-receipt {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    padding: 10px;
+    box-shadow: none;
+    font-family: 'Kalpurush', 'Hind Siliguri', sans-serif !important;
+  }
 }
 
 /* Animations */
