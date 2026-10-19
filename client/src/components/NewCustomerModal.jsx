@@ -72,7 +72,7 @@ export default function NewCustomerModal({ onClose, onCreated }) {
               gap: '0.5rem'
             }}>
               <Award size={16} style={{ color: 'var(--primary)', flexShrink: 0 }} />
-              <span>নতুন গ্রাহক ব্রোঞ্জ কার্ড ও <strong>৫০ পয়েন্ট ওয়েলকাম বোনাস</strong> পাবেন।</span>
+              <span>নতুন গ্রাহক ব্রোঞ্জ কার্ড ও <strong>১০ পয়েন্ট ওয়েলকাম বোনাস</strong> পাবেন।</span>
             </div>
 
             <div className="modal-form-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>

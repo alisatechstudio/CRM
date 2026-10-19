@@ -152,6 +152,12 @@ export default function ReceiptModal({ orderId, onClose }) {
                   <span>৳{order.customer_due_balance?.toFixed(2)}</span>
                 </div>
               )}
+              {order.earned_points > 0 && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#4f46e5', fontWeight: 600, marginTop: '0.2rem' }}>
+                  <span>অর্জিত পয়েন্ট:</span>
+                  <span>+{order.earned_points} (১০০ টাকায় ১ pt)</span>
+                </div>
+              )}
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', color: '#4b5563', marginTop: '0.2rem' }}>
                 <span>মাধ্যম:</span>
                 <span>{order.payment_method}</span>

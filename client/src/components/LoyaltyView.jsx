@@ -75,7 +75,7 @@ export default function LoyaltyView() {
       tier: 'ব্রোঞ্জ (Bronze)',
       threshold: '০ - ১,৪৯৯ পয়েন্ট',
       multiplier: '১.০x গুণ',
-      perks: ['ডিজিটাল সদস্য কার্ড', 'মেম্বারশিপ সেল ডিসকাউন্ট', 'প্রতি ১০০ টাকা কেনাকাটায় পয়েন্ট'],
+      perks: ['ডিজিটাল সদস্য কার্ড', 'মেম্বারশিপ সেল ডিসকাউন্ট', 'প্রতি ১০০ টাকা কেনাকাটায় ১ পয়েন্ট'],
       color: '#d97706',
       badgeClass: 'tier-Bronze'
     },
@@ -129,6 +129,17 @@ export default function LoyaltyView() {
             <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem' }}>
               টিয়ার সুবিধা, পয়েন্ট মাল্টিপ্লায়ার ও ভাউচার ব্যবস্থাপনা।
             </p>
+            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '0.65rem' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-sm)', background: 'rgba(99, 102, 241, 0.15)', color: 'var(--primary)' }}>
+                🎁 সাইনআপ বোনাস: ১০ পয়েন্ট
+              </span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-sm)', background: 'rgba(16, 185, 129, 0.15)', color: 'var(--success)' }}>
+                🛍️ কেনাকাটায়: প্রতি ১০০ টাকায় ১ পয়েন্ট
+              </span>
+              <span style={{ fontSize: '0.75rem', fontWeight: 600, padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-sm)', background: 'rgba(245, 158, 11, 0.15)', color: 'var(--warning)' }}>
+                ৳ রিডিম রেট: ১ পয়েন্ট = ৳১ ছাড়
+              </span>
+            </div>
           </div>
 
           <button className="btn btn-primary" onClick={() => setShowAddCoupon(true)}>

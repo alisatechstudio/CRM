@@ -204,7 +204,7 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
   else if (selectedCustomer?.tier === 'Gold') tierMultiplier = 1.5;
   else if (selectedCustomer?.tier === 'Platinum') tierMultiplier = 1.75;
   else if (selectedCustomer?.tier === 'VIP') tierMultiplier = 2.0;
-  const potentialPointsEarned = Math.round(finalTotal * 0.1 * tierMultiplier); // 10% base points
+  const potentialPointsEarned = Math.round(Math.floor(finalTotal / 100) * tierMultiplier); // প্রতি ১০০ টাকায় ১ পয়েন্ট
 
   // Checkout process
   const handleCheckout = async () => {

@@ -27,6 +27,7 @@ const orderSchema = new mongoose.Schema({
   paid_amount: { type: Number, default: 0 },
   due_amount: { type: Number, default: 0 },
   change_amount: { type: Number, default: 0 },
+  earned_points: { type: Number, default: 0 },
   payment_status: { type: String, default: 'Paid' },
   payment_method: { type: String, default: 'নগদ (Cash)' },
   status: { type: String, default: 'Completed' },

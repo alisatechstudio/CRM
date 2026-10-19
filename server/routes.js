@@ -259,8 +259,8 @@ router.post('/customers', async (req, res) => {
       email: email ? email.trim() : '',
       phone: phone.trim(),
       tier: 'Bronze',
-      points_balance: 50,
-      lifetime_points: 50,
+      points_balance: 10,
+      lifetime_points: 10,
       total_spent: 0,
       visit_count: 0,
       join_date,
@@ -275,9 +275,9 @@ router.post('/customers', async (req, res) => {
       id: 'lt_' + Date.now(),
       customer_id: id,
       type: 'Bonus',
-      points: 50,
-      balance_after: 50,
-      description: 'স্বাগতম মেম্বার বোনাস পয়েন্ট',
+      points: 10,
+      balance_after: 10,
+      description: 'স্বাগতম মেম্বার বোনাস পয়েন্ট (১০ পয়েন্ট)',
       created_at: new Date().toISOString()
     });
 
@@ -769,6 +769,19 @@ router.post('/pos/checkout', async (req, res) => {
       total_price: it.lineTotal
     }));
 
+    let earnedPoints = 0;
+    let multiplier = 1.0;
+    if (customer) {
+      if (customer.tier === 'Silver') multiplier = 1.25;
+      else if (customer.tier === 'Gold') multiplier = 1.5;
+      else if (customer.tier === 'Platinum') multiplier = 1.75;
+      else if (customer.tier === 'VIP') multiplier = 2.0;
+
+      // 1 point for every 100 taka shopping
+      const basePoints = Math.floor(total / 100);
+      earnedPoints = Math.round(basePoints * multiplier);
+    }
+
     await Order.create({
       id: orderId,
       order_number: orderNumber,
@@ -786,6 +799,7 @@ router.post('/pos/checkout', async (req, res) => {
       paid_amount: finalPaidAmount,
       due_amount: dueAmount,
       change_amount: changeAmount,
+      earned_points: earnedPoints,
       payment_status: paymentStatus,
       payment_method,
       status: 'Completed',
@@ -793,7 +807,6 @@ router.post('/pos/checkout', async (req, res) => {
       items: orderItemsForSave
     });
 
-    let earnedPoints = 0;
     if (customer) {
       // If customer has due created
       if (dueAmount > 0) {
@@ -817,13 +830,6 @@ router.post('/pos/checkout', async (req, res) => {
         });
       }
 
-      let multiplier = 1.0;
-      if (customer.tier === 'Silver') multiplier = 1.25;
-      else if (customer.tier === 'Gold') multiplier = 1.5;
-      else if (customer.tier === 'Platinum') multiplier = 1.75;
-      else if (customer.tier === 'VIP') multiplier = 2.0;
-
-      earnedPoints = Math.round(total * multiplier);
       const newBalance = customer.points_balance - pointsRedeemed + earnedPoints;
       const newLifetime = customer.lifetime_points + earnedPoints;
       const newTotalSpent = Number((customer.total_spent + total).toFixed(2));
@@ -864,7 +870,7 @@ router.post('/pos/checkout', async (req, res) => {
         type: 'Earned',
         points: earnedPoints,
         balance_after: customer.points_balance,
-        description: `অর্ডার #${orderNumber}-এ অর্জিত ${earnedPoints} পয়েন্ট (${multiplier}x রেট)`,
+        description: `অর্ডার #${orderNumber}-এ অর্জিত ${earnedPoints} পয়েন্ট (প্রতি ১০০ টাকায় ১ পয়েন্ট, ${multiplier}x রেট)`,
         created_at: createdAt
       });
     }
@@ -951,6 +957,7 @@ router.get('/orders/:id', async (req, res) => {
       paid_amount: order.paid_amount !== undefined ? order.paid_amount : order.total,
       due_amount: order.due_amount || 0,
       change_amount: order.change_amount || 0,
+      earned_points: order.earned_points || 0,
       payment_status: order.payment_status || (order.due_amount > 0 ? 'Due' : 'Paid'),
       customer_due_balance: customer?.due_balance || 0,
       first_name: customer?.first_name || '',
