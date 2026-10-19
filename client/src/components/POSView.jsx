@@ -771,6 +771,24 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
           </button>
         </div>
       </div>
+
+      {/* Mobile Floating Cart Summary Pill */}
+      {cart.length > 0 && (
+        <button 
+          type="button" 
+          className="mobile-floating-cart-pill"
+          onClick={() => {
+            const el = document.querySelector('.pos-cart-panel');
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <ShoppingBag size={18} />
+            <span>{cart.reduce((s, it) => s + it.quantity, 0)} টি আইটেম • ৳{finalTotal.toFixed(2)}</span>
+          </div>
+          <span style={{ fontWeight: 800 }}>বিল পরিশোধ ➔</span>
+        </button>
+      )}
     </div>
   );
 }

@@ -184,26 +184,18 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       {/* Top Welcome Banner */}
-      <div className="glass-panel" style={{ 
-        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15) 0%, rgba(236, 72, 153, 0.08) 100%)',
-        border: '1px solid rgba(99, 102, 241, 0.25)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '1.35rem 1.75rem',
-        borderRadius: 'var(--radius-lg)'
-      }}>
+      <div className="glass-panel dashboard-welcome-banner">
         <div>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', color: 'var(--primary)', fontWeight: 700, fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
             <Sparkles size={14} /> মিজান কম্পিউটার অ্যান্ড কসমেটিকস • সেলস, ব্যয় ও প্রফিট অ্যানালিটিক্স
           </div>
-          <h1 style={{ fontSize: '1.55rem', margin: '0.35rem 0 0.25rem', fontWeight: 800 }}>মিজান কম্পিউটার অ্যান্ড কসমেটিকস (Mijan Computer & Cosmetics) সামগ্রিক পারফরম্যান্স</h1>
+          <h1 className="dashboard-main-title">মিজান কম্পিউটার অ্যান্ড কসমেটিকস (Mijan Computer & Cosmetics) সামগ্রিক পারফরম্যান্স</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', margin: 0 }}>
             কম্পিউটার এক্সেসরিজ, কসমেটিকস, গিফট আইটেম ও স্টেশনারি পণ্যের লাইভ বিক্রয়, পরিচালন ব্যয় ও নিট মুনাফা বিশ্লেষণ।
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '1rem', flexShrink: 0 }}>
+        <div className="dashboard-csat-wrap">
           <div style={{ 
             textAlign: 'right', 
             padding: '0.65rem 1.15rem', 
@@ -220,30 +212,13 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       </div>
 
       {/* Date Filter Bar & Quick Expense Entry */}
-      <div className="glass-panel" style={{ 
-        padding: '0.9rem 1.5rem', 
-        display: 'flex', 
-        alignItems: 'center', 
-        justifyContent: 'space-between', 
-        flexWrap: 'wrap', 
-        gap: '0.85rem',
-        border: '1px solid var(--border-subtle)'
-      }}>
+      <div className="glass-panel dashboard-filter-bar">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
           <Calendar size={18} style={{ color: 'var(--primary)' }} />
           <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>হিসাব ও অ্যানালিটিক্স সময়কাল:</span>
         </div>
 
-        <div style={{ 
-          display: 'flex', 
-          alignItems: 'center', 
-          gap: '0.35rem', 
-          flexWrap: 'wrap',
-          background: 'var(--bg-surface)',
-          padding: '0.3rem',
-          borderRadius: 'var(--radius-md)',
-          border: '1px solid var(--border-subtle)'
-        }}>
+        <div className="dashboard-filter-pills">
           {[
             { id: 'all', label: 'সব সময় (All)' },
             { id: 'today', label: 'আজ (Today)' },
@@ -479,23 +454,14 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       </div>
 
       {/* Financial P&L Breakdown Formula Banner */}
-      <div className="glass-panel" style={{
-        padding: '1.1rem 1.5rem',
-        background: 'linear-gradient(90deg, rgba(99, 102, 241, 0.08) 0%, rgba(16, 185, 129, 0.08) 50%, rgba(139, 92, 246, 0.08) 100%)',
-        border: '1px solid var(--border-subtle)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
-        gap: '0.85rem'
-      }}>
+      <div className="glass-panel dashboard-pnl-banner">
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <PieChart size={18} style={{ color: 'var(--primary)' }} />
           <span style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)' }}>
             আয়-ব্যয় ও প্রফিট সমীকরণ (Financial P&L Statement):
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: '0.86rem', fontWeight: 700 }}>
+        <div className="dashboard-pnl-chips">
           <div style={{ background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', padding: '0.28rem 0.65rem', borderRadius: 'var(--radius-sm)' }}>
             মোট বিক্রয়: ৳{(kpis.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           </div>
@@ -525,7 +491,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       </div>
 
       {/* Expense Analysis Section: 2 Columns */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
+      <div className="dashboard-grid-2col">
         {/* Left: Expense Category Breakdown */}
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
@@ -700,7 +666,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       </div>
 
       {/* 2-Column: Department Sales & Loyalty Tiers */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
+      <div className="dashboard-grid-2col">
         {/* Department Revenue Breakdown */}
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
@@ -843,7 +809,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       </div>
 
       {/* 2-Column: Top VIP Spenders & Recent Orders */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '1.5rem', alignItems: 'stretch' }}>
+      <div className="dashboard-grid-2col">
         {/* Top VIP Spenders */}
         <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>

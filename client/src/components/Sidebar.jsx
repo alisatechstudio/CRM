@@ -10,7 +10,8 @@ import {
   Store, 
   Sun, 
   Moon, 
-  Sparkles
+  Sparkles,
+  X
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -20,7 +21,9 @@ export default function Sidebar({
   setTheme, 
   stores = [], 
   activeStore, 
-  setActiveStore
+  setActiveStore,
+  isOpen = false,
+  onClose
 }) {
   const navItems = [
     { id: 'dashboard', label: 'এক্সিকিউটিভ ড্যাশবোর্ড', icon: LayoutDashboard },
@@ -32,87 +35,120 @@ export default function Sidebar({
     { id: 'tickets', label: 'কাস্টমার সার্ভিস ও রিটার্ন', icon: LifeBuoy }
   ];
 
+  const handleNavClick = (tabId) => {
+    setCurrentTab(tabId);
+    if (onClose) onClose();
+  };
+
   return (
-    <aside className="sidebar">
-      {/* Brand Header */}
-      <div className="sidebar-brand">
-        <div className="brand-icon">
-          <Sparkles size={20} />
-        </div>
-        <div>
-          <div className="brand-title">মিজান কম্পিউটার অ্যান্ড কসমেটিকস</div>
-          <div className="brand-sub">Mijan Computer & Cosmetics • চন্ডিপুর পুরান বাজার</div>
-        </div>
-      </div>
+    <>
+      {/* Mobile Backdrop Overlay */}
+      {isOpen && (
+        <div 
+          className="sidebar-backdrop" 
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
 
-      {/* Navigation */}
-      <nav className="nav-menu">
-        <div className="nav-label">দৈনন্দিন পরিচালনা</div>
-        {navItems.slice(0, 3).map((item) => {
-          const Icon = item.icon;
-          const isActive = currentTab === item.id;
-          return (
-            <button
-              key={item.id}
-              className={`nav-item ${isActive ? 'active' : ''}`}
-              onClick={() => setCurrentTab(item.id)}
-            >
-              <Icon size={18} />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-
-        <div className="nav-label">ব্যবস্থাপনা ও প্রবৃদ্ধি</div>
-        {navItems.slice(3).map((item) => {
-          const Icon = item.icon;
-          const isActive = currentTab === item.id;
-          return (
-            <button
-              key={item.id}
-              className={`nav-item ${isActive ? 'active' : ''}`}
-              onClick={() => setCurrentTab(item.id)}
-            >
-              <Icon size={18} />
-              <span>{item.label}</span>
-            </button>
-          );
-        })}
-      </nav>
-
-      {/* Sidebar Footer with Store Selector and Actions */}
-      <div className="sidebar-footer">
-        {/* Single Store Card */}
-        <div style={{
-          background: 'var(--bg-app)',
-          padding: '0.65rem 0.75rem',
-          borderRadius: 'var(--radius-sm)',
-          border: '1px solid var(--border-subtle)',
-          marginBottom: '0.5rem'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
-            <Store size={14} /> {activeStore?.name || 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস'}
+      <aside className={`sidebar ${isOpen ? 'open' : ''}`}>
+        {/* Brand Header */}
+        <div className="sidebar-brand">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flex: 1, minWidth: 0 }}>
+            <div className="brand-icon">
+              <Sparkles size={20} />
+            </div>
+            <div style={{ minWidth: 0, overflow: 'hidden' }}>
+              <div className="brand-title" style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                মিজান কম্পিউটার
+              </div>
+              <div className="brand-sub">Mijan Computer & Cosmetics</div>
+            </div>
           </div>
-          <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
-            {activeStore?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর'}
-          </div>
-          <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginTop: '0.15rem' }}>
-            কোড: {activeStore?.code || 'MJN-NR01'} • শাখা: প্রধান আউটলেট
-          </div>
-        </div>
 
-        <div style={{ marginTop: '0.25rem' }}>
+          {/* Close button on mobile drawer */}
           <button 
-            className="btn btn-secondary btn-sm" 
-            style={{ width: '100%', justifyContent: 'center' }}
-            title="থিম পরিবর্তন করুন"
-            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            type="button" 
+            className="sidebar-close-btn"
+            onClick={onClose}
+            aria-label="মেনু বন্ধ করুন"
           >
-            {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
-            <span>{theme === 'dark' ? 'লাইট মোড' : 'ডার্ক মোড'}</span>
+            <X size={18} />
           </button>
         </div>
-      </div>
-    </aside>
+
+        {/* Navigation */}
+        <nav className="nav-menu">
+          <div className="nav-label">দৈনন্দিন পরিচালনা</div>
+          {navItems.slice(0, 3).map((item) => {
+            const Icon = item.icon;
+            const isActive = currentTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`nav-item ${isActive ? 'active' : ''}`}
+                onClick={() => handleNavClick(item.id)}
+              >
+                <Icon size={18} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+
+          <div className="nav-label">ব্যবস্থাপনা ও প্রবৃদ্ধি</div>
+          {navItems.slice(3).map((item) => {
+            const Icon = item.icon;
+            const isActive = currentTab === item.id;
+            return (
+              <button
+                key={item.id}
+                type="button"
+                className={`nav-item ${isActive ? 'active' : ''}`}
+                onClick={() => handleNavClick(item.id)}
+              >
+                <Icon size={18} />
+                <span>{item.label}</span>
+              </button>
+            );
+          })}
+        </nav>
+
+        {/* Sidebar Footer with Store Selector and Actions */}
+        <div className="sidebar-footer">
+          {/* Single Store Card */}
+          <div style={{
+            background: 'var(--bg-app)',
+            padding: '0.65rem 0.75rem',
+            borderRadius: 'var(--radius-sm)',
+            border: '1px solid var(--border-subtle)',
+            marginBottom: '0.5rem'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary)' }}>
+              <Store size={14} /> {activeStore?.name || 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস'}
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+              {activeStore?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর'}
+            </div>
+            <div style={{ fontSize: '0.68rem', color: 'var(--text-dim)', marginTop: '0.15rem' }}>
+              কোড: {activeStore?.code || 'MJN-NR01'} • শাখা: প্রধান আউটলেট
+            </div>
+          </div>
+
+          <div style={{ marginTop: '0.25rem' }}>
+            <button 
+              type="button"
+              className="btn btn-secondary btn-sm" 
+              style={{ width: '100%', justifyContent: 'center' }}
+              title="থিম পরিবর্তন করুন"
+              onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            >
+              {theme === 'dark' ? <Sun size={15} /> : <Moon size={15} />}
+              <span>{theme === 'dark' ? 'লাইট মোড' : 'ডার্ক মোড'}</span>
+            </button>
+          </div>
+        </div>
+      </aside>
+    </>
   );
 }

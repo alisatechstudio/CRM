@@ -13,6 +13,7 @@ import CampaignsView from './components/CampaignsView';
 import TicketsView from './components/TicketsView';
 import NewCustomerModal from './components/NewCustomerModal';
 import PinLockScreen from './components/PinLockScreen';
+import MobileBottomNav from './components/MobileBottomNav';
 
 export default function App() {
   const [isLocked, setIsLocked] = useState(() => {
@@ -20,6 +21,7 @@ export default function App() {
   });
 
   const [currentTab, setCurrentTab] = useState('dashboard');
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [theme, setTheme] = useState('dark');
   const [stores, setStores] = useState([]);
   const [activeStore, setActiveStore] = useState(null);
@@ -83,15 +85,20 @@ export default function App() {
         <PinLockScreen onUnlock={handleUnlock} />
       )}
 
-      {/* Navigation Sidebar */}
+      {/* Navigation Sidebar (Desktop + Mobile Drawer) */}
       <Sidebar
         currentTab={currentTab}
-        setCurrentTab={setCurrentTab}
+        setCurrentTab={(tab) => {
+          setCurrentTab(tab);
+          setMobileSidebarOpen(false);
+        }}
         theme={theme}
         setTheme={setTheme}
         stores={stores}
         activeStore={activeStore}
         setActiveStore={setActiveStore}
+        isOpen={mobileSidebarOpen}
+        onClose={() => setMobileSidebarOpen(false)}
       />
 
       {/* Main App Canvas */}
@@ -100,8 +107,12 @@ export default function App() {
           currentTab={currentTab}
           activeStore={activeStore}
           onOpenNewCustomer={() => setShowNewCustomerModal(true)}
-          onQuickPOS={() => setCurrentTab('pos')}
+          onQuickPOS={() => {
+            setCurrentTab('pos');
+            setMobileSidebarOpen(false);
+          }}
           onLockApp={handleLock}
+          onOpenMobileMenu={() => setMobileSidebarOpen(true)}
         />
 
         <main className="content-body">
@@ -180,6 +191,16 @@ export default function App() {
           }}
         />
       )}
+
+      {/* Mobile App Bottom Navigation Bar */}
+      <MobileBottomNav 
+        currentTab={currentTab}
+        setCurrentTab={(tab) => {
+          setCurrentTab(tab);
+          setMobileSidebarOpen(false);
+        }}
+        onToggleMenu={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+      />
     </div>
   );
 }
