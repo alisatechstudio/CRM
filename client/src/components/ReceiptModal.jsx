@@ -168,7 +168,6 @@ export default function ReceiptModal({ orderId, onClose }) {
 
             <div className="thermal-receipt-center" style={{ fontSize: '0.75rem', color: '#374151' }}>
               <div style={{ fontWeight: 700 }}>কেনাকাটার জন্য ধন্যবাদ!</div>
-              <div>১৫ দিনে পরিবর্তনযোগ্য।</div>
               <div style={{ marginTop: '0.5rem', fontFamily: 'monospace', fontSize: '0.7rem', letterSpacing: '0.2em' }}>
                 * |||||| | ||||| |||| || ||| *
               </div>
