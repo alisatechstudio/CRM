@@ -11,10 +11,22 @@ import {
   Tag, 
   ShoppingBag,
   AlertCircle,
-  Package
+  Package,
+  PackagePlus,
+  Sparkles
 } from 'lucide-react';
 import { api } from '../api';
 import { DEFAULT_DEPARTMENTS } from '../constants/departments';
+
+const MANUAL_PRESETS = [
+  { label: '📄 ফটোকপি', name: 'ফটোকপি (A4)', price: 3, unit: 'পাতা', dept: 'ফটোকপি ও কম্পিউটার সার্ভিস' },
+  { label: '🖨️ প্রিন্ট (কালো)', name: 'কম্পিউটার প্রিন্ট (কালো)', price: 5, unit: 'পাতা', dept: 'ফটোকপি ও কম্পিউটার সার্ভিস' },
+  { label: '🎨 কালার প্রিন্ট', name: 'কালার প্রিন্ট', price: 15, unit: 'পাতা', dept: 'ফটোকপি ও কম্পিউটার সার্ভিস' },
+  { label: '📑 লেমিনেশন', name: 'লেমিনেশন (A4)', price: 20, unit: 'পাতা', dept: 'ফটোকপি ও কম্পিউটার সার্ভিস' },
+  { label: '✏️ স্টেশনারি', name: 'কাস্টম স্টেশনারি সামগ্রী', price: '', unit: 'পিস', dept: 'খাতা, ডায়েরি ও কাগজ সামগ্রী' },
+  { label: '💄 কসমেটিকস', name: 'কসমেটিকস প্রসাধন সামগ্রী', price: '', unit: 'পিস', dept: 'স্কিনকেয়ার ও প্রসাধন সামগ্রী' },
+  { label: '🛠️ সার্ভিস/অন্যান্য', name: 'সার্ভিস চার্জ / মেরামত', price: '', unit: 'সেট', dept: 'সাধারণ স্টেশনারি' }
+];
 
 export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer }) {
   const [products, setProducts] = useState([]);
@@ -52,6 +64,112 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
   // Due & partial payment state
   const [paymentMode, setPaymentMode] = useState('full'); // 'full' | 'partial' | 'due'
   const [paidAmountInput, setPaidAmountInput] = useState('');
+
+  // Manual product modal state (for non-inventory items)
+  const [showManualModal, setShowManualModal] = useState(false);
+  const [manualForm, setManualForm] = useState({
+    name: '',
+    price: '',
+    quantity: 1,
+    unit: 'পিস',
+    department_name: 'সাধারণ স্টেশনারি',
+    category: 'কাস্টম ও সার্ভিস সামগ্রী',
+    barcode: '',
+    save_to_inventory: false
+  });
+  const [savingManualProduct, setSavingManualProduct] = useState(false);
+
+  // Open manual product modal
+  const openManualProductModal = (initialName = '') => {
+    const defaultDept = activeDepartments[0]?.name || 'সাধারণ স্টেশনারি';
+    setManualForm({
+      name: initialName || '',
+      price: '',
+      quantity: 1,
+      unit: 'পিস',
+      department_name: defaultDept,
+      category: 'কাস্টম ও সার্ভিস সামগ্রী',
+      barcode: '',
+      save_to_inventory: false
+    });
+    setShowManualModal(true);
+  };
+
+  // Add manual product to cart
+  const handleAddManualProductToCart = async (e) => {
+    e.preventDefault();
+    const trimmedName = manualForm.name.trim();
+    const parsedPrice = parseFloat(manualForm.price);
+    const parsedQty = parseInt(manualForm.quantity, 10);
+
+    if (!trimmedName) {
+      alert('অনুগ্রহ করে পণ্যের নাম প্রদান করুন');
+      return;
+    }
+    if (isNaN(parsedPrice) || parsedPrice <= 0) {
+      alert('সঠিক বিক্রয়মূল্য (৳) দিন');
+      return;
+    }
+    if (isNaN(parsedQty) || parsedQty <= 0) {
+      alert('সঠিক পরিমাণ দিন');
+      return;
+    }
+
+    setSavingManualProduct(true);
+    try {
+      const customId = 'manual_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+
+      // Optionally save to inventory catalog
+      if (manualForm.save_to_inventory) {
+        try {
+          const matchedDept = activeDepartments.find(d => d.name === manualForm.department_name) || activeDepartments[0];
+          await api.createProduct({
+            name: trimmedName,
+            department_id: matchedDept?.id || 'dept_1',
+            category: manualForm.category || 'কাস্টম ও সার্ভিস সামগ্রী',
+            price: parsedPrice,
+            cost: Number((parsedPrice * 0.7).toFixed(2)),
+            stock_qty: parsedQty,
+            min_threshold: 5,
+            unit: manualForm.unit || 'পিস',
+            barcode: manualForm.barcode ? manualForm.barcode.trim() : ('890' + Math.floor(100000 + Math.random() * 900000))
+          });
+          loadData(); // reload catalog
+        } catch (saveErr) {
+          console.warn('Could not save manual item to catalog:', saveErr);
+        }
+      }
+
+      const manualCartItem = {
+        id: customId,
+        productId: customId,
+        name: trimmedName,
+        price: parsedPrice,
+        quantity: parsedQty,
+        unit: manualForm.unit || 'পিস',
+        department_name: manualForm.department_name || 'সাধারণ স্টেশনারি',
+        department_code: 'MNL',
+        category: manualForm.category || 'কাস্টম পণ্য',
+        barcode: manualForm.barcode ? manualForm.barcode.trim() : '',
+        is_manual: true,
+        stock_qty: 999999
+      };
+
+      setCart(prev => {
+        const existingIdx = prev.findIndex(item => item.is_manual && item.name.toLowerCase() === trimmedName.toLowerCase() && item.price === parsedPrice);
+        if (existingIdx >= 0) {
+          return prev.map((item, idx) => idx === existingIdx ? { ...item, quantity: item.quantity + parsedQty } : item);
+        }
+        return [...prev, manualCartItem];
+      });
+
+      setShowManualModal(false);
+    } catch (err) {
+      alert('কার্টে যোগ ব্যর্থ: ' + err.message);
+    } finally {
+      setSavingManualProduct(false);
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -110,6 +228,10 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
   const updateQuantity = (productId, delta) => {
     setCart(prev => prev.map(item => {
       if (item.id === productId) {
+        if (delta > 0 && !item.is_manual && item.stock_qty !== undefined && item.quantity >= item.stock_qty) {
+          alert(`স্টকে আর মাত্র ${item.stock_qty} টি পণ্য রয়েছে!`);
+          return item;
+        }
         const newQty = item.quantity + delta;
         return newQty > 0 ? { ...item, quantity: newQty } : null;
       }
@@ -225,9 +347,15 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
           id: c.id, 
           productId: c.id, 
           product_id: c.id,
+          name: c.name,
+          price: c.price,
+          unit_price: c.price,
+          unitPrice: c.price,
           qty: c.quantity, 
           quantity: c.quantity,
-          barcode: c.barcode 
+          department_name: c.department_name,
+          is_manual: !!c.is_manual,
+          barcode: c.barcode || ''
         })),
         coupon_code: appliedCoupon ? appliedCoupon.coupon.code : null,
         manual_discount_type: manualDiscountType === 'percent' ? 'percentage' : 'fixed',
@@ -279,8 +407,8 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
       {/* LEFT: Product Catalog & Fast Department Tabs */}
       <div className={`pos-catalog-panel ${mobilePane !== 'catalog' ? 'pos-pane-hidden-mobile' : ''}`}>
         {/* Search & Scan Header */}
-        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem' }}>
-          <div style={{ position: 'relative', flex: 1 }}>
+        <div style={{ display: 'flex', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap' }}>
+          <div style={{ position: 'relative', flex: 1, minWidth: '180px' }}>
             <input
               type="text"
               className="form-control"
@@ -294,6 +422,17 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
               style={{ position: 'absolute', left: '0.85rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} 
             />
           </div>
+
+          <button 
+            type="button"
+            className="btn btn-secondary" 
+            title="ইনভেন্টরিতে না থাকা পণ্য সরাসরি কার্টে লিখুন"
+            onClick={() => openManualProductModal(searchTerm)}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', whiteSpace: 'nowrap' }}
+          >
+            <PackagePlus size={16} style={{ color: 'var(--primary)' }} />
+            <span>+ ম্যানুয়াল পণ্য</span>
+          </button>
 
           <button 
             className="btn btn-secondary" 
@@ -336,8 +475,36 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
               লোড হচ্ছে...
             </div>
           ) : products.length === 0 ? (
-            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '3rem', color: 'var(--text-muted)' }}>
-              কোনো পণ্য পাওয়া যায়নি
+            <div style={{ 
+              gridColumn: '1/-1', 
+              textAlign: 'center', 
+              padding: '3rem 1.5rem', 
+              background: 'var(--bg-surface-elevated)', 
+              borderRadius: 'var(--radius-md)',
+              border: '1px dashed var(--border-subtle)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '0.75rem'
+            }}>
+              <Package size={36} style={{ color: 'var(--text-dim)', opacity: 0.6 }} />
+              <div>
+                <p style={{ margin: 0, fontWeight: 700, fontSize: '0.95rem' }}>
+                  {searchTerm ? `'${searchTerm}' দিয়ে ইনভেন্টরিতে কোনো পণ্য পাওয়া যায়নি` : 'কোনো পণ্য পাওয়া যায়নি'}
+                </p>
+                <p style={{ margin: '0.25rem 0 0', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                  ইনভেন্টরি তালিকায় না থাকলেও সরাসরি ম্যানুয়ালি নাম ও মূল্য লিখে কার্টে বিক্রি করতে পারবেন।
+                </p>
+              </div>
+              <button 
+                type="button" 
+                className="btn btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', marginTop: '0.35rem' }}
+                onClick={() => openManualProductModal(searchTerm)}
+              >
+                <PackagePlus size={16} />
+                <span>{searchTerm ? `'${searchTerm}' কার্টে ম্যানুয়াল পণ্য যোগ করুন` : '+ ম্যানুয়াল পণ্য কার্টে যোগ করুন'}</span>
+              </button>
             </div>
           ) : (
             products.map((p) => {
@@ -408,11 +575,23 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
             <ShoppingBag size={18} style={{ color: 'var(--primary)' }} />
             <h3 style={{ fontSize: '1rem', margin: 0 }}>ক্যাশ রেজিস্টার</h3>
           </div>
-          {cart.length > 0 && (
-            <button className="btn btn-secondary btn-sm" onClick={clearCart} title="কার্ট খালি করুন">
-              রিসেট
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+            <button 
+              type="button" 
+              className="btn btn-secondary btn-sm"
+              onClick={() => openManualProductModal()}
+              title="ইনভেন্টরি ছাড়া ম্যানুয়াল পণ্য কার্টে যোগ করুন"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontSize: '0.75rem', padding: '0.3rem 0.55rem' }}
+            >
+              <PackagePlus size={13} />
+              <span>+ ম্যানুয়াল</span>
             </button>
-          )}
+            {cart.length > 0 && (
+              <button className="btn btn-secondary btn-sm" onClick={clearCart} title="কার্ট খালি করুন">
+                রিসেট
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Customer Attachment Box */}
@@ -550,15 +729,39 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
         {/* Cart Item Rows */}
         <div className="pos-cart-items">
           {cart.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: 'var(--text-muted)' }}>
-              <p style={{ fontWeight: 600 }}>কার্ট খালি</p>
-              <p style={{ fontSize: '0.78rem', marginTop: '0.35rem' }}>পণ্য যুক্ত করুন</p>
+            <div style={{ textAlign: 'center', padding: '2.5rem 1rem', color: 'var(--text-muted)' }}>
+              <ShoppingBag size={32} style={{ color: 'var(--text-dim)', opacity: 0.45, marginBottom: '0.5rem' }} />
+              <p style={{ fontWeight: 600, margin: 0, fontSize: '0.9rem' }}>কার্ট খালি</p>
+              <p style={{ fontSize: '0.78rem', margin: '0.3rem 0 0.85rem' }}>ক্যাটালগ থেকে নির্বাচন করুন অথবা সরাসরি ম্যানুয়াল পণ্য যোগ করুন</p>
+              <button 
+                type="button" 
+                className="btn btn-secondary btn-sm"
+                onClick={() => openManualProductModal()}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.8rem' }}
+              >
+                <PackagePlus size={14} />
+                <span>+ ম্যানুয়াল পণ্য যোগ করুন</span>
+              </button>
             </div>
           ) : (
             cart.map((item) => (
               <div key={item.id} className="pos-cart-item">
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{item.name}</div>
+                <div style={{ flex: 1, minWidth: 0, marginRight: '0.5rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
+                    <span style={{ fontWeight: 600, fontSize: '0.85rem' }}>{item.name}</span>
+                    {item.is_manual && (
+                      <span style={{ 
+                        fontSize: '0.62rem', 
+                        padding: '0.1rem 0.35rem', 
+                        borderRadius: 'var(--radius-sm)', 
+                        background: 'rgba(59, 130, 246, 0.15)', 
+                        color: 'var(--primary)', 
+                        fontWeight: 700 
+                      }}>
+                        ম্যানুয়াল
+                      </span>
+                    )}
+                  </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
                     ৳{item.price.toFixed(2)} প্রতি {item.unit || 'পিস'}
                   </div>
@@ -1021,6 +1224,234 @@ export default function POSView({ activeStore, onOpenReceipt, onOpenNewCustomer 
           </div>
           <span style={{ fontWeight: 800 }}>পরিশোধ ➔</span>
         </button>
+      )}
+
+      {/* Manual Product Input Modal (for non-inventory items) */}
+      {showManualModal && (
+        <div className="modal-overlay" onClick={() => !savingManualProduct && setShowManualModal(false)}>
+          <div 
+            className="modal-card" 
+            style={{ maxWidth: '560px', width: '94%' }} 
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="modal-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <div className="brand-icon" style={{ width: '30px', height: '30px', flexShrink: 0 }}>
+                  <PackagePlus size={16} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.05rem', margin: 0 }}>ম্যানুয়াল পণ্য কার্টে যোগ করুন</h2>
+                  <p style={{ margin: '0.15rem 0 0', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    ইনভেন্টরিতে স্টক বা এন্ট্রি না থাকলেও সরাসরি কাস্টম পণ্য বিক্রি করুন
+                  </p>
+                </div>
+              </div>
+              <button 
+                type="button"
+                className="btn btn-secondary btn-icon" 
+                onClick={() => setShowManualModal(false)}
+                disabled={savingManualProduct}
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleAddManualProductToCart} style={{ display: 'flex', flexDirection: 'column' }}>
+              <div className="modal-body" style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                
+                {/* Quick Presets */}
+                <div>
+                  <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.35rem' }}>
+                    <Sparkles size={13} style={{ color: 'var(--primary)' }} />
+                    <span>কুইক প্রিসেট (এক ক্লিকে নির্বাচন করুন):</span>
+                  </label>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.35rem' }}>
+                    {MANUAL_PRESETS.map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        className="btn btn-secondary btn-sm"
+                        style={{ fontSize: '0.72rem', padding: '0.25rem 0.5rem', borderRadius: 'var(--radius-sm)' }}
+                        onClick={() => {
+                          setManualForm(prev => ({
+                            ...prev,
+                            name: preset.name,
+                            price: preset.price !== '' ? preset.price : prev.price,
+                            unit: preset.unit || prev.unit,
+                            department_name: preset.dept || prev.department_name
+                          }));
+                        }}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Product Name */}
+                <div className="input-group">
+                  <label className="input-label">পণ্যের নাম / বিবরণ *</label>
+                  <input 
+                    type="text" 
+                    className="form-control" 
+                    placeholder="যেমন: ফটোকপি (A4), কাস্টম স্টেশনারি, সার্ভিস ইত্যাদি"
+                    value={manualForm.name}
+                    onChange={(e) => setManualForm({ ...manualForm, name: e.target.value })}
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                {/* Price and Quantity */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="input-group">
+                    <label className="input-label">বিক্রয়মূল্য (৳) *</label>
+                    <input 
+                      type="number" 
+                      className="form-control" 
+                      placeholder="0.00"
+                      step="any"
+                      min="0.01"
+                      value={manualForm.price}
+                      onChange={(e) => setManualForm({ ...manualForm, price: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">পরিমাণ (Quantity) *</label>
+                    <input 
+                      type="number" 
+                      className="form-control" 
+                      min="1"
+                      value={manualForm.quantity}
+                      onChange={(e) => setManualForm({ ...manualForm, quantity: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Unit and Department */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                  <div className="input-group">
+                    <label className="input-label">একক (Unit)</label>
+                    <select 
+                      className="form-control"
+                      value={manualForm.unit}
+                      onChange={(e) => setManualForm({ ...manualForm, unit: e.target.value })}
+                    >
+                      <option value="পিস">পিস (Pcs)</option>
+                      <option value="পাতা">পাতা (Pages)</option>
+                      <option value="কেজি">কেজি (Kg)</option>
+                      <option value="গ্রাম">গ্রাম (gm)</option>
+                      <option value="প্যাকেট">প্যাকেট (Pkt)</option>
+                      <option value="ডজন">ডজন (Dozen)</option>
+                      <option value="বক্স">বক্স (Box)</option>
+                      <option value="সেট">সেট (Set)</option>
+                      <option value="রোল">রোল (Roll)</option>
+                      <option value="লিটার">লিটার (Ltr)</option>
+                    </select>
+                  </div>
+                  <div className="input-group">
+                    <label className="input-label">বিভাগ (Department)</label>
+                    <select 
+                      className="form-control"
+                      value={manualForm.department_name}
+                      onChange={(e) => setManualForm({ ...manualForm, department_name: e.target.value })}
+                    >
+                      {activeDepartments.map(d => (
+                        <option key={d.id || d.name} value={d.name}>{d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Optional Barcode */}
+                <div className="input-group">
+                  <label className="input-label">বারকোড (ঐচ্ছিক)</label>
+                  <div style={{ position: 'relative' }}>
+                    <input 
+                      type="text" 
+                      className="form-control" 
+                      placeholder="বারকোড থাকলে লিখুন বা স্ক্যান করুন"
+                      value={manualForm.barcode}
+                      onChange={(e) => setManualForm({ ...manualForm, barcode: e.target.value })}
+                      style={{ paddingLeft: '2rem' }}
+                    />
+                    <Barcode size={15} style={{ position: 'absolute', left: '0.65rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-dim)' }} />
+                  </div>
+                </div>
+
+                {/* Save to permanent catalog toggle */}
+                <div style={{ 
+                  background: 'var(--bg-surface-elevated)', 
+                  border: '1px solid var(--border-subtle)', 
+                  borderRadius: 'var(--radius-md)', 
+                  padding: '0.65rem 0.85rem' 
+                }}>
+                  <label style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', cursor: 'pointer', margin: 0 }}>
+                    <input 
+                      type="checkbox" 
+                      checked={manualForm.save_to_inventory}
+                      onChange={(e) => setManualForm({ ...manualForm, save_to_inventory: e.target.checked })}
+                      style={{ marginTop: '0.2rem', accentColor: 'var(--primary)' }}
+                    />
+                    <div>
+                      <div style={{ fontWeight: 600, fontSize: '0.8rem' }}>
+                        ভবিষ্যতের জন্য ইনভেন্টরি তালিকায় সংরক্ষণ করুন
+                      </div>
+                      <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '0.1rem' }}>
+                        টিক দিলে এই পণ্যটি স্থায়ীভাবে ইনভেন্টরিতে ক্যাটালগভুক্ত হবে যেন পরবর্তীতে সার্চে পাওয়া যায়।
+                      </div>
+                    </div>
+                  </label>
+                </div>
+
+                {/* Live Line Total Calculation Banner */}
+                {parseFloat(manualForm.price) > 0 && (
+                  <div style={{ 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    padding: '0.55rem 0.85rem', 
+                    background: 'rgba(59, 130, 246, 0.08)', 
+                    border: '1px solid rgba(59, 130, 246, 0.25)', 
+                    borderRadius: 'var(--radius-md)' 
+                  }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--primary)' }}>
+                      কার্টে মোট যোগ হবে:
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontWeight: 800, fontSize: '1rem', color: 'var(--primary)' }}>
+                      ৳{((parseFloat(manualForm.price) || 0) * (parseInt(manualForm.quantity, 10) || 1)).toFixed(2)}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer Actions */}
+              <div className="modal-footer" style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '0.75rem' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-secondary" 
+                  onClick={() => setShowManualModal(false)}
+                  disabled={savingManualProduct}
+                >
+                  বাতিল
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary"
+                  disabled={savingManualProduct || !manualForm.name.trim() || !parseFloat(manualForm.price)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+                >
+                  <PackagePlus size={15} />
+                  <span>{savingManualProduct ? 'সংরক্ষণ ও যোগ হচ্ছে...' : 'কার্টে যোগ করুন'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
       )}
     </div>
   );

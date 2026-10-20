@@ -689,35 +689,60 @@ router.post('/pos/checkout', async (req, res) => {
       if (!prod && item.barcode) {
         prod = await Product.findOne({ barcode: String(item.barcode).trim() });
       }
-      if (!prod) {
+
+      // Check if it's a manual / custom non-inventory product
+      const isManual = item.is_manual || item.isManual || String(pId).startsWith('manual_') || String(pId).startsWith('custom_') || (!prod && item.name && (item.price !== undefined || item.unitPrice !== undefined || item.unit_price !== undefined));
+
+      if (!prod && !isManual) {
         return res.status(400).json({ error: `পণ্য ID '${pId}' খুঁজে পাওয়া যায়নি` });
       }
 
-      if (prod.stock_qty < pQty) {
-        return res.status(400).json({ 
-          error: `পর্যাপ্ত স্টক নেই: ${prod.name} (চাহিদা: ${pQty}, বর্তমান মজুদ: ${prod.stock_qty})` 
+      if (prod) {
+        if (prod.stock_qty < pQty) {
+          return res.status(400).json({ 
+            error: `পর্যাপ্ত স্টক নেই: ${prod.name} (চাহিদা: ${pQty}, বর্তমান মজুদ: ${prod.stock_qty})` 
+          });
+        }
+
+        const lineTotal = Number((prod.price * pQty).toFixed(2));
+        subtotal += lineTotal;
+
+        const dept = await Department.findOne({ id: prod.department_id }).lean();
+        const fallbackDept = DEFAULT_DEPARTMENTS.find(d => d.id === prod.department_id);
+        verifiedItems.push({
+          productId: prod.id,
+          id: prod.id,
+          name: prod.name,
+          deptName: dept?.name || fallbackDept?.name || 'স্টেশনারি',
+          unitPrice: prod.price,
+          qty: pQty,
+          quantity: pQty,
+          lineTotal
+        });
+
+        // Deduct stock
+        prod.stock_qty = Math.max(0, prod.stock_qty - pQty);
+        await prod.save();
+      } else {
+        // Manual / Custom non-inventory item
+        const itemPrice = Number(parseFloat(item.price ?? item.unit_price ?? item.unitPrice ?? 0).toFixed(2));
+        if (isNaN(itemPrice) || itemPrice < 0) {
+          return res.status(400).json({ error: `ম্যানুয়াল পণ্যের সঠিক বিক্রয়মূল্য দিন: ${item.name || 'কাস্টম পণ্য'}` });
+        }
+        const lineTotal = Number((itemPrice * pQty).toFixed(2));
+        subtotal += lineTotal;
+
+        verifiedItems.push({
+          productId: pId,
+          id: pId,
+          name: item.name ? String(item.name).trim() : 'ম্যানুয়াল পণ্য',
+          deptName: item.department_name || item.deptName || 'সাধারণ স্টেশনারি',
+          unitPrice: itemPrice,
+          qty: pQty,
+          quantity: pQty,
+          lineTotal
         });
       }
-
-      const lineTotal = Number((prod.price * pQty).toFixed(2));
-      subtotal += lineTotal;
-
-      const dept = await Department.findOne({ id: prod.department_id }).lean();
-      const fallbackDept = DEFAULT_DEPARTMENTS.find(d => d.id === prod.department_id);
-      verifiedItems.push({
-        productId: prod.id,
-        id: prod.id,
-        name: prod.name,
-        deptName: dept?.name || fallbackDept?.name || 'স্টেশনারি',
-        unitPrice: prod.price,
-        qty: pQty,
-        quantity: pQty,
-        lineTotal
-      });
-
-      // Deduct stock
-      prod.stock_qty = Math.max(0, prod.stock_qty - pQty);
-      await prod.save();
     }
 
     subtotal = Number(subtotal.toFixed(2));
