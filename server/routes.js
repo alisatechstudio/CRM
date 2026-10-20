@@ -289,7 +289,7 @@ router.post('/customers', async (req, res) => {
 
 router.put('/customers/:id', async (req, res) => {
   try {
-    const { first_name, last_name, email, phone, birthday, preferred_department, notes, tags } = req.body;
+    const { first_name, last_name, email, phone, birthday, preferred_department, notes, tags, tier, churn_risk, card_number } = req.body;
     const updateFields = {};
     if (first_name !== undefined) updateFields.first_name = first_name.trim();
     if (last_name !== undefined) updateFields.last_name = last_name.trim();
@@ -299,6 +299,9 @@ router.put('/customers/:id', async (req, res) => {
     if (preferred_department !== undefined) updateFields.preferred_department = preferred_department;
     if (notes !== undefined) updateFields.notes = notes;
     if (tags !== undefined) updateFields.tags = tags;
+    if (tier !== undefined) updateFields.tier = tier;
+    if (churn_risk !== undefined) updateFields.churn_risk = churn_risk;
+    if (card_number !== undefined && card_number.trim()) updateFields.card_number = card_number.trim();
 
     const updated = await Customer.findOneAndUpdate(
       { id: req.params.id },
@@ -308,6 +311,29 @@ router.put('/customers/:id', async (req, res) => {
 
     if (!updated) return res.status(404).json({ error: 'Customer not found' });
     res.json(updated);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/customers/:id', async (req, res) => {
+  try {
+    const customer = await Customer.findOne({ id: req.params.id });
+    if (!customer) return res.status(404).json({ error: 'গ্রাহক খুঁজে পাওয়া যায়নি' });
+
+    // Safeguard: Check if customer has outstanding unpaid dues
+    if (customer.due_balance > 0 && req.query.force !== 'true') {
+      return res.status(400).json({ 
+        error: `এই গ্রাহকের ৳${customer.due_balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} বকেয়া বাকি রয়েছে! বকেয়া পরিশোধ না করে গ্রাহক মুছে ফেলা সম্ভব নয়।` 
+      });
+    }
+
+    const result = await Customer.deleteOne({ id: req.params.id });
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ error: 'গ্রাহক খুঁজে পাওয়া যায়নি' });
+    }
+
+    res.json({ success: true, message: 'গ্রাহক সফলভাবে মুছে ফেলা হয়েছে' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
