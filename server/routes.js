@@ -25,6 +25,29 @@ async function getEffectivePin() {
   return process.env.APP_PIN || '0000';
 }
 
+// Dhaka Timezone Helpers (Asia/Dhaka - UTC+6)
+const getDhakaDateTime = (date = new Date()) => {
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'Asia/Dhaka',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).format(date).replace('T', ' ');
+};
+
+const getDhakaDate = (date = new Date()) => {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Dhaka',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(date);
+};
+
 // =================== PIN SECURITY & AUTH ===================
 router.post('/auth/verify-pin', async (req, res) => {
   try {
@@ -783,7 +806,7 @@ router.post('/pos/checkout', async (req, res) => {
 
     const orderId = 'ord_' + Date.now();
     const orderNumber = `ORD-2026-${Math.floor(1000 + Math.random() * 9000)}`;
-    const createdAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const createdAt = getDhakaDateTime();
 
     const orderItemsForSave = verifiedItems.map((it, idx) => ({
       id: `item_${orderId}_${idx + 1}`,
@@ -978,8 +1001,39 @@ router.get('/orders/:id', async (req, res) => {
 
     const store = await Store.findOne({ id: order.store_id || 'store_1' }).lean();
 
+    // Format created_at to Asia/Dhaka timezone
+    let dhakaDate = '';
+    let dhakaTime = '';
+    const rawDate = order.createdAt || order.created_at;
+    if (rawDate) {
+      try {
+        const dObj = order.createdAt 
+          ? new Date(order.createdAt) 
+          : new Date(rawDate.includes('Z') || rawDate.includes('+') ? rawDate : rawDate.replace(' ', 'T') + 'Z');
+        if (!isNaN(dObj.getTime())) {
+          dhakaDate = new Intl.DateTimeFormat('en-CA', {
+            timeZone: 'Asia/Dhaka',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+          }).format(dObj);
+          dhakaTime = new Intl.DateTimeFormat('en-US', {
+            timeZone: 'Asia/Dhaka',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true
+          }).format(dObj);
+        }
+      } catch (e) {
+        // fallback
+      }
+    }
+
     res.json({
       ...order,
+      dhaka_date: dhakaDate || (order.created_at ? order.created_at.split(' ')[0] : ''),
+      dhaka_time: dhakaTime || (order.created_at ? order.created_at.split(' ').slice(1).join(' ') : ''),
       paid_amount: order.paid_amount !== undefined ? order.paid_amount : order.total,
       due_amount: order.due_amount || 0,
       change_amount: order.change_amount || 0,

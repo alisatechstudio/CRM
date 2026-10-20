@@ -2,6 +2,61 @@ import React, { useState, useEffect } from 'react';
 import { X, Printer, CheckCircle } from 'lucide-react';
 import { api } from '../api';
 
+// Helper to format date and time in Asia/Dhaka timezone (UTC+6)
+const formatDhakaDateTime = (orderObj) => {
+  if (!orderObj) return { date: '', time: '' };
+  if (orderObj.dhaka_date && orderObj.dhaka_time) {
+    return { date: orderObj.dhaka_date, time: orderObj.dhaka_time };
+  }
+
+  const raw = orderObj.createdAt || orderObj.created_at;
+  if (!raw) return { date: '', time: '' };
+
+  try {
+    let dateObj;
+    if (orderObj.createdAt) {
+      dateObj = new Date(orderObj.createdAt);
+    } else if (typeof raw === 'string') {
+      if (raw.includes('Z') || raw.includes('+')) {
+        dateObj = new Date(raw);
+      } else if (raw.includes('T')) {
+        dateObj = new Date(raw + 'Z');
+      } else if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(raw)) {
+        dateObj = new Date(raw.replace(' ', 'T') + 'Z');
+      } else {
+        dateObj = new Date(raw);
+      }
+    } else {
+      dateObj = new Date(raw);
+    }
+
+    if (isNaN(dateObj.getTime())) {
+      const parts = String(raw).split(' ');
+      return { date: parts[0] || '', time: parts.slice(1).join(' ') || '' };
+    }
+
+    const date = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Dhaka',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(dateObj);
+
+    const time = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Asia/Dhaka',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    }).format(dateObj);
+
+    return { date, time };
+  } catch (err) {
+    const parts = String(raw).split(' ');
+    return { date: parts[0] || '', time: parts.slice(1).join(' ') || '' };
+  }
+};
+
 export default function ReceiptModal({ orderId, onClose }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -30,6 +85,8 @@ export default function ReceiptModal({ orderId, onClose }) {
   }
 
   if (!order) return null;
+
+  const { date: receiptDate, time: receiptTime } = formatDhakaDateTime(order);
 
   return (
     <div className="modal-overlay" onClick={onClose}>
@@ -70,11 +127,11 @@ export default function ReceiptModal({ orderId, onClose }) {
 
             <div style={{ fontSize: '0.78rem', display: 'flex', justifyContent: 'space-between' }}>
               <span>চালান নং: {order.order_number}</span>
-              <span>{order.created_at?.split(' ')[0]}</span>
+              <span>{receiptDate}</span>
             </div>
             <div style={{ fontSize: '0.78rem', display: 'flex', justifyContent: 'space-between' }}>
               <span>ক্যাশিয়ার: {order.cashier_name}</span>
-              <span>{order.created_at?.split(' ')[1]}</span>
+              <span>{receiptTime}</span>
             </div>
 
             {order.first_name && (
