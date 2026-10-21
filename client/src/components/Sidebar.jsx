@@ -33,7 +33,7 @@ export default function Sidebar({
   const navItems = [
     { id: 'dashboard', label: 'ড্যাশবোর্ড', icon: LayoutDashboard },
     { id: 'pos', label: 'পিওএস কাউন্টার', icon: ShoppingCart },
-    { id: 'orders', label: 'বিক্রয় ও চালান', icon: Receipt },
+    { id: 'orders', label: 'অর্ডার ও চালান', icon: Receipt },
     { id: 'customers', label: 'কাস্টমার তালিকা', icon: Users },
     { id: 'dues', label: 'বাকি খাতা', icon: BookOpen },
     { id: 'inventory', label: 'ইনভেন্টরি স্টক', icon: Package },

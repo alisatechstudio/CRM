@@ -129,8 +129,8 @@ export default function App() {
             <DashboardView 
               analytics={analytics}
               onSelectCustomer={(id) => setSelectedCustomerId(id)}
-              onOpenReceipt={(orderId) => setSelectedReceiptId(orderId)}
               onRefreshAnalytics={refreshAnalytics}
+              onNavigateToOrders={() => setCurrentTab('orders')}
             />
           )}
 

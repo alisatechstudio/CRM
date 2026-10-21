@@ -13,6 +13,7 @@ export default function TopNav({
   const titles = {
     dashboard: 'ড্যাশবোর্ড',
     pos: 'পিওএস কাউন্টার',
+    orders: 'অর্ডার ও বিক্রয় চালান',
     customers: 'কাস্টমার তালিকা',
     dues: 'বাকি খাতা ও দেনা-পাওনা',
     inventory: 'ইনভেন্টরি স্টক',

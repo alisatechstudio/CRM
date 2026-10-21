@@ -20,12 +20,9 @@ import {
   X,
   CreditCard,
   FileText,
-  BookOpen,
-  Edit2
+  BookOpen
 } from 'lucide-react';
 import { api } from '../api';
-import EditOrderModal from './EditOrderModal';
-import DeleteOrderModal from './DeleteOrderModal';
 
 const EXPENSE_CATEGORIES = [
   'দোকান ভাড়া',
@@ -58,7 +55,7 @@ const PAYMENT_METHODS = [
   'ব্যাংক ট্রান্সফার'
 ];
 
-export default function DashboardView({ analytics, onSelectCustomer, onOpenReceipt, onRefreshAnalytics }) {
+export default function DashboardView({ analytics, onSelectCustomer, onRefreshAnalytics, onNavigateToOrders }) {
   const [period, setPeriod] = useState('all');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -75,10 +72,6 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
   });
   const [isSubmittingExpense, setIsSubmittingExpense] = useState(false);
   const [expenseError, setExpenseError] = useState('');
-
-  // Order Edit & Delete modal states
-  const [editingOrderId, setEditingOrderId] = useState(null);
-  const [deletingOrder, setDeletingOrder] = useState(null);
 
   if (!analytics) {
     return (
@@ -311,12 +304,17 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
       {/* Expanded 8-KPI Cards Grid */}
       <div className="kpi-grid">
         {/* KPI 1: Gross Revenue */}
-        <div className="kpi-card" style={{ '--card-accent': '#6366f1', '--card-bg-accent': 'rgba(99, 102, 241, 0.12)' }}>
+        <div 
+          className="kpi-card" 
+          style={{ '--card-accent': '#6366f1', '--card-bg-accent': 'rgba(99, 102, 241, 0.12)', cursor: onNavigateToOrders ? 'pointer' : undefined }}
+          onClick={() => onNavigateToOrders && onNavigateToOrders()}
+          title="সকল অর্ডার ও বিক্রয় চালান দেখতে ক্লিক করুন"
+        >
           <div>
             <div className="kpi-title">মোট বিক্রয়</div>
             <div className="kpi-value">৳{(kpis.totalRevenue || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
             <div className="kpi-trend" style={{ color: 'var(--success)' }}>
-              <TrendingUp size={13} /> {kpis.totalOrders || 0} টি অর্ডার
+              <TrendingUp size={13} /> {kpis.totalOrders || 0} টি অর্ডার • বিস্তারিত দেখুন →
             </div>
           </div>
           <div className="kpi-icon-wrap" style={{ color: '#6366f1', background: 'rgba(99, 102, 241, 0.12)' }}>
@@ -816,162 +814,76 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         </div>
       </div>
 
-      {/* 2-Column: Top VIP Spenders & Recent Orders */}
-      <div className="dashboard-grid-2col">
-        {/* Top VIP Spenders */}
-        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <div>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>শীর্ষ ক্রেতা</h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>সর্বোচ্চ কেনাকাটাকারী গ্রাহক</p>
-            </div>
+      {/* Top VIP Spenders */}
+      <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.65rem' }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>শীর্ষ ক্রেতা ও মেম্বার তালিকা</h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>সর্বোচ্চ কেনাকাটাকারী কাস্টমার প্রোফাইল</p>
           </div>
-
-          <div className="data-table-container" style={{ flex: 1 }}>
-            <table className="data-table">
-              <thead>
-                <tr>
-                  <th>গ্রাহক</th>
-                  <th>টিয়ার</th>
-                  <th>মোট ক্রয়</th>
-                  <th>পয়েন্ট</th>
-                  <th>বিস্তারিত</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topSpenders.length === 0 ? (
-                  <tr>
-                    <td colSpan="5" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                      কোনো কেনাকাটার তথ্য নেই
-                    </td>
-                  </tr>
-                ) : (
-                  topSpenders.map((cust) => (
-                    <tr key={cust.id}>
-                      <td>
-                        <div style={{ fontWeight: 600 }}>{cust.first_name} {cust.last_name}</div>
-                        <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
-                          {cust.card_number}
-                        </div>
-                      </td>
-                      <td>
-                        <span className={`tier-badge tier-${cust.tier}`}>{cust.tier}</span>
-                      </td>
-                      <td style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
-                        ৳{cust.total_spent?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
-                      </td>
-                      <td style={{ color: 'var(--primary)', fontWeight: 600 }}>
-                        {cust.points_balance?.toLocaleString()}
-                      </td>
-                      <td>
-                        <button 
-                          className="btn btn-secondary btn-sm"
-                          onClick={() => onSelectCustomer(cust.id)}
-                        >
-                          প্রোফাইল <ArrowUpRight size={13} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
+          {onNavigateToOrders && (
+            <button 
+              type="button" 
+              className="btn btn-secondary btn-sm"
+              onClick={onNavigateToOrders}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.78rem' }}
+            >
+              <Receipt size={14} style={{ color: 'var(--primary)' }} />
+              <span>সকল বিক্রয় ও অর্ডার ব্যবস্থাপনা দেখুন</span>
+              <ArrowUpRight size={13} />
+            </button>
+          )}
         </div>
 
-        {/* Recent Transactions Feed */}
-        <div className="glass-panel" style={{ display: 'flex', flexDirection: 'column' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-            <div>
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: 700 }}>সাম্প্রতিক লেনদেন</h3>
-              <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0.2rem 0 0' }}>সর্বশেষ বিক্রয় রসিদ</p>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', flex: 1 }}>
-            {recentOrders.length === 0 ? (
-              <div style={{ 
-                textAlign: 'center', 
-                padding: '2.5rem', 
-                color: 'var(--text-muted)', 
-                fontSize: '0.85rem',
-                background: 'var(--bg-surface)',
-                borderRadius: 'var(--radius-md)',
-                border: '1px dashed var(--border-subtle)',
-                margin: 'auto 0'
-              }}>
-                কোনো বিক্রয় রসিদ নেই
-              </div>
-            ) : (
-              recentOrders.map((ord) => (
-                <div 
-                  key={ord.id}
-                  style={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    justifyContent: 'space-between',
-                    padding: '0.75rem 1rem',
-                    background: 'var(--bg-surface)',
-                    borderRadius: 'var(--radius-md)',
-                    border: '1px solid var(--border-subtle)',
-                    cursor: 'pointer',
-                    transition: 'border-color var(--transition-fast)'
-                  }}
-                  onClick={() => onOpenReceipt(ord.id)}
-                >
-                  <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                      <span style={{ fontWeight: 700, fontSize: '0.875rem' }}>{ord.order_number}</span>
-                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>• {ord.store_name}</span>
-                    </div>
-                    <div style={{ fontSize: '0.78rem', color: 'var(--text-dim)' }}>
-                      {ord.first_name ? `${ord.first_name} ${ord.last_name}` : 'অতিথি'} • {ord.payment_method}
-                    </div>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 800, fontFamily: 'var(--font-mono)', fontSize: '0.95rem' }}>
-                        ৳{ord.total?.toFixed(2)}
+        <div className="data-table-container" style={{ flex: 1 }}>
+          <table className="data-table">
+            <thead>
+              <tr>
+                <th>গ্রাহক</th>
+                <th>টিয়ার</th>
+                <th>মোট ক্রয়</th>
+                <th>পয়েন্ট</th>
+                <th>বিস্তারিত</th>
+              </tr>
+            </thead>
+            <tbody>
+              {topSpenders.length === 0 ? (
+                <tr>
+                  <td colSpan="5" style={{ textAlign: 'center', padding: '2.5rem', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                    কোনো কেনাকাটার তথ্য নেই
+                  </td>
+                </tr>
+              ) : (
+                topSpenders.map((cust) => (
+                  <tr key={cust.id}>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{cust.first_name} {cust.last_name}</div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-dim)', fontFamily: 'var(--font-mono)' }}>
+                        {cust.card_number || cust.phone || 'আইডি: ' + cust.id}
                       </div>
-                      <div style={{ fontSize: '0.7rem', color: 'var(--success)' }}>
-                        সম্পন্ন
-                      </div>
-                    </div>
-                    
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm btn-icon"
-                        style={{ width: '28px', height: '28px', padding: 0 }}
-                        title="চালান এডিট / আপডেট করুন"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingOrderId(ord.id);
-                        }}
+                    </td>
+                    <td>
+                      <span className={`tier-badge tier-${cust.tier}`}>{cust.tier}</span>
+                    </td>
+                    <td style={{ fontWeight: 700, fontFamily: 'var(--font-mono)' }}>
+                      ৳{cust.total_spent?.toLocaleString('en-US', { minimumFractionDigits: 2 })}
+                    </td>
+                    <td style={{ color: 'var(--primary)', fontWeight: 600 }}>
+                      {cust.points_balance?.toLocaleString()}
+                    </td>
+                    <td>
+                      <button 
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => onSelectCustomer(cust.id)}
                       >
-                        <Edit2 size={13} />
+                        প্রোফাইল <ArrowUpRight size={13} />
                       </button>
-                      <button
-                        type="button"
-                        className="btn btn-danger btn-sm btn-icon"
-                        style={{ width: '28px', height: '28px', padding: 0 }}
-                        title="চালান মুছে ফেলুন"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setDeletingOrder(ord);
-                        }}
-                      >
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
-
-                    <ChevronRight size={16} style={{ color: 'var(--text-dim)' }} />
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
 
@@ -1143,30 +1055,6 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
         </div>
       )}
 
-      {/* Edit Order Modal */}
-      {editingOrderId && (
-        <EditOrderModal
-          orderId={editingOrderId}
-          onClose={() => setEditingOrderId(null)}
-          onUpdated={() => {
-            if (onRefreshAnalytics) onRefreshAnalytics();
-          }}
-          onDeleted={() => {
-            if (onRefreshAnalytics) onRefreshAnalytics();
-          }}
-        />
-      )}
-
-      {/* Delete Order Confirmation Modal */}
-      {deletingOrder && (
-        <DeleteOrderModal
-          order={deletingOrder}
-          onClose={() => setDeletingOrder(null)}
-          onDeleted={() => {
-            if (onRefreshAnalytics) onRefreshAnalytics();
-          }}
-        />
-      )}
     </div>
   );
 }
