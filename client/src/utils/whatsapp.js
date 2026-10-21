@@ -82,6 +82,12 @@ export function buildWhatsAppReceiptText(order) {
   if (customerName) {
     msg += `👤 *গ্রাহক:* ${customerName}${order.card_number ? ` (কার্ড: ${order.card_number})` : ''}\n`;
   }
+  const custPhone = order.phone || order.customer_phone || '';
+  if (custPhone) {
+    const digitsOnly = String(custPhone).replace(/\D/g, '');
+    const last6 = digitsOnly.length >= 6 ? digitsOnly.slice(-6) : digitsOnly;
+    msg += `📱 *মোবাইল:* ...${last6} (${formatDisplayPhone(custPhone)})\n`;
+  }
   if (order.cashier_name) {
     msg += `👨‍💼 *ক্যাশিয়ার:* ${order.cashier_name}\n`;
   }
@@ -162,6 +168,11 @@ export function buildWhatsAppDueStatementText({ customer, storePhone = '+880 130
   msg += `━━━━━━━━━━━━━━━━━━━━\n`;
   msg += `প্রিয় ${name},\n`;
   if (customer.card_number) msg += `💳 মেম্বার কার্ড নং: ${customer.card_number}\n`;
+  if (customer.phone) {
+    const digitsOnly = String(customer.phone).replace(/\D/g, '');
+    const last6 = digitsOnly.length >= 6 ? digitsOnly.slice(-6) : digitsOnly;
+    msg += `📱 *মোবাইল:* ...${last6} (${formatDisplayPhone(customer.phone)})\n`;
+  }
   msg += `🔴 *আপনার বর্তমান সর্বমোট বকেয়া (Due): ৳${due.toFixed(2)}*\n`;
   if (customer.points_balance > 0) {
     msg += `⭐ আপনার অর্জিত পয়েন্ট: ${customer.points_balance} pt\n`;

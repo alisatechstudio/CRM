@@ -256,10 +256,9 @@ router.get('/public/customer-portal', async (req, res) => {
     // Exact phone match
     orConditions.push({ phone: raw });
     
-    // If cleanDigits has 10 or 11 digits
-    if (cleanDigits.length >= 10) {
-      const last10 = cleanDigits.slice(-10);
-      orConditions.push({ phone: { $regex: new RegExp(`${last10}$`) } });
+    // Match by phone: supports full 11 digits or just the last 6 digits of customer mobile no
+    if (cleanDigits.length >= 6) {
+      orConditions.push({ phone: { $regex: new RegExp(`${cleanDigits}$`) } });
     }
 
     // Direct id match

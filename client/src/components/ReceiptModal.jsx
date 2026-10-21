@@ -150,6 +150,9 @@ export default function ReceiptModal({ orderId, onClose, onOrderUpdated, onOrder
               <div style={{ fontSize: '0.78rem', marginTop: '0.35rem', background: '#f3f4f6', padding: '0.4rem', borderRadius: '4px' }}>
                 <div>মেম্বার: <strong>{order.first_name} {order.last_name}</strong> ({order.tier})</div>
                 <div>কার্ড নং: {order.card_number}</div>
+                {order.phone && (
+                  <div>মোবাইল: ...{String(order.phone).replace(/\D/g, '').slice(-6)} ({order.phone})</div>
+                )}
               </div>
             )}
 

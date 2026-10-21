@@ -221,7 +221,7 @@ export default function CustomerPortalView({ onExitToStaff, initialPhone = '' })
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="আপনার ১১ সংখ্যার মোবাইল নম্বর (উদাঃ 017...)"
+                  placeholder="মোবাইল নম্বর (১১ ডিজিট বা শেষ ৬ ডিজিট) বা কার্ড নং"
                   value={identifier}
                   onChange={(e) => {
                     setIdentifier(e.target.value);
@@ -229,7 +229,7 @@ export default function CustomerPortalView({ onExitToStaff, initialPhone = '' })
                   }}
                   style={{
                     paddingLeft: '2.5rem',
-                    fontSize: '1rem',
+                    fontSize: '0.95rem',
                     fontWeight: 600,
                     fontFamily: 'var(--font-mono)',
                     height: '46px'
@@ -254,6 +254,10 @@ export default function CustomerPortalView({ onExitToStaff, initialPhone = '' })
                     <X size={15} />
                   </button>
                 )}
+              </div>
+
+              <div style={{ fontSize: '0.74rem', color: 'var(--text-dim)', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <span>💡 আপনি পুরো ১১ ডিজিট অথবা মোবাইল নম্বরের শেষ ৬ ডিজিট (উদাঃ <strong>965422</strong>) লিখেই দেখতে পারবেন।</span>
               </div>
 
               {error && (
