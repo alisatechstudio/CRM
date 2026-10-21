@@ -15,7 +15,8 @@ import {
   Download, 
   Phone,
   BookOpen,
-  Receipt
+  Receipt,
+  ShoppingBag
 } from 'lucide-react';
 
 export default function Sidebar({ 
@@ -28,7 +29,8 @@ export default function Sidebar({
   setActiveStore,
   isOpen = false,
   onClose,
-  onOpenInstallModal
+  onOpenInstallModal,
+  onOpenCustomerPortal
 }) {
   const navItems = [
     { id: 'dashboard', label: 'ড্যাশবোর্ড', icon: LayoutDashboard },
@@ -146,6 +148,27 @@ export default function Sidebar({
           </div>
 
           <div style={{ marginTop: '0.35rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            {onOpenCustomerPortal && (
+              <button 
+                type="button"
+                className="btn btn-secondary btn-sm" 
+                style={{ 
+                  width: '100%', 
+                  justifyContent: 'center',
+                  color: 'var(--primary)',
+                  fontWeight: 700
+                }}
+                title="গ্রাহক সেলফ-সার্ভিস পোর্টাল প্রিভিউ দেখুন"
+                onClick={() => {
+                  if (onClose) onClose();
+                  onOpenCustomerPortal();
+                }}
+              >
+                <ShoppingBag size={14} />
+                <span>গ্রাহক পোর্টাল</span>
+              </button>
+            )}
+
             <button 
               type="button"
               className="btn btn-secondary btn-sm" 

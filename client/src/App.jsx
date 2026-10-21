@@ -17,8 +17,19 @@ import PinLockScreen from './components/PinLockScreen';
 import MobileBottomNav from './components/MobileBottomNav';
 import InstallPwaModal from './components/InstallPwaModal';
 import OrdersView from './components/OrdersView';
+import CustomerPortalView from './components/CustomerPortalView';
 
 export default function App() {
+  const [isCustomerPortal, setIsCustomerPortal] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('portal') === 'true' || urlParams.has('phone') || urlParams.has('card') || window.location.hash === '#portal';
+  });
+
+  const [portalInitialPhone, setPortalInitialPhone] = useState(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get('phone') || urlParams.get('card') || '';
+  });
+
   const [isLocked, setIsLocked] = useState(() => {
     return !sessionStorage.getItem('crm_unlocked');
   });
@@ -86,10 +97,29 @@ export default function App() {
     }
   };
 
+  if (isCustomerPortal) {
+    return (
+      <CustomerPortalView
+        initialPhone={portalInitialPhone}
+        onExitToStaff={() => {
+          setIsCustomerPortal(false);
+          const url = new URL(window.location.href);
+          url.searchParams.delete('portal');
+          url.searchParams.delete('phone');
+          url.searchParams.delete('card');
+          window.history.replaceState({}, '', url.pathname);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="app-container">
       {isLocked && (
-        <PinLockScreen onUnlock={handleUnlock} />
+        <PinLockScreen 
+          onUnlock={handleUnlock} 
+          onOpenCustomerPortal={() => setIsCustomerPortal(true)}
+        />
       )}
 
       {/* Navigation Sidebar (Desktop + Mobile Drawer) */}
@@ -107,6 +137,7 @@ export default function App() {
         isOpen={mobileSidebarOpen}
         onClose={() => setMobileSidebarOpen(false)}
         onOpenInstallModal={() => setShowInstallModal(true)}
+        onOpenCustomerPortal={() => setIsCustomerPortal(true)}
       />
 
       {/* Main App Canvas */}

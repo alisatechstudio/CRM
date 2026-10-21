@@ -133,6 +133,14 @@ export function buildWhatsAppReceiptText(order) {
   }
 
   msg += `💳 মাধ্যম: ${order.payment_method || 'নগদ (Cash)'}\n`;
+
+  const customerPhone = order.phone || order.customer_phone || '';
+  if (customerPhone && typeof window !== 'undefined' && window.location?.origin) {
+    const cleanDigits = customerPhone.replace(/\D/g, '');
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `🌐 আপনার সম্পূর্ণ হিসাব ও রসিদ দেখতে ভিজিট করুন:\n${window.location.origin}/?phone=${cleanDigits}&portal=true\n`;
+  }
+
   msg += `━━━━━━━━━━━━━━━━━━━━\n`;
   msg += `কেনাকাটার জন্য আপনাকে আন্তরিক ধন্যবাদ! 🙏\n`;
   msg += `যেকোনো প্রয়োজনে যোগাযোগ: ${storePhone}`;
@@ -158,6 +166,13 @@ export function buildWhatsAppDueStatementText({ customer, storePhone = '+880 130
   if (customer.points_balance > 0) {
     msg += `⭐ আপনার অর্জিত পয়েন্ট: ${customer.points_balance} pt\n`;
   }
+
+  if (customer.phone && typeof window !== 'undefined' && window.location?.origin) {
+    const cleanDigits = customer.phone.replace(/\D/g, '');
+    msg += `━━━━━━━━━━━━━━━━━━━━\n`;
+    msg += `🌐 লাইভ বকেয়া হিসাব ও পরিশোধ দেখতে ভিজিট করুন:\n${window.location.origin}/?phone=${cleanDigits}&portal=true\n`;
+  }
+
   msg += `━━━━━━━━━━━━━━━━━━━━\n`;
   msg += `দয়া করে সুবিধাজনক সময়ে দোকানে এসে অথবা বিকাশ/নগদে বকেয়া পরিশোধ করার অনুরোধ করা যাচ্ছে।\n\n`;
   msg += `📲 বিকাশ/নগদ নম্বর: ${storePhone}\n`;

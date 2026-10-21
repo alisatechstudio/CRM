@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, Unlock, ShieldCheck, Delete, KeyRound, AlertCircle, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Lock, Unlock, ShieldCheck, Delete, KeyRound, AlertCircle, CheckCircle2, RefreshCw, ShoppingBag } from 'lucide-react';
 import { api } from '../api';
 
-export default function PinLockScreen({ onUnlock }) {
+export default function PinLockScreen({ onUnlock, onOpenCustomerPortal }) {
   const [pin, setPin] = useState('');
   const [error, setError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -240,6 +240,41 @@ export default function PinLockScreen({ onUnlock }) {
             <span>পিন পরিবর্তন</span>
           </button>
         </div>
+
+        {/* Customer Portal Entry Banner */}
+        {onOpenCustomerPortal && (
+          <div style={{
+            marginTop: '1rem',
+            paddingTop: '0.85rem',
+            borderTop: '1px dashed var(--border-subtle)',
+            width: '100%',
+            textAlign: 'center'
+          }}>
+            <button
+              type="button"
+              onClick={onOpenCustomerPortal}
+              style={{
+                width: '100%',
+                padding: '0.75rem 1rem',
+                borderRadius: 'var(--radius-md)',
+                background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(79, 70, 229, 0.16))',
+                border: '1px solid rgba(79, 70, 229, 0.3)',
+                color: 'var(--primary)',
+                fontWeight: 800,
+                fontSize: '0.86rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+            >
+              <ShoppingBag size={16} />
+              <span>গ্রাহক পোর্টাল — বাকি ও রসিদ দেখুন</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Change PIN Modal */}

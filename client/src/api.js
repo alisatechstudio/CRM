@@ -48,8 +48,8 @@ export const api = {
   getCustomerById: (id) => request(`/customers/${id}`),
   createCustomer: (data) => request('/customers', { method: 'POST', body: JSON.stringify(data) }),
   updateCustomer: (id, data) => request(`/customers/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
-  deleteCustomer: (id, force = false) => request(`/customers/${id}${force ? '?force=true' : ''}`, { method: 'DELETE' }),
   adjustPoints: (id, data) => request(`/customers/${id}/points`, { method: 'POST', body: JSON.stringify(data) }),
+  customerPortalLookup: (identifier) => request(`/public/customer-portal?identifier=${encodeURIComponent(identifier)}`),
 
   // Dues & Credit Management (বাকি খাতা)
   getDues: (params = {}) => request(`/dues${toQueryString(params)}`),

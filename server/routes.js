@@ -234,6 +234,136 @@ router.get('/customers', async (req, res) => {
   }
 });
 
+// =================== PUBLIC CUSTOMER PORTAL LOOKUP ===================
+router.get('/public/customer-portal', async (req, res) => {
+  try {
+    const { identifier } = req.query;
+    if (!identifier || !identifier.trim()) {
+      return res.status(400).json({ 
+        success: false, 
+        error: 'অনুগ্রহ করে আপনার মোবাইল নম্বর বা মেম্বার কার্ড নম্বর লিখুন।' 
+      });
+    }
+
+    const raw = identifier.trim();
+    const cleanDigits = raw.replace(/\D/g, '');
+
+    const orConditions = [];
+    
+    // Direct match on card number (case insensitive)
+    orConditions.push({ card_number: { $regex: new RegExp(`^${raw}$`, 'i') } });
+    
+    // Exact phone match
+    orConditions.push({ phone: raw });
+    
+    // If cleanDigits has 10 or 11 digits
+    if (cleanDigits.length >= 10) {
+      const last10 = cleanDigits.slice(-10);
+      orConditions.push({ phone: { $regex: new RegExp(`${last10}$`) } });
+    }
+
+    // Direct id match
+    if (raw.startsWith('cust_')) {
+      orConditions.push({ id: raw });
+    }
+
+    const customer = await Customer.findOne({ $or: orConditions }).lean();
+
+    if (!customer) {
+      return res.status(404).json({ 
+        success: false, 
+        error: 'এই মোবাইল নম্বর বা কার্ড নম্বরে কোনো গ্রাহক অ্যাকাউন্ট খুঁজে পাওয়া যায়নি। নম্বরটি সঠিক কিনা যাচাই করুন অথবা দোকানে যোগাযোগ করুন।' 
+      });
+    }
+
+    // Fetch up to 30 recent orders and due transactions
+    const [orders, dueTransactions, store] = await Promise.all([
+      Order.find({ customer_id: customer.id }).sort({ created_at: -1 }).limit(30).lean(),
+      DueTransaction.find({ customer_id: customer.id }).sort({ createdAt: -1, date: -1 }).limit(50).lean(),
+      Store.findOne({ id: 'store_1' }).lean()
+    ]);
+
+    // Format orders for customer view
+    const formattedOrders = orders.map(ord => {
+      let dhakaDate = '';
+      let dhakaTime = '';
+      const rawDate = ord.createdAt || ord.created_at;
+      if (rawDate) {
+        try {
+          const dObj = ord.createdAt 
+            ? new Date(ord.createdAt) 
+            : new Date(rawDate.includes('Z') || rawDate.includes('+') ? rawDate : rawDate.replace(' ', 'T') + 'Z');
+          if (!isNaN(dObj.getTime())) {
+            dhakaDate = new Intl.DateTimeFormat('en-CA', {
+              timeZone: 'Asia/Dhaka',
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit'
+            }).format(dObj);
+            dhakaTime = new Intl.DateTimeFormat('en-US', {
+              timeZone: 'Asia/Dhaka',
+              hour: '2-digit',
+              minute: '2-digit',
+              hour12: true
+            }).format(dObj);
+          }
+        } catch (e) {}
+      }
+
+      return {
+        id: ord.id,
+        order_number: ord.order_number,
+        created_at: ord.created_at || ord.createdAt,
+        dhaka_date: dhakaDate || (ord.created_at ? ord.created_at.split(' ')[0] : ''),
+        dhaka_time: dhakaTime || (ord.created_at ? ord.created_at.split(' ').slice(1).join(' ') : ''),
+        items: ord.items || [],
+        subtotal: ord.subtotal || ord.total || 0,
+        discount_amount: ord.discount_amount || 0,
+        manual_discount: ord.manual_discount || 0,
+        points_discount: ord.points_discount || 0,
+        total: ord.total || 0,
+        paid_amount: ord.paid_amount !== undefined ? ord.paid_amount : ord.total,
+        due_amount: ord.due_amount || 0,
+        change_amount: ord.change_amount || 0,
+        earned_points: ord.earned_points || 0,
+        payment_method: ord.payment_method || 'নগদ (Cash)',
+        payment_status: ord.payment_status || (ord.due_amount > 0 ? 'Due' : 'Paid')
+      };
+    });
+
+    res.json({
+      success: true,
+      customer: {
+        id: customer.id,
+        first_name: customer.first_name,
+        last_name: customer.last_name,
+        phone: customer.phone,
+        card_number: customer.card_number,
+        tier: customer.tier || 'Bronze',
+        points_balance: customer.points_balance || 0,
+        lifetime_points: customer.lifetime_points || 0,
+        due_balance: customer.due_balance || 0,
+        total_spent: customer.total_spent || 0,
+        visit_count: customer.visit_count || 0,
+        last_visit: customer.last_visit || '',
+        join_date: customer.join_date || ''
+      },
+      orders: formattedOrders,
+      dueTransactions: dueTransactions || [],
+      store: {
+        name: store?.name || 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস',
+        subName: 'MIJAN COMPUTER & COSMETICS',
+        location: store?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর',
+        phone: store?.phone || '+880 1309-965422',
+        bkash_number: '01309-965422',
+        nagad_number: '01309-965422'
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 router.get('/customers/:id', async (req, res) => {
   try {
     const customer = await Customer.findOne({ id: req.params.id }).lean();
