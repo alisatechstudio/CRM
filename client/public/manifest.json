@@ -77,6 +77,13 @@
       "description": "গ্রাহক প্রোফাইল ও লয়াল্টি পয়েন্ট",
       "url": "/?tab=customers",
       "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "গ্রাহক সেলফ-সার্ভিস পোর্টাল (Customer Portal)",
+      "short_name": "গ্রাহক পোর্টাল",
+      "description": "গ্রাহকের বাকি, ক্যাশ মেমো ও পয়েন্ট চেক করুন",
+      "url": "/?portal=true",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }]
     }
   ],
   "prefer_related_applications": false

@@ -22,10 +22,14 @@ import {
   ChevronRight,
   RefreshCw,
   Wallet,
-  Receipt
+  Receipt,
+  Download,
+  Smartphone
 } from 'lucide-react';
 import { api } from '../api';
 import { sendToWhatsApp } from '../utils/whatsapp';
+import InstallPwaModal from './InstallPwaModal';
+import { canPromptInstall, promptPwaInstall, isStandaloneApp, subscribePwaState } from '../pwaManager';
 
 export default function CustomerPortalView({ onExitToStaff, initialPhone = '' }) {
   const [identifier, setIdentifier] = useState(initialPhone || (() => localStorage.getItem('crm_portal_phone') || ''));
@@ -38,6 +42,33 @@ export default function CustomerPortalView({ onExitToStaff, initialPhone = '' })
   const [showPaymentInfo, setShowPaymentInfo] = useState(false);
   const [selectedReceiptOrder, setSelectedReceiptOrder] = useState(null);
   const [copiedField, setCopiedField] = useState('');
+  const [showInstallModal, setShowInstallModal] = useState(false);
+  const [canPrompt, setCanPrompt] = useState(canPromptInstall());
+  const [isInstalled, setIsInstalled] = useState(isStandaloneApp());
+
+  useEffect(() => {
+    const unsub = subscribePwaState((ev) => {
+      if (ev.type === 'prompt_ready') setCanPrompt(true);
+      if (ev.type === 'installed') setIsInstalled(true);
+      if (ev.type === 'choice' && ev.outcome === 'accepted') setIsInstalled(true);
+    });
+    return unsub;
+  }, []);
+
+  const handleQuickInstall = async () => {
+    if (canPrompt) {
+      try {
+        const res = await promptPwaInstall();
+        if (res && res.outcome === 'accepted') {
+          setIsInstalled(true);
+          return;
+        }
+      } catch (e) {
+        console.warn('Install prompt error:', e);
+      }
+    }
+    setShowInstallModal(true);
+  };
 
   // Auto-search if initialPhone was provided
   useEffect(() => {
@@ -142,6 +173,28 @@ export default function CustomerPortalView({ onExitToStaff, initialPhone = '' })
 
           {/* Action buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            {!isInstalled && (
+              <button
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={handleQuickInstall}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.35rem',
+                  fontSize: '0.75rem',
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                  border: 'none',
+                  boxShadow: '0 2px 8px rgba(79, 70, 229, 0.3)'
+                }}
+                title="মোবাইলে সরাসরি অ্যাপ ইনস্টল করুন"
+              >
+                <Download size={13} />
+                <span>অ্যাপ ইনস্টল</span>
+              </button>
+            )}
+
             <a
               href="tel:+8801309965422"
               className="btn btn-secondary btn-sm"
@@ -876,6 +929,67 @@ export default function CustomerPortalView({ onExitToStaff, initialPhone = '' })
             )}
           </div>
         )}
+
+        {/* PWA App Install Banner for Customers */}
+        {!isInstalled && (
+          <div style={{
+            background: 'linear-gradient(135deg, rgba(79, 70, 229, 0.08) 0%, rgba(124, 58, 237, 0.06) 100%)',
+            border: '1px solid rgba(99, 102, 241, 0.25)',
+            borderRadius: 'var(--radius-lg)',
+            padding: '1.15rem 1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '0.85rem',
+            marginTop: '1.75rem',
+            boxShadow: 'var(--shadow-sm)'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <div style={{
+                width: '44px',
+                height: '44px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#ffffff',
+                flexShrink: 0,
+                boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)'
+              }}>
+                <Smartphone size={22} />
+              </div>
+              <div>
+                <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-main)' }}>
+                  ফোনে সরাসরি অ্যাপ হিসেবে ইনস্টল করুন
+                </div>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                  ব্রাউজার ছাড়াই সরাসরি ১-ট্যাপে নিজের বাকি, ক্যাশ মেমো ও পয়েন্ট চেক করুন।
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={handleQuickInstall}
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.45rem',
+                fontWeight: 700,
+                padding: '0.55rem 1.15rem',
+                borderRadius: 'var(--radius-md)',
+                background: 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)',
+                boxShadow: '0 2px 8px rgba(79, 70, 229, 0.35)'
+              }}
+            >
+              <Download size={15} />
+              <span>📲 ইনস্টল করুন</span>
+            </button>
+          </div>
+        )}
       </main>
 
       {/* MODAL 1: BKASH / NAGAD PAYMENT INSTRUCTIONS */}
@@ -1112,6 +1226,11 @@ export default function CustomerPortalView({ onExitToStaff, initialPhone = '' })
             </div>
           </div>
         </div>
+      )}
+
+      {/* MODAL 3: PWA INSTALL GUIDE & TRIGGER */}
+      {showInstallModal && (
+        <InstallPwaModal onClose={() => setShowInstallModal(false)} />
       )}
     </div>
   );
