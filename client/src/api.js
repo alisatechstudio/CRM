@@ -72,6 +72,8 @@ export const api = {
     return request(`/orders${toQueryString(params)}`);
   },
   getOrderById: (id) => request(`/orders/${id}`),
+  updateOrder: (id, data) => request(`/orders/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+  deleteOrder: (id) => request(`/orders/${id}`, { method: 'DELETE' }),
 
   // Coupons
   getCoupons: () => request('/coupons'),

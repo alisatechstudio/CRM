@@ -20,9 +20,12 @@ import {
   X,
   CreditCard,
   FileText,
-  BookOpen
+  BookOpen,
+  Edit2
 } from 'lucide-react';
 import { api } from '../api';
+import EditOrderModal from './EditOrderModal';
+import DeleteOrderModal from './DeleteOrderModal';
 
 const EXPENSE_CATEGORIES = [
   'দোকান ভাড়া',
@@ -72,6 +75,10 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
   });
   const [isSubmittingExpense, setIsSubmittingExpense] = useState(false);
   const [expenseError, setExpenseError] = useState('');
+
+  // Order Edit & Delete modal states
+  const [editingOrderId, setEditingOrderId] = useState(null);
+  const [deletingOrder, setDeletingOrder] = useState(null);
 
   if (!analytics) {
     return (
@@ -922,7 +929,7 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                     </div>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
                     <div style={{ textAlign: 'right' }}>
                       <div style={{ fontWeight: 800, fontFamily: 'var(--font-mono)', fontSize: '0.95rem' }}>
                         ৳{ord.total?.toFixed(2)}
@@ -931,6 +938,34 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
                         সম্পন্ন
                       </div>
                     </div>
+                    
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <button
+                        type="button"
+                        className="btn btn-secondary btn-sm btn-icon"
+                        style={{ width: '28px', height: '28px', padding: 0 }}
+                        title="চালান এডিট / আপডেট করুন"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setEditingOrderId(ord.id);
+                        }}
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-danger btn-sm btn-icon"
+                        style={{ width: '28px', height: '28px', padding: 0 }}
+                        title="চালান মুছে ফেলুন"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setDeletingOrder(ord);
+                        }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+
                     <ChevronRight size={16} style={{ color: 'var(--text-dim)' }} />
                   </div>
                 </div>
@@ -1106,6 +1141,31 @@ export default function DashboardView({ analytics, onSelectCustomer, onOpenRecei
             </form>
           </div>
         </div>
+      )}
+
+      {/* Edit Order Modal */}
+      {editingOrderId && (
+        <EditOrderModal
+          orderId={editingOrderId}
+          onClose={() => setEditingOrderId(null)}
+          onUpdated={() => {
+            if (onRefreshAnalytics) onRefreshAnalytics();
+          }}
+          onDeleted={() => {
+            if (onRefreshAnalytics) onRefreshAnalytics();
+          }}
+        />
+      )}
+
+      {/* Delete Order Confirmation Modal */}
+      {deletingOrder && (
+        <DeleteOrderModal
+          order={deletingOrder}
+          onClose={() => setDeletingOrder(null)}
+          onDeleted={() => {
+            if (onRefreshAnalytics) onRefreshAnalytics();
+          }}
+        />
       )}
     </div>
   );

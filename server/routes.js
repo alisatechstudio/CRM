@@ -980,14 +980,39 @@ router.post('/pos/checkout', async (req, res) => {
 // =================== ORDERS & RECEIPTS ===================
 router.get('/orders', async (req, res) => {
   try {
-    const { customer_id, limit = 50, start_date, end_date } = req.query;
+    const { customer_id, limit = 50, start_date, end_date, search, payment_status, payment_method } = req.query;
     const filter = {};
 
     if (customer_id) filter.customer_id = customer_id;
+    if (payment_status && payment_status !== 'all') {
+      filter.payment_status = payment_status;
+    }
+    if (payment_method && payment_method !== 'all') {
+      filter.payment_method = payment_method;
+    }
     if (start_date || end_date) {
       filter.created_at = {};
       if (start_date) filter.created_at.$gte = start_date;
       if (end_date) filter.created_at.$lte = end_date + ' 23:59:59';
+    }
+
+    if (search && search.trim()) {
+      const s = search.trim();
+      const matchingCusts = await Customer.find({
+        $or: [
+          { first_name: { $regex: s, $options: 'i' } },
+          { last_name: { $regex: s, $options: 'i' } },
+          { phone: { $regex: s, $options: 'i' } },
+          { card_number: { $regex: s, $options: 'i' } }
+        ]
+      }).select('id').lean();
+      const matchingCustIds = matchingCusts.map(c => c.id);
+
+      filter.$or = [
+        { order_number: { $regex: s, $options: 'i' } },
+        { cashier_name: { $regex: s, $options: 'i' } },
+        { customer_id: { $in: matchingCustIds } }
+      ];
     }
 
     const orders = await Order.find(filter)
@@ -1005,6 +1030,8 @@ router.get('/orders', async (req, res) => {
       customer_first_name: custMap[o.customer_id]?.first_name || '',
       customer_last_name: custMap[o.customer_id]?.last_name || '',
       customer_card: custMap[o.customer_id]?.card_number || null,
+      customer_phone: custMap[o.customer_id]?.phone || null,
+      customer_due_balance: custMap[o.customer_id]?.due_balance || 0,
       store_name: 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস'
     }));
 
@@ -1074,6 +1101,389 @@ router.get('/orders/:id', async (req, res) => {
       store_name: store?.name || 'মিজান কম্পিউটার অ্যান্ড কসমেটিকস',
       store_location: store?.location || 'চন্ডিপুর পুরান বাজার, নড়িয়া, শরীয়তপুর',
       store_phone: store?.phone || '+880 1309-965422'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Update Order (Items, Payment, Discounts, Status, and Cashier)
+router.put('/orders/:id', async (req, res) => {
+  try {
+    const order = await Order.findOne({ id: req.params.id });
+    if (!order) return res.status(404).json({ error: 'অর্ডারটি খুঁজে পাওয়া যায়নি' });
+
+    const {
+      items,
+      manual_discount,
+      manual_discount_reason,
+      paid_amount,
+      payment_method,
+      cashier_name,
+      status
+    } = req.body;
+
+    const oldTotal = order.total;
+    const oldDue = order.due_amount || 0;
+    const oldEarnedPoints = order.earned_points || 0;
+
+    let customer = null;
+    if (order.customer_id) {
+      customer = await Customer.findOne({ id: order.customer_id });
+    }
+
+    // 1. If line items are being updated
+    if (items && Array.isArray(items)) {
+      if (items.length === 0) {
+        return res.status(400).json({ error: 'অর্ডারে কমপক্ষে একটি পণ্য থাকা আবশ্যক' });
+      }
+
+      // Map existing item quantities per product_id
+      const oldQtys = {};
+      for (const it of (order.items || [])) {
+        if (it.product_id) {
+          oldQtys[it.product_id] = (oldQtys[it.product_id] || 0) + (it.quantity || 0);
+        }
+      }
+
+      // Map new item quantities per product_id
+      const newQtys = {};
+      for (const it of items) {
+        const pId = it.product_id || it.productId;
+        const q = parseInt(it.quantity || it.qty || 1, 10);
+        if (pId) {
+          newQtys[pId] = (newQtys[pId] || 0) + q;
+        }
+      }
+
+      // Check stock sufficiency for net increments
+      const allProductIds = Array.from(new Set([...Object.keys(oldQtys), ...Object.keys(newQtys)]));
+      const productsMap = {};
+      if (allProductIds.length > 0) {
+        const prods = await Product.find({ id: { $in: allProductIds } });
+        for (const p of prods) productsMap[p.id] = p;
+      }
+
+      for (const pId of allProductIds) {
+        const oldQ = oldQtys[pId] || 0;
+        const newQ = newQtys[pId] || 0;
+        const delta = newQ - oldQ; // positive = needs more stock
+        const prod = productsMap[pId];
+        if (prod && delta > 0) {
+          if (prod.stock_qty < delta) {
+            return res.status(400).json({
+              error: `পর্যাপ্ত স্টক নেই: ${prod.name} (বাড়তি চাহিদা: ${delta}, বর্তমান মজুদ: ${prod.stock_qty})`
+            });
+          }
+        }
+      }
+
+      // Adjust inventory stock safely
+      for (const pId of allProductIds) {
+        const oldQ = oldQtys[pId] || 0;
+        const newQ = newQtys[pId] || 0;
+        const delta = newQ - oldQ;
+        const prod = productsMap[pId];
+        if (prod && delta !== 0) {
+          prod.stock_qty = Math.max(0, prod.stock_qty - delta);
+          await prod.save();
+        }
+      }
+
+      // Build verified new line items & calculate subtotal
+      let newSubtotal = 0;
+      const verifiedItems = items.map((it, idx) => {
+        const unitPrice = Number(parseFloat(it.unit_price ?? it.price ?? 0).toFixed(2));
+        const qty = parseInt(it.quantity ?? it.qty ?? 1, 10);
+        const lineTotal = Number((unitPrice * qty).toFixed(2));
+        newSubtotal += lineTotal;
+        return {
+          id: it.id || `item_${order.id}_${idx + 1}`,
+          product_id: it.product_id || it.productId || null,
+          product_name: it.product_name || it.name || 'পণ্য',
+          department_name: it.department_name || it.deptName || 'সাধারণ স্টেশনারি',
+          unit_price: unitPrice,
+          quantity: qty,
+          total_price: lineTotal
+        };
+      });
+
+      newSubtotal = Number(newSubtotal.toFixed(2));
+
+      // Calculate manual and other discounts
+      let calcManualDiscount = 0;
+      if (manual_discount !== undefined) {
+        calcManualDiscount = Number(parseFloat(manual_discount || 0).toFixed(2));
+      } else {
+        calcManualDiscount = order.manual_discount || 0;
+      }
+      calcManualDiscount = Math.min(newSubtotal, calcManualDiscount);
+
+      const discountAmount = order.discount_amount || 0;
+      const pointsDiscount = order.points_discount || 0;
+      const totalDiscount = Math.min(newSubtotal, Number((calcManualDiscount + discountAmount + pointsDiscount).toFixed(2)));
+      const newTotal = Number(Math.max(0, newSubtotal - totalDiscount).toFixed(2));
+
+      // Reconcile paid and due amounts
+      let finalPaidAmount = newTotal;
+      let newDueAmount = 0;
+      let newChangeAmount = 0;
+      let newPaymentStatus = 'Paid';
+
+      if (paid_amount !== undefined && paid_amount !== null && paid_amount !== '') {
+        const parsedPaid = Number(parseFloat(paid_amount).toFixed(2));
+        if (!isNaN(parsedPaid)) {
+          if (parsedPaid < newTotal) {
+            finalPaidAmount = Math.max(0, parsedPaid);
+            newDueAmount = Number((newTotal - finalPaidAmount).toFixed(2));
+            newPaymentStatus = finalPaidAmount > 0 ? 'Partial' : 'Due';
+          } else {
+            finalPaidAmount = newTotal;
+            newChangeAmount = Number((parsedPaid - newTotal).toFixed(2));
+            newDueAmount = 0;
+            newPaymentStatus = 'Paid';
+          }
+        }
+      } else {
+        const priorPaid = order.paid_amount !== undefined ? order.paid_amount : oldTotal;
+        if (priorPaid < newTotal) {
+          finalPaidAmount = Math.max(0, priorPaid);
+          newDueAmount = Number((newTotal - finalPaidAmount).toFixed(2));
+          newPaymentStatus = finalPaidAmount > 0 ? 'Partial' : 'Due';
+        } else {
+          finalPaidAmount = newTotal;
+          newDueAmount = 0;
+          newPaymentStatus = 'Paid';
+        }
+      }
+
+      if (newDueAmount > 0 && !customer) {
+        return res.status(400).json({ error: 'বাকি চালানের জন্য গ্রাহক/মেম্বার থাকা আবশ্যক' });
+      }
+
+      // Customer adjustments (Due balance, Total spent, Loyalty points)
+      if (customer) {
+        // Due balance delta
+        const dueDelta = Number((newDueAmount - oldDue).toFixed(2));
+        if (dueDelta !== 0) {
+          customer.due_balance = Math.max(0, Number(((customer.due_balance || 0) + dueDelta).toFixed(2)));
+          const existingDueTx = await DueTransaction.findOne({ order_id: order.id, type: 'New_Due' });
+          if (existingDueTx) {
+            if (newDueAmount > 0) {
+              existingDueTx.amount = newDueAmount;
+              existingDueTx.remaining_due = customer.due_balance;
+              existingDueTx.notes = `চালান #${order.order_number}-এ বাকি (আপডেট)`;
+              await existingDueTx.save();
+            } else {
+              await DueTransaction.deleteOne({ _id: existingDueTx._id });
+            }
+          } else if (newDueAmount > 0) {
+            await DueTransaction.create({
+              id: 'due_' + Date.now(),
+              customer_id: customer.id,
+              order_id: order.id,
+              order_number: order.order_number,
+              type: 'New_Due',
+              amount: newDueAmount,
+              previous_due: Math.max(0, customer.due_balance - dueDelta),
+              remaining_due: customer.due_balance,
+              payment_method: payment_method || order.payment_method,
+              notes: `চালান #${order.order_number}-এ বাকি (আপডেট)`,
+              collected_by: cashier_name || order.cashier_name,
+              date: getDhakaDateTime()
+            });
+          }
+        }
+
+        // Total spent delta
+        const spentDelta = Number((newTotal - oldTotal).toFixed(2));
+        customer.total_spent = Math.max(0, Number(((customer.total_spent || 0) + spentDelta).toFixed(2)));
+
+        // Earned points recalculation
+        let multiplier = 1.0;
+        if (customer.tier === 'Silver') multiplier = 1.25;
+        else if (customer.tier === 'Gold') multiplier = 1.5;
+        else if (customer.tier === 'Platinum') multiplier = 1.75;
+        else if (customer.tier === 'VIP') multiplier = 2.0;
+
+        const basePoints = Math.floor(newTotal / 100);
+        const newEarnedPoints = Math.round(basePoints * multiplier);
+        const pointsDelta = newEarnedPoints - oldEarnedPoints;
+
+        customer.points_balance = Math.max(0, (customer.points_balance || 0) + pointsDelta);
+        customer.lifetime_points = Math.max(0, (customer.lifetime_points || 0) + pointsDelta);
+
+        let newTier = 'Bronze';
+        if (customer.lifetime_points >= 12000) newTier = 'VIP';
+        else if (customer.lifetime_points >= 7000) newTier = 'Platinum';
+        else if (customer.lifetime_points >= 3500) newTier = 'Gold';
+        else if (customer.lifetime_points >= 1500) newTier = 'Silver';
+        customer.tier = newTier;
+
+        await customer.save();
+
+        if (pointsDelta !== 0) {
+          await LoyaltyTransaction.findOneAndUpdate(
+            { order_id: order.id, type: 'Earned' },
+            {
+              points: newEarnedPoints,
+              balance_after: customer.points_balance,
+              description: `অর্ডার #${order.order_number}-এ অর্জিত ${newEarnedPoints} পয়েন্ট (আপডেট)`
+            }
+          );
+        }
+
+        order.earned_points = newEarnedPoints;
+      }
+
+      order.items = verifiedItems;
+      order.subtotal = newSubtotal;
+      order.manual_discount = calcManualDiscount;
+      if (manual_discount_reason !== undefined) order.manual_discount_reason = manual_discount_reason.trim();
+      order.total = newTotal;
+      order.paid_amount = finalPaidAmount;
+      order.due_amount = newDueAmount;
+      order.change_amount = newChangeAmount;
+      order.payment_status = newPaymentStatus;
+    } else {
+      // Items not modified, but payment amounts or status changed
+      if (paid_amount !== undefined && paid_amount !== null && paid_amount !== '') {
+        const parsedPaid = Number(parseFloat(paid_amount).toFixed(2));
+        if (!isNaN(parsedPaid)) {
+          let finalPaidAmount = parsedPaid;
+          let newDueAmount = 0;
+          let newChangeAmount = 0;
+          let newPaymentStatus = 'Paid';
+
+          if (parsedPaid < order.total) {
+            finalPaidAmount = Math.max(0, parsedPaid);
+            newDueAmount = Number((order.total - finalPaidAmount).toFixed(2));
+            newPaymentStatus = finalPaidAmount > 0 ? 'Partial' : 'Due';
+          } else {
+            finalPaidAmount = order.total;
+            newChangeAmount = Number((parsedPaid - order.total).toFixed(2));
+            newDueAmount = 0;
+            newPaymentStatus = 'Paid';
+          }
+
+          if (newDueAmount > 0 && !customer) {
+            return res.status(400).json({ error: 'বাকি চালানের জন্য গ্রাহক/মেম্বার থাকা আবশ্যক' });
+          }
+
+          if (customer) {
+            const dueDelta = Number((newDueAmount - oldDue).toFixed(2));
+            if (dueDelta !== 0) {
+              customer.due_balance = Math.max(0, Number(((customer.due_balance || 0) + dueDelta).toFixed(2)));
+              await customer.save();
+
+              const existingDueTx = await DueTransaction.findOne({ order_id: order.id, type: 'New_Due' });
+              if (existingDueTx) {
+                if (newDueAmount > 0) {
+                  existingDueTx.amount = newDueAmount;
+                  existingDueTx.remaining_due = customer.due_balance;
+                  await existingDueTx.save();
+                } else {
+                  await DueTransaction.deleteOne({ _id: existingDueTx._id });
+                }
+              } else if (newDueAmount > 0) {
+                await DueTransaction.create({
+                  id: 'due_' + Date.now(),
+                  customer_id: customer.id,
+                  order_id: order.id,
+                  order_number: order.order_number,
+                  type: 'New_Due',
+                  amount: newDueAmount,
+                  previous_due: Math.max(0, customer.due_balance - dueDelta),
+                  remaining_due: customer.due_balance,
+                  payment_method: payment_method || order.payment_method,
+                  notes: `চালান #${order.order_number}-এ বাকি (আপডেট)`,
+                  collected_by: cashier_name || order.cashier_name,
+                  date: getDhakaDateTime()
+                });
+              }
+            }
+          }
+
+          order.paid_amount = finalPaidAmount;
+          order.due_amount = newDueAmount;
+          order.change_amount = newChangeAmount;
+          order.payment_status = newPaymentStatus;
+        }
+      }
+    }
+
+    if (payment_method) order.payment_method = payment_method;
+    if (cashier_name) order.cashier_name = cashier_name.trim();
+    if (status) order.status = status;
+
+    await order.save();
+
+    res.json({
+      success: true,
+      message: `চালান #${order.order_number} সফলভাবে আপডেট করা হয়েছে`,
+      order
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Delete Order (Restore stocks, Reconcile dues, Revert points and metrics)
+router.delete('/orders/:id', async (req, res) => {
+  try {
+    const order = await Order.findOne({ id: req.params.id });
+    if (!order) return res.status(404).json({ error: 'অর্ডারটি খুঁজে পাওয়া যায়নি' });
+
+    // 1. Revert product stock for all items
+    if (order.items && Array.isArray(order.items)) {
+      for (const it of order.items) {
+        if (it.product_id) {
+          const prod = await Product.findOne({ id: it.product_id });
+          if (prod) {
+            prod.stock_qty = (prod.stock_qty || 0) + (it.quantity || 0);
+            await prod.save();
+          }
+        }
+      }
+    }
+
+    // 2. Revert customer due balance, points, total spent, and visit count
+    if (order.customer_id) {
+      const customer = await Customer.findOne({ id: order.customer_id });
+      if (customer) {
+        // Revert due balance
+        if (order.due_amount > 0) {
+          customer.due_balance = Math.max(0, Number(((customer.due_balance || 0) - order.due_amount).toFixed(2)));
+          await DueTransaction.deleteMany({ order_id: order.id });
+        }
+
+        // Revert loyalty points
+        const pointsRedeemed = order.points_redeemed || 0;
+        const earnedPoints = order.earned_points || 0;
+        customer.points_balance = Math.max(0, (customer.points_balance || 0) + pointsRedeemed - earnedPoints);
+        customer.lifetime_points = Math.max(0, (customer.lifetime_points || 0) - earnedPoints);
+        customer.total_spent = Math.max(0, Number(((customer.total_spent || 0) - order.total).toFixed(2)));
+        customer.visit_count = Math.max(0, (customer.visit_count || 1) - 1);
+
+        let newTier = 'Bronze';
+        if (customer.lifetime_points >= 12000) newTier = 'VIP';
+        else if (customer.lifetime_points >= 7000) newTier = 'Platinum';
+        else if (customer.lifetime_points >= 3500) newTier = 'Gold';
+        else if (customer.lifetime_points >= 1500) newTier = 'Silver';
+        customer.tier = newTier;
+
+        await customer.save();
+
+        await LoyaltyTransaction.deleteMany({ order_id: order.id });
+      }
+    }
+
+    // 3. Delete order
+    await Order.deleteOne({ id: order.id });
+
+    res.json({
+      success: true,
+      message: `চালান #${order.order_number} সফলভাবে মুছে ফেলা হয়েছে এবং ইনভেন্টরি স্টক ও আর্থিক হিসাব সমন্বয় করা হয়েছে।`
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

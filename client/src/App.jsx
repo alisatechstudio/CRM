@@ -16,6 +16,7 @@ import NewCustomerModal from './components/NewCustomerModal';
 import PinLockScreen from './components/PinLockScreen';
 import MobileBottomNav from './components/MobileBottomNav';
 import InstallPwaModal from './components/InstallPwaModal';
+import OrdersView from './components/OrdersView';
 
 export default function App() {
   const [isLocked, setIsLocked] = useState(() => {
@@ -144,6 +145,13 @@ export default function App() {
             />
           )}
 
+          {currentTab === 'orders' && (
+            <OrdersView 
+              onOpenReceipt={(orderId) => setSelectedReceiptId(orderId)}
+              onRefreshAnalytics={refreshAnalytics}
+            />
+          )}
+
           {currentTab === 'customers' && (
             <CustomersView 
               onSelectCustomer={(id) => setSelectedCustomerId(id)}
@@ -206,6 +214,11 @@ export default function App() {
         <ReceiptModal 
           orderId={selectedReceiptId}
           onClose={() => setSelectedReceiptId(null)}
+          onOrderUpdated={refreshAnalytics}
+          onOrderDeleted={() => {
+            setSelectedReceiptId(null);
+            refreshAnalytics();
+          }}
         />
       )}
 

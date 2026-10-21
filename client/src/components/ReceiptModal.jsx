@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { X, Printer, CheckCircle } from 'lucide-react';
+import { X, Printer, CheckCircle, Edit2, Trash2 } from 'lucide-react';
 import { api } from '../api';
+import EditOrderModal from './EditOrderModal';
+import DeleteOrderModal from './DeleteOrderModal';
 
 // Helper to format date and time in Asia/Dhaka timezone (UTC+6)
 const formatDhakaDateTime = (orderObj) => {
@@ -57,17 +59,24 @@ const formatDhakaDateTime = (orderObj) => {
   }
 };
 
-export default function ReceiptModal({ orderId, onClose }) {
+export default function ReceiptModal({ orderId, onClose, onOrderUpdated, onOrderDeleted }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
-  useEffect(() => {
+  const fetchOrder = () => {
     if (orderId) {
+      setLoading(true);
       api.getOrderById(orderId)
         .then(setOrder)
         .catch(console.error)
         .finally(() => setLoading(false));
     }
+  };
+
+  useEffect(() => {
+    fetchOrder();
   }, [orderId]);
 
   const handlePrint = () => {
@@ -235,15 +244,65 @@ export default function ReceiptModal({ orderId, onClose }) {
           </div>
         </div>
 
-        <div className="modal-footer">
-          <button className="btn btn-secondary" onClick={onClose}>
-            বন্ধ
-          </button>
-          <button className="btn btn-primary" onClick={handlePrint}>
-            <Printer size={16} /> প্রিন্ট
-          </button>
+        <div className="modal-footer" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '0.4rem' }}>
+            <button 
+              type="button" 
+              className="btn btn-secondary btn-sm"
+              onClick={() => setShowEditModal(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+            >
+              <Edit2 size={14} /> এডিট / আপডেট
+            </button>
+            <button 
+              type="button" 
+              className="btn btn-danger btn-sm"
+              onClick={() => setShowDeleteModal(true)}
+              title="অর্ডার ডিলিট করুন"
+              style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}
+            >
+              <Trash2 size={14} /> ডিলিট
+            </button>
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button className="btn btn-secondary" onClick={onClose}>
+              বন্ধ
+            </button>
+            <button className="btn btn-primary" onClick={handlePrint}>
+              <Printer size={16} /> প্রিন্ট
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Edit Order Modal */}
+      {showEditModal && (
+        <EditOrderModal
+          orderId={order.id}
+          onClose={() => setShowEditModal(false)}
+          onUpdated={(updatedOrd) => {
+            fetchOrder();
+            if (onOrderUpdated) onOrderUpdated(updatedOrd);
+          }}
+          onDeleted={(delId) => {
+            if (onOrderDeleted) onOrderDeleted(delId);
+            onClose();
+          }}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <DeleteOrderModal
+          order={order}
+          onClose={() => setShowDeleteModal(false)}
+          onDeleted={(delId) => {
+            if (onOrderDeleted) onOrderDeleted(delId);
+            onClose();
+          }}
+        />
+      )}
     </div>
   );
 }

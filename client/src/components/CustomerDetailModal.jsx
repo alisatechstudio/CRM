@@ -14,14 +14,20 @@ import {
   FileText,
   BookOpen,
   CheckCircle,
-  AlertCircle
+  AlertCircle,
+  Edit2,
+  Trash2
 } from 'lucide-react';
 import { api } from '../api';
+import EditOrderModal from './EditOrderModal';
+import DeleteOrderModal from './DeleteOrderModal';
 
 export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt }) {
   const [customer, setCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('purchases');
+  const [editingOrderId, setEditingOrderId] = useState(null);
+  const [deletingOrder, setDeletingOrder] = useState(null);
   
   // Points adjust state
   const [adjustAmount, setAdjustAmount] = useState('');
@@ -310,13 +316,33 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
                       </div>
                     </div>
 
-                    <button 
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => onOpenReceipt(ord.id)}
-                      style={{ flexShrink: 0 }}
-                    >
-                      রসিদ
-                    </button>
+                    <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexShrink: 0 }}>
+                      <button 
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => onOpenReceipt(ord.id)}
+                        title="রসিদ দেখুন"
+                      >
+                        রসিদ
+                      </button>
+                      <button 
+                        type="button"
+                        className="btn btn-secondary btn-sm btn-icon"
+                        onClick={() => setEditingOrderId(ord.id)}
+                        title="অর্ডার এডিট / আপডেট করুন"
+                        style={{ width: '30px', height: '30px', padding: 0 }}
+                      >
+                        <Edit2 size={13} />
+                      </button>
+                      <button 
+                        type="button"
+                        className="btn btn-danger btn-sm btn-icon"
+                        onClick={() => setDeletingOrder(ord)}
+                        title="অর্ডার মুছে ফেলুন"
+                        style={{ width: '30px', height: '30px', padding: 0 }}
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
                   </div>
                 ))
               )}
@@ -701,6 +727,31 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
           </button>
         </div>
       </div>
+
+      {/* Edit Order Modal */}
+      {editingOrderId && (
+        <EditOrderModal
+          orderId={editingOrderId}
+          onClose={() => setEditingOrderId(null)}
+          onUpdated={() => {
+            fetchCustomer();
+          }}
+          onDeleted={() => {
+            fetchCustomer();
+          }}
+        />
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {deletingOrder && (
+        <DeleteOrderModal
+          order={deletingOrder}
+          onClose={() => setDeletingOrder(null)}
+          onDeleted={() => {
+            fetchCustomer();
+          }}
+        />
+      )}
     </div>
   );
 }
