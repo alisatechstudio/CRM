@@ -15,9 +15,12 @@ import {
   UserCheck, 
   Calendar,
   RefreshCw,
-  X
+  X,
+  MessageSquare
 } from 'lucide-react';
 import { api } from '../api';
+import WhatsAppShareModal from './WhatsAppShareModal';
+import { buildWhatsAppDueStatementText } from '../utils/whatsapp';
 
 export default function DueManagementView({ onSelectCustomer, onOpenReceipt }) {
   const [data, setData] = useState({
@@ -40,6 +43,7 @@ export default function DueManagementView({ onSelectCustomer, onOpenReceipt }) {
   const [collectNotes, setCollectNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState(null);
+  const [whatsAppCustomer, setWhatsAppCustomer] = useState(null);
 
   const loadDuesData = async () => {
     try {
@@ -360,16 +364,37 @@ export default function DueManagementView({ onSelectCustomer, onOpenReceipt }) {
                             </span>
                           </td>
                           <td style={{ textAlign: 'right' }}>
-                            <div style={{ display: 'inline-flex', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                            <div style={{ display: 'inline-flex', gap: '0.4rem', justifyContent: 'flex-end', alignItems: 'center' }}>
                               {hasDue && (
-                                <button
-                                  type="button"
-                                  className="btn btn-sm btn-primary"
-                                  style={{ background: 'var(--danger)', borderColor: 'var(--danger)', fontSize: '0.75rem', padding: '0.25rem 0.6rem' }}
-                                  onClick={() => handleOpenCollect(c)}
-                                >
-                                  আদায়
-                                </button>
+                                <>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-primary"
+                                    style={{ background: 'var(--danger)', borderColor: 'var(--danger)', fontSize: '0.75rem', padding: '0.25rem 0.6rem' }}
+                                    onClick={() => handleOpenCollect(c)}
+                                  >
+                                    আদায়
+                                  </button>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm"
+                                    style={{
+                                      background: '#25D366',
+                                      borderColor: '#25D366',
+                                      color: '#ffffff',
+                                      fontSize: '0.75rem',
+                                      padding: '0.25rem 0.55rem',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '0.25rem',
+                                      fontWeight: 700
+                                    }}
+                                    onClick={() => setWhatsAppCustomer(c)}
+                                    title="WhatsApp এ বকেয়া তাগাদা পাঠান"
+                                  >
+                                    <MessageSquare size={12} /> তাগাদা
+                                  </button>
+                                </>
                               )}
                               <button
                                 type="button"
@@ -437,14 +462,35 @@ export default function DueManagementView({ onSelectCustomer, onOpenReceipt }) {
 
                       <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
                         {hasDue && (
-                          <button
-                            type="button"
-                            className="btn btn-sm btn-primary"
-                            style={{ flex: 1, background: 'var(--danger)', borderColor: 'var(--danger)' }}
-                            onClick={() => handleOpenCollect(c)}
-                          >
-                            আদায় করুন
-                          </button>
+                          <>
+                            <button
+                              type="button"
+                              className="btn btn-sm btn-primary"
+                              style={{ flex: 1, background: 'var(--danger)', borderColor: 'var(--danger)' }}
+                              onClick={() => handleOpenCollect(c)}
+                            >
+                              আদায় করুন
+                            </button>
+                            <button
+                              type="button"
+                              className="btn btn-sm"
+                              style={{
+                                background: '#25D366',
+                                borderColor: '#25D366',
+                                color: '#ffffff',
+                                fontWeight: 700,
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.3rem',
+                                padding: '0.25rem 0.75rem'
+                              }}
+                              onClick={() => setWhatsAppCustomer(c)}
+                              title="WhatsApp এ বকেয়া তাগাদা পাঠান"
+                            >
+                              <MessageSquare size={13} /> WhatsApp
+                            </button>
+                          </>
                         )}
                         <button
                           type="button"
@@ -737,6 +783,18 @@ export default function DueManagementView({ onSelectCustomer, onOpenReceipt }) {
             </form>
           </div>
         </div>
+      )}
+
+      {/* WhatsApp Due Reminder Modal */}
+      {whatsAppCustomer && (
+        <WhatsAppShareModal
+          isOpen={!!whatsAppCustomer}
+          onClose={() => setWhatsAppCustomer(null)}
+          title={`WhatsApp এ বকেয়া তাগাদা (${whatsAppCustomer.first_name || 'গ্রাহক'})`}
+          defaultPhone={whatsAppCustomer.phone || ''}
+          customerName={`${whatsAppCustomer.first_name || ''} ${whatsAppCustomer.last_name || ''}`.trim()}
+          message={buildWhatsAppDueStatementText({ customer: whatsAppCustomer })}
+        />
       )}
     </div>
   );

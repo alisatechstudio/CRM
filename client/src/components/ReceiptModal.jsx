@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { X, Printer, CheckCircle, Edit2, Trash2 } from 'lucide-react';
+import { X, Printer, CheckCircle, Edit2, Trash2, MessageSquare } from 'lucide-react';
 import { api } from '../api';
 import EditOrderModal from './EditOrderModal';
 import DeleteOrderModal from './DeleteOrderModal';
+import WhatsAppShareModal from './WhatsAppShareModal';
+import { buildWhatsAppReceiptText } from '../utils/whatsapp';
 
 // Helper to format date and time in Asia/Dhaka timezone (UTC+6)
 const formatDhakaDateTime = (orderObj) => {
@@ -64,6 +66,7 @@ export default function ReceiptModal({ orderId, onClose, onOrderUpdated, onOrder
   const [loading, setLoading] = useState(true);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
 
   const fetchOrder = () => {
     if (orderId) {
@@ -265,9 +268,26 @@ export default function ReceiptModal({ orderId, onClose, onOrderUpdated, onOrder
             </button>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
             <button className="btn btn-secondary" onClick={onClose}>
               বন্ধ
+            </button>
+            <button 
+              type="button" 
+              className="btn" 
+              onClick={() => setShowWhatsAppModal(true)}
+              style={{
+                background: '#25D366',
+                borderColor: '#25D366',
+                color: '#ffffff',
+                fontWeight: 700,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.35rem'
+              }}
+              title="কাস্টমারকে WhatsApp এ সম্পূর্ণ রসিদ পাঠান"
+            >
+              <MessageSquare size={15} /> WhatsApp
             </button>
             <button className="btn btn-primary" onClick={handlePrint}>
               <Printer size={16} /> প্রিন্ট
@@ -275,6 +295,18 @@ export default function ReceiptModal({ orderId, onClose, onOrderUpdated, onOrder
           </div>
         </div>
       </div>
+
+      {/* WhatsApp Share Modal */}
+      {showWhatsAppModal && (
+        <WhatsAppShareModal
+          isOpen={showWhatsAppModal}
+          onClose={() => setShowWhatsAppModal(false)}
+          title="WhatsApp এ রসিদ পাঠান"
+          defaultPhone={order.phone || order.customer_phone || ''}
+          customerName={order.first_name ? `${order.first_name} ${order.last_name || ''}`.trim() : ''}
+          message={buildWhatsAppReceiptText(order)}
+        />
+      )}
 
       {/* Edit Order Modal */}
       {showEditModal && (

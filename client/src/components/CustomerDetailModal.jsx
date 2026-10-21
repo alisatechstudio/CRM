@@ -16,11 +16,14 @@ import {
   CheckCircle,
   AlertCircle,
   Edit2,
-  Trash2
+  Trash2,
+  MessageSquare
 } from 'lucide-react';
 import { api } from '../api';
 import EditOrderModal from './EditOrderModal';
 import DeleteOrderModal from './DeleteOrderModal';
+import WhatsAppShareModal from './WhatsAppShareModal';
+import { buildWhatsAppReceiptText, buildWhatsAppDueStatementText } from '../utils/whatsapp';
 
 export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt }) {
   const [customer, setCustomer] = useState(null);
@@ -28,6 +31,8 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
   const [activeTab, setActiveTab] = useState('purchases');
   const [editingOrderId, setEditingOrderId] = useState(null);
   const [deletingOrder, setDeletingOrder] = useState(null);
+  const [whatsAppOrder, setWhatsAppOrder] = useState(null);
+  const [whatsAppDueCustomer, setWhatsAppDueCustomer] = useState(null);
   
   // Points adjust state
   const [adjustAmount, setAdjustAmount] = useState('');
@@ -327,6 +332,22 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
                       <button 
                         type="button"
                         className="btn btn-secondary btn-sm btn-icon"
+                        onClick={() => setWhatsAppOrder({
+                          ...ord,
+                          first_name: customer.first_name,
+                          last_name: customer.last_name,
+                          phone: customer.phone,
+                          card_number: customer.card_number,
+                          customer_due_balance: customer.due_balance
+                        })}
+                        title="WhatsApp এ এই রসিদ পাঠান"
+                        style={{ width: '30px', height: '30px', padding: 0, color: '#25D366' }}
+                      >
+                        <MessageSquare size={13} />
+                      </button>
+                      <button 
+                        type="button"
+                        className="btn btn-secondary btn-sm btn-icon"
                         onClick={() => setEditingOrderId(ord.id)}
                         title="অর্ডার এডিট / আপডেট করুন"
                         style={{ width: '30px', height: '30px', padding: 0 }}
@@ -376,19 +397,40 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center' }}>
                   {customer.due_balance > 0 && (
-                    <button
-                      type="button"
-                      className="btn btn-primary btn-sm"
-                      style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}
-                      onClick={() => {
-                        setShowCollectForm(!showCollectForm);
-                        if (!collectAmount) setCollectAmount(String(customer.due_balance));
-                      }}
-                    >
-                      {showCollectForm ? 'ফর্ম লুকান' : 'বাকি আদায় / পরিশোধ'}
-                    </button>
+                    <>
+                      <button
+                        type="button"
+                        className="btn btn-primary btn-sm"
+                        style={{ background: 'var(--danger)', borderColor: 'var(--danger)' }}
+                        onClick={() => {
+                          setShowCollectForm(!showCollectForm);
+                          if (!collectAmount) setCollectAmount(String(customer.due_balance));
+                        }}
+                      >
+                        {showCollectForm ? 'ফর্ম লুকান' : 'বাকি আদায় / পরিশোধ'}
+                      </button>
+                      <button
+                        type="button"
+                        className="btn btn-sm"
+                        style={{
+                          background: '#25D366',
+                          borderColor: '#25D366',
+                          color: '#ffffff',
+                          fontWeight: 700,
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '0.35rem',
+                          fontSize: '0.8rem',
+                          padding: '0.3rem 0.65rem'
+                        }}
+                        onClick={() => setWhatsAppDueCustomer(customer)}
+                        title="WhatsApp এ বকেয়া তাগাদা পাঠান"
+                      >
+                        <MessageSquare size={13} /> WhatsApp তাগাদা
+                      </button>
+                    </>
                   )}
                 </div>
               </div>
@@ -750,6 +792,29 @@ export default function CustomerDetailModal({ customerId, onClose, onOpenReceipt
           onDeleted={() => {
             fetchCustomer();
           }}
+        />
+      )}
+      {/* WhatsApp Share Order Receipt Modal */}
+      {whatsAppOrder && (
+        <WhatsAppShareModal
+          isOpen={!!whatsAppOrder}
+          onClose={() => setWhatsAppOrder(null)}
+          title={`WhatsApp এ চালান #${whatsAppOrder.order_number} পাঠান`}
+          defaultPhone={whatsAppOrder.phone || customer?.phone || ''}
+          customerName={`${customer?.first_name || ''} ${customer?.last_name || ''}`.trim()}
+          message={buildWhatsAppReceiptText(whatsAppOrder)}
+        />
+      )}
+
+      {/* WhatsApp Due Reminder Modal */}
+      {whatsAppDueCustomer && (
+        <WhatsAppShareModal
+          isOpen={!!whatsAppDueCustomer}
+          onClose={() => setWhatsAppDueCustomer(null)}
+          title={`WhatsApp এ বকেয়া তাগাদা (${customer?.first_name || 'গ্রাহক'})`}
+          defaultPhone={customer?.phone || ''}
+          customerName={`${customer?.first_name || ''} ${customer?.last_name || ''}`.trim()}
+          message={buildWhatsAppDueStatementText({ customer: whatsAppDueCustomer })}
         />
       )}
     </div>

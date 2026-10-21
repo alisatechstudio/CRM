@@ -19,9 +19,12 @@ import {
   X,
   ShieldAlert,
   Award,
-  Users
+  Users,
+  MessageSquare
 } from 'lucide-react';
 import { api } from '../api';
+import WhatsAppShareModal from './WhatsAppShareModal';
+import { buildWhatsAppDueStatementText } from '../utils/whatsapp';
 
 const DEFAULT_DEPARTMENTS = [
   'খাতা, ডায়েরি ও কাগজ সামগ্রী',
@@ -90,6 +93,7 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
   const [deletingCustomer, setDeletingCustomer] = useState(null);
   const [forceDelete, setForceDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [whatsAppCustomer, setWhatsAppCustomer] = useState(null);
 
   // Load Departments for select dropdowns
   useEffect(() => {
@@ -579,6 +583,16 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
                             <span>প্রোফাইল</span>
                           </button>
 
+                          {/* WhatsApp statement */}
+                          <button 
+                            className="btn btn-secondary btn-sm btn-icon"
+                            title="WhatsApp এ বকেয়া বিবরণী বা মেসেজ পাঠান"
+                            onClick={() => setWhatsAppCustomer(c)}
+                            style={{ color: '#25D366', padding: '0.35rem 0.5rem' }}
+                          >
+                            <MessageSquare size={13} />
+                          </button>
+
                           {/* UPDATE: Edit Customer */}
                           <button 
                             className="btn btn-secondary btn-sm"
@@ -691,6 +705,16 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
                   >
                     <Edit2 size={14} />
                     <span>এডিট</span>
+                  </button>
+
+                  <button 
+                    type="button" 
+                    className="btn btn-secondary btn-sm btn-icon"
+                    title="WhatsApp এ পাঠান"
+                    onClick={() => setWhatsAppCustomer(c)}
+                    style={{ color: '#25D366', padding: '0.45rem 0.65rem' }}
+                  >
+                    <MessageSquare size={14} />
                   </button>
 
                   <button 
@@ -1166,6 +1190,18 @@ export default function CustomersView({ onSelectCustomer, onOpenNewCustomer }) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* WhatsApp Share Modal */}
+      {whatsAppCustomer && (
+        <WhatsAppShareModal
+          isOpen={!!whatsAppCustomer}
+          onClose={() => setWhatsAppCustomer(null)}
+          title={`WhatsApp এ গ্রাহক বিবরণী (${whatsAppCustomer.first_name || 'গ্রাহক'})`}
+          defaultPhone={whatsAppCustomer.phone || ''}
+          customerName={`${whatsAppCustomer.first_name || ''} ${whatsAppCustomer.last_name || ''}`.trim()}
+          message={buildWhatsAppDueStatementText({ customer: whatsAppCustomer })}
+        />
       )}
     </div>
   );

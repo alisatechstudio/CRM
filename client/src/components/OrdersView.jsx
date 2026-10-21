@@ -17,11 +17,14 @@ import {
   CreditCard, 
   RefreshCw,
   TrendingUp,
-  FileText
+  FileText,
+  MessageSquare
 } from 'lucide-react';
 import { api } from '../api';
 import EditOrderModal from './EditOrderModal';
 import DeleteOrderModal from './DeleteOrderModal';
+import WhatsAppShareModal from './WhatsAppShareModal';
+import { buildWhatsAppReceiptText } from '../utils/whatsapp';
 
 export default function OrdersView({ onOpenReceipt, onRefreshAnalytics }) {
   const [orders, setOrders] = useState([]);
@@ -34,6 +37,7 @@ export default function OrdersView({ onOpenReceipt, onRefreshAnalytics }) {
   // Modals
   const [editingOrderId, setEditingOrderId] = useState(null);
   const [deletingOrder, setDeletingOrder] = useState(null);
+  const [whatsAppOrder, setWhatsAppOrder] = useState(null);
 
   // Load Orders
   const loadOrders = async () => {
@@ -467,6 +471,15 @@ export default function OrdersView({ onOpenReceipt, onRefreshAnalytics }) {
                           <button
                             type="button"
                             className="btn btn-secondary btn-sm btn-icon"
+                            onClick={() => setWhatsAppOrder(ord)}
+                            title="WhatsApp এ রসিদ পাঠান"
+                            style={{ width: '30px', height: '30px', padding: 0, color: '#25D366' }}
+                          >
+                            <MessageSquare size={13} />
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-secondary btn-sm btn-icon"
                             onClick={() => setEditingOrderId(ord.id)}
                             title="চালান এডিট / আপডেট করুন"
                             style={{ width: '30px', height: '30px', padding: 0 }}
@@ -492,6 +505,22 @@ export default function OrdersView({ onOpenReceipt, onRefreshAnalytics }) {
           </div>
         )}
       </div>
+
+      {/* WhatsApp Share Modal */}
+      {whatsAppOrder && (
+        <WhatsAppShareModal
+          isOpen={!!whatsAppOrder}
+          onClose={() => setWhatsAppOrder(null)}
+          title={`WhatsApp এ চালান #${whatsAppOrder.order_number} পাঠান`}
+          defaultPhone={whatsAppOrder.customer_phone || ''}
+          customerName={
+            whatsAppOrder.customer_first_name 
+              ? `${whatsAppOrder.customer_first_name} ${whatsAppOrder.customer_last_name || ''}`.trim()
+              : (whatsAppOrder.first_name ? `${whatsAppOrder.first_name} ${whatsAppOrder.last_name || ''}`.trim() : '')
+          }
+          message={buildWhatsAppReceiptText(whatsAppOrder)}
+        />
+      )}
 
       {/* Edit Order Modal */}
       {editingOrderId && (
